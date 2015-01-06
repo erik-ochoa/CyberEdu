@@ -8,16 +8,34 @@
 
 <body>
 	<canvas id="view" width="1280" height="630" style="border:1px solid #000000;" onclick="click_position()" onmousemove="rollover_position()"> </canvas>	
-	<p id="text"> No action yet </p>
+	<p id="text"> </p>
 	
-	<img width="0" height="0" id="image" src="file://C:/Users/Jonathan/Documents/Test/CyberEDUGame/coffee_shop_3.jpg" alt="Coffee Shop">
+	<img width="0" height="0" id="coffee_shop_image" src="file://C:/Users/Jonathan/Documents/Test/CyberEDUGame/coffee_shop_3.jpg" alt="">
+	<img width="0" height="0" id="go_to_the_coffee_shop_image" src="file://C:/Users/Jonathan/Documents/Test/CyberEDUGame/go_to_the_coffee_shop.jpg" alt="">
 </body>
 </html>
 
 <script>
-	// Class definition for rectangular button
-	// List of all buttons listening for events. A button is actively listening when it is created.
-	var all_buttons = [];
+	// Debug print function. May be useful.
+	function print (s) {
+		document.getElementById("text").innerHTML = document.getElementById("text").innerHTML + s + "<br>";
+	}
+	
+	// Class definition for a scene. A scene is a image and a list of buttons. 	
+	// Constructor
+	var Scene = function (image) {
+		this.image = image;
+		this.buttons = [];
+	};
+	
+	Scene.prototype.addButton = function (button) {
+		this.buttons[this.buttons.length] = button;
+	};
+	// End Scene Class
+
+	// Class definition for rectangular button 
+	// A button must be added to a scene to do anything. 
+	// Buttons are enabled by default. Disabling a button makes it unclickable until it is enabled again.
 	
 	// Constructor
 	var Button = function(topLeftX, topLeftY, bottomRightX, bottomRightY, fun) {
@@ -26,12 +44,12 @@
 		this.x2 = bottomRightX;
 		this.y2 = bottomRightY;
 		this.action = fun;
-		all_buttons[all_buttons.length] = this;
+		this.enabled = true;
 	};
 	
 	// returns true if a point is within the bounds of the button
 	Button.prototype.isWithinBounds = function(x, y) {
-		return (this.x1 <= x && x <= this.x2 && this.y1 <= y && y <= this.y2);
+		return (this.enabled && this.x1 <= x && x <= this.x2 && this.y1 <= y && y <= this.y2);
 	};
 	
 	// calls the function given as the event for this button
@@ -46,38 +64,13 @@
 	};
 	
 	Button.prototype.setEnabled = function(b) {
-		if (b) {
-			var found = false;
-			for (var i = 0; i < all_buttons.length; i++) {
-				if (all_buttons[i] == this) {
-					found = true;
-				}
-			}
-			if (!found) {
-				all_buttons[all_buttons.length] = this;
-			}
-		}
-		else {
-			for (var i = 0; i < all_buttons.length; i++) {
-				if (all_buttons[i] == this) {
-					all_buttons.splice(i, 1);
-				}
-			}
-		}
+		this.enabled = b;
 	};
 	// End Button class
 
-	// Draw the coffee shop in the canvas
-	var g = document.getElementById("view").getContext("2d");
-	g.drawImage(document.getElementById("image"),0,0);
-	
-	var testButton = new Button (0, 0, 800, 315, function() { document.getElementById("text").innerHTML = "Hello: top half pressed"; testButton2.setEnabled(false); });
-	var testButton2 = new Button (0, 316, 800, 630, function() { document.getElementById("text").innerHTML = "Hello: bottom half pressed"; testButton.setEnabled(false); });
-	var testButton3 = new Button (1201, 0, 1280, 630, function() { document.getElementById("text").innerHTML = "Hello: right side pressed"; testButton.setEnabled(true); testButton2.setEnabled(true); });
-	
 	function click_position(event) {
 		// Compatibility Code taken from http://www.quirksmode.org/js/events_properties.html
-		var e = event || window.event
+		var e = event || window.event;
 		var posx = 0;
 		var posy = 0;
 		if (e.pageX || e.pageY) {
@@ -92,15 +85,20 @@
 		}
 		// End compatibility code, posx & posy contain the clicked position
 		
+		print("Click at x: " + posx + " y: " + posy);
+		
 		// Cause event(s) to occur based on the location of the mouse click.
-		for (var i = 0; i < all_buttons.length; i++) {
-			all_buttons[i].reactToClickAt(posx, posy);
+		for (var i = 0; i < current_scene.buttons.length; i++) {
+			current_scene.buttons[i].reactToClickAt(posx, posy);
+		}
+		for (var i = 0; i < persistent_buttons.length; i++) {
+			persistent_buttons[i].reactToClickAt(posx, posy);
 		}
 	}
 	
 	function rollover_position(event) {
 		// Compatibility Code taken from http://www.quirksmode.org/js/events_properties.html
-		var e = event || window.event
+		var e = event || window.event;
 		var posx = 0;
 		var posy = 0;
 		if (e.pageX || e.pageY) {
@@ -116,8 +114,13 @@
 		// End compatibility code, posx & posy contain the clicked position
 		
 		var found = false;
-		for (var i = 0; i < all_buttons.length; i++) {
-			if (all_buttons[i].isWithinBounds(posx, posy)) {
+		for (var i = 0; i < current_scene.buttons.length; i++) {
+			if (current_scene.buttons[i].isWithinBounds(posx, posy)) {
+				found = true;
+			}
+		}
+		for (var i = 0; i < persistent_buttons.length; i++) {
+			if (persistent_buttons[i].isWithinBounds(posx, posy)) {
 				found = true;
 			}
 		}
@@ -127,4 +130,31 @@
 		else
 			document.getElementById("view").style.cursor = "auto";
 	}
+	
+	function changeScene(new_scene) {
+		current_scene = new_scene;
+		var g = document.getElementById("view").getContext("2d");
+		g.drawImage(current_scene.image,0,0);
+	}
+	
+	// A list of buttons that exist in multiple scenes, such as the inventory buttons.
+	var persistent_buttons = [];
+	var testButton0 = new Button (1200, 600, 1290, 640, function() { print("persistent button pressed"); });
+	persistent_buttons[persistent_buttons.length] = testButton0;
+	
+	// Declaring the various scenes in the game
+	var coffee_shop = new Scene (document.getElementById("coffee_shop_image"));
+	var testButton1 = new Button (480, 200, 960, 400, function () { print("button pushed"); });
+	var testButton2 = new Button (0, 0, 480, 200, function () { print("button disabled"); testButton.setEnabled(false); });
+	var testButton3 = new Button (960, 0, 1280, 200, function () { print("button enabled"); testButton.setEnabled(true); });
+	coffee_shop.addButton(testButton1);
+	coffee_shop.addButton(testButton2);
+	coffee_shop.addButton(testButton3);
+	
+	var start = new Scene (document.getElementById("go_to_the_coffee_shop_image"));
+	var startButton = new Button (300, 100, 940, 400, function () { print("going to the coffee shop now"); changeScene(coffee_shop); });
+	start.addButton(startButton);
+	
+	// Display the screen
+	changeScene(start);
 </script>
