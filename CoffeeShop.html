@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<base href="C:\Users\Jonathan\Documents\Test\CyberEDUGame\\" target="_blank">
 	<meta charset="UTF-8">
 	<title>Test #2 </title>
 </head>
@@ -17,8 +18,7 @@
 		<!-- Preloading scene images -->
 		<img hidden = "true" id="coffee_shop_image" src="images/coffee_shop.jpg">
 
-		<!-- I don't know what this file is, you'll have to fix the relative pathname and upload it yourself. -->
-		<img hidden = "true" id="go_to_the_coffee_shop_image" src="file://C:/Users/Jonathan/Documents/Test/CyberEDUGame/go_to_the_coffee_shop.jpg" alt="">
+		<img hidden = "true" id="go_to_the_coffee_shop_image" src="images/go_to_the_coffee_shop.jpg">
 	</div>
 </body>
 </html>
@@ -168,17 +168,22 @@
 	persistent_buttons[persistent_buttons.length] = 
 		new Button(265,565, 310, 610, function() { print("Inventory slot four pressed."); })
 	
-	var testButton0 = new Button (1200, 600, 1290, 640, function() { print("persistent button pressed"); });
-	persistent_buttons[persistent_buttons.length] = testButton0;
-	
 	// Declaring the various scenes in the game
 	var coffee_shop = new Scene (document.getElementById("coffee_shop_image"));
-	var testButton1 = new Button (480, 200, 960, 400, function () { print("button pushed"); });
-	var testButton2 = new Button (0, 0, 480, 200, function () { print("button disabled"); testButton.setEnabled(false); });
-	var testButton3 = new Button (960, 0, 1280, 200, function () { print("button enabled"); testButton.setEnabled(true); });
-	coffee_shop.addButton(testButton1);
-	coffee_shop.addButton(testButton2);
-	coffee_shop.addButton(testButton3);
+	var manager = new Button (179, 131, 269, 287, function () { print("manager"); });
+	var witness1 = new Button (735, 159, 776, 218, function () { print("witness #1"); });
+	var witness2 = new Button (869, 190, 906, 242, function () {print ("witness #2"); });
+	var tophat = new Button (914, 219, 975, 328, function () { print ("top hat"); });
+	var suspect1 = new Button (726, 230, 765, 282, function () { print ("suspect #1"); });
+	var suspect2 = new Button (754, 298, 841, 398, function () { print ("suspect #2"); });
+	var culprit = new Button (1183, 202, 1240, 280, function () { print ("culprit"); }); // Obviously cannot have this in the final code. Will refractor later.
+	coffee_shop.addButton(manager);
+	coffee_shop.addButton(witness1);
+	coffee_shop.addButton(witness2);
+	coffee_shop.addButton(tophat);
+	coffee_shop.addButton(suspect1);
+	coffee_shop.addButton(suspect2);
+	coffee_shop.addButton(culprit);
 	
 	var start = new Scene (document.getElementById("go_to_the_coffee_shop_image"));
 	var startButton = new Button (300, 100, 940, 400, function () { print("going to the coffee shop now"); changeScene(coffee_shop); });
@@ -187,3 +192,4 @@
 	// Display the screen
 	changeScene(start);
 </script>
+
