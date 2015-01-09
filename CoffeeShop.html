@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<base href="file://C:/Users/Jonathan/Documents/Test/CyberEDUGame" target="_blank">
 	<meta charset="UTF-8">
 	<title>Test #2 </title>
 </head>
@@ -10,8 +9,17 @@
 	<canvas id="view" width="1280" height="630" style="border:1px solid #000000;" onclick="click_position()" onmousemove="rollover_position()"> </canvas>	
 	<p id="text"> </p>
 	
-	<img width="0" height="0" id="coffee_shop_image" src="file://C:/Users/Jonathan/Documents/Test/CyberEDUGame/coffee_shop_3.jpg" alt="">
-	<img width="0" height="0" id="go_to_the_coffee_shop_image" src="file://C:/Users/Jonathan/Documents/Test/CyberEDUGame/go_to_the_coffee_shop.jpg" alt="">
+	
+	<div class="image_preloader">
+		<!-- Preloading GUI elements -->
+		<img hidden = "true" id="inventory" src="images/inventory.png">
+	
+		<!-- Preloading scene images -->
+		<img hidden = "true" id="coffee_shop_image" src="images/coffee_shop.jpg">
+
+		<!-- I don't know what this file is, you'll have to fix the relative pathname and upload it yourself. -->
+		<img hidden = "true" id="go_to_the_coffee_shop_image" src="file://C:/Users/Jonathan/Documents/Test/CyberEDUGame/go_to_the_coffee_shop.jpg" alt="">
+	</div>
 </body>
 </html>
 
@@ -21,6 +29,9 @@
 		document.getElementById("text").innerHTML = document.getElementById("text").innerHTML + s + "<br>";
 	}
 	
+	/*********************
+	Scene Class Definition
+	**********************/
 	// Class definition for a scene. A scene is a image and a list of buttons. 	
 	// Constructor
 	var Scene = function (image) {
@@ -33,6 +44,10 @@
 	};
 	// End Scene Class
 
+	/**********************
+	Button Class Definition
+	***********************/
+	
 	// Class definition for rectangular button 
 	// A button must be added to a scene to do anything. 
 	// Buttons are enabled by default. Disabling a button makes it unclickable until it is enabled again.
@@ -68,6 +83,8 @@
 	};
 	// End Button class
 
+	
+	
 	function click_position(event) {
 		// Compatibility Code taken from http://www.quirksmode.org/js/events_properties.html
 		var e = event || window.event;
@@ -135,10 +152,22 @@
 		current_scene = new_scene;
 		var g = document.getElementById("view").getContext("2d");
 		g.drawImage(current_scene.image,0,0);
+		g.drawImage(document.getElementById("inventory"),0,0) // fix this lookup.
 	}
 	
 	// A list of buttons that exist in multiple scenes, such as the inventory buttons.
 	var persistent_buttons = [];
+	
+	// TODO: These numbers are awful. Resolution got messed up or something? The far right of canvas is at 1288.
+	persistent_buttons[persistent_buttons.length] = 
+		new Button(85,565, 130, 610, function() { print("Inventory slot one pressed."); }) 
+	persistent_buttons[persistent_buttons.length] = 
+		new Button(145,565, 190, 610, function() { print("Inventory slot two pressed."); })
+	persistent_buttons[persistent_buttons.length] = 
+		new Button(205,565, 250, 610, function() { print("Inventory slot three pressed."); })
+	persistent_buttons[persistent_buttons.length] = 
+		new Button(265,565, 310, 610, function() { print("Inventory slot four pressed."); })
+	
 	var testButton0 = new Button (1200, 600, 1290, 640, function() { print("persistent button pressed"); });
 	persistent_buttons[persistent_buttons.length] = testButton0;
 	
