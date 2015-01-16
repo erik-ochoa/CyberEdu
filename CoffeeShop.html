@@ -36,9 +36,10 @@
 		document.getElementById("text").innerHTML = document.getElementById("text").innerHTML + s + "<br>";
 	}
 		
-	// character_name says text in the game
-	function say (character_name, text) {
-		print(character_name + ": " + text);
+	// character_name says text in the game, nextFunc is to chain dialogue together.
+	function say (character_name, text, next) {
+		next = typeof next !== 'undefined' ? next : closeDialogue;
+		dialogue(character_name, text, [["Okay.", next]]);
 	}
 	
 	/* Creates dialogue overlay, delays next action until response has been made.
@@ -57,7 +58,6 @@
 	
 	*/
 	function closeDialogue() {
-		print("closing dialogue");
 		// Remove all dialogue buttons:
 		dialogue_buttons = [];
 		// Re-enable world buttons
@@ -69,11 +69,9 @@
 		g.drawImage(document.getElementById("inventory"),0,0) // fix this lookup.
 	}
 	
-	function dialogue(character_name, text, responses ) {
+	function dialogue(character_name, text, responses) {
 		// Setting default responses.
-		responses = typeof responsese !== 'undefined' ? responses : [["Okay.", function () { print("test"); closeDialogue(); }]];
-		
-		responses[0][1];
+		responses = typeof responses !== 'undefined' ? responses : [["Okay (default).", function () { closeDialogue(); }]];
 		var g = document.getElementById("view").getContext("2d");
 		worldButtonsEnabled = false;
 		diagUp = true;
@@ -107,8 +105,8 @@
 		
 		while (i < words.length - 1) {
 			print(g.measureText(lines[lines.length-1].join(' ') + ' ' + words[i]).width);
-			while (g.measureText(lines[lines.length-1].join(' ') + ' ' + words[i]).width < textWidth && i < words.length - 1) {
-				// Using timeout to create a sense of delay in the conversation.
+			while (g.measureText(lines[lines.length-1].join(' ') + ' ' + words[i]).width < textWidth && i < words.length) {
+				
 				lines[lines.length-1].push(words[i]);
 				i++;
 			}
@@ -119,7 +117,7 @@
 		for (var j = 0; j < lines.length; j ++) { 
 			g.fillText(lines[j].join(' '), MAX_X/2 - (dimX/2 - 8), MAX_Y/2 - (dimY/2 - 44 - lineHeight*j));
 		}
-		
+		dialogue_buttons = []; // MAKE SURE DIALOGUE BUTTONS ARE CLEAN.
 		// Now load the responses:
 		// TODO support more than one response.
 		g.fillStyle = "rgba(80,80,80,1)";
@@ -227,15 +225,14 @@
 		for (var i = 0; i < persistent_buttons.length; i++) {
 			persistent_buttons[i].reactToClickAt(posx, posy);
 		}
-<<<<<<< HEAD
-		
+		var reacted = false;
 		for (var i = 0; i < dialogue_buttons.length; i++) {
-			dialogue_buttons[i].reactToClickAt(posx, posy);
+			if (!reacted){
+				reacted = true;
+				dialogue_buttons[i].reactToClickAt(posx, posy);
+			}
 		}
-		
-=======
 		current_scene.run_after_action();
->>>>>>> origin/master
 	}
 	
 	function rollover_position(event) {
@@ -305,8 +302,7 @@
 	persistent_buttons[persistent_buttons.length] = 
 		new Button(205,565, 250, 610, function() { print("Inventory slot three pressed."); })
 	persistent_buttons[persistent_buttons.length] = 
-		new Button(265,565, 310, 610, function() { print("Inventory slot four pressed.");
-													dialogue("johnny boy", "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.");})
+		new Button(265,565, 310, 610, function() { print("Inventory slot four pressed."); })
 	
 	var player_name = "Bobby";
 	var partner_name = "Ashley";
@@ -332,10 +328,14 @@
 			culprit.setEnabled(true);
 		}
 		else {
-			say(player_name, "Hello, ma'am. We are the detectives you called for. Do you have any leads?");
-			say("Manager", "The guy in the suit with a top hat, the guy in the light blue shirt in the back corner, and the girl in a red shirt sitting at the counter all reported to me that they had been robbed after leaving " +
-				"here.");
-			say(partner_name, "Let's go talk to the victims, " + player_name + ".");
+			// change say function example
+			say(player_name, "Hello, ma'am. We are the detectives you called for. Do you have any leads?", function() { 
+				say("Manager", "The guy in the suit with a top hat, the guy in the light blue shirt in the back corner, and the girl in a red shirt sitting at the counter all reported to me that they had been robbed after leaving " +
+					"here.", function () {
+					say(partner_name, "Let's go talk to the victims, " + player_name + ".", closeDialogue());
+				});
+			});
+			// done example.
 		}
 	});
 	var witness1 = new Button (735, 159, 776, 218, function () { 
