@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<base href="C:\Users\Jonathan\Documents\Test\CyberEDUGame\\" target="_blank">
+	<!-- Commenting this out because it breaks my loading. Does it not work for you if you don't have this? -->
+	<!--<base href="C:\Users\Jonathan\Documents\Test\CyberEDUGame\\" target="_blank"> --> 
 	<meta charset="UTF-8">
 	<title>Test #2 </title>
 </head>
 
 <body>
-	<canvas id="view" width="1280" height="630" style="border:1px solid #000000;" onclick="click_position()" onmousemove="rollover_position()"> </canvas>	
+	<canvas id="view" width="1280" height="630" style="border:1px solid #000000; position:relative;" onclick="click_position()" onmousemove="rollover_position()"> </canvas>	
 	<p id="text"> </p>
 	
 	
@@ -17,16 +18,118 @@
 	
 		<!-- Preloading scene images -->
 		<img hidden = "true" id="coffee_shop_image" src="images/coffee_shop.jpg">
-
 		<img hidden = "true" id="go_to_the_coffee_shop_image" src="images/go_to_the_coffee_shop.jpg">
 	</div>
 </body>
 </html>
 
 <script>
+	// Global Variables
+	var worldButtonsEnabled = true;
+	var diagUp = false;
+	var MAX_X = 1280;
+	var MAX_Y = 630;
+	var dialogue_buttons = [];
+
 	// Debug print function. May be useful.
 	function print (s) {
 		document.getElementById("text").innerHTML = document.getElementById("text").innerHTML + s + "<br>";
+	}
+	
+	/* Creates dialogue overlay, delays next action until response has been made.
+		Takes:
+			character_name: Name of character, displayed at the top right of the diag box in bigger white text.
+			text: The text that is displayed. This is the "Dialogue".
+			responses: Possible responses to the dialogue Array of arrays. Format is:
+						[
+							[
+								String:Response Description,
+								Function: Reponse Action
+							]
+						]
+						If no response is specified, the default response is "Okay."
+						which will simply close the dialogue and re-enable world buttons.
+	
+	*/
+	function closeDialogue() {
+		print("closing dialogue");
+		// Remove all dialogue buttons:
+		dialogue_buttons = [];
+		// Re-enable world buttons
+		worldButtonsEnabled = true;
+		diagUp = false;
+		// redraw scene.
+		var g = document.getElementById("view").getContext("2d");
+		g.drawImage(current_scene.image,0,0);
+		g.drawImage(document.getElementById("inventory"),0,0) // fix this lookup.
+	}
+	
+	function dialogue(character_name, text, responses ) {
+		// Setting default responses.
+		responses = typeof responsese !== 'undefined' ? responses : [["Okay.", function () { print("test"); closeDialogue(); }]];
+		
+		responses[0][1];
+		var g = document.getElementById("view").getContext("2d");
+		worldButtonsEnabled = false;
+		diagUp = true;
+		//Redraw current scene.
+		g.drawImage(current_scene.image,0,0); // TODO I'll be honest I do not know how the scoping on this works.
+		// Dark gray overlay
+		g.fillStyle = "rgba(0,0,0,0.5)";
+		g.fillRect(0,0,MAX_X,MAX_Y);
+		// fill out rect of diag box.
+		g.fillStyle = "rgba(50,50,50,1)";
+		var dimX = 600
+		var dimY = 400
+		// Currentl has a border of pixel size 2. Could make this bigger or smaller, probably a function to do this explicitly.
+		g.fillRect(MAX_X/2 - (dimX/2 + 2), MAX_Y/2 - (dimY/2 + 2), dimX + 4, dimY + 4);
+		// Fill inner rect of diag box
+		g.fillStyle = "rgba(70,70,70,1)";
+		g.fillRect(MAX_X/2 - dimX/2, MAX_Y/2 - dimY/2, dimX, dimY);
+		
+		g.fillStyle = "rgba(255,255,255,1)";
+		g.font = "24px Verdana";
+		g.fillText(character_name, MAX_X/2 - (dimX/2 - 8), MAX_Y/2 - (dimY/2 - 24));
+		g.fillStyle = "rgba(200,200,200,1)";
+		g.font = "16px Verdana";
+		
+
+		var textWidth = dimX - 16;
+        var lineHeight = 20;
+		var words = text.split(' ');
+		var lines = [["   "]];
+		var i = 0;
+		
+		while (i < words.length - 1) {
+			print(g.measureText(lines[lines.length-1].join(' ') + ' ' + words[i]).width);
+			while (g.measureText(lines[lines.length-1].join(' ') + ' ' + words[i]).width < textWidth && i < words.length - 1) {
+				// Using timeout to create a sense of delay in the conversation.
+				lines[lines.length-1].push(words[i]);
+				i++;
+			}
+			// Line has over filled, so add a new line in and continue from there
+			lines.push([""]);
+		}
+		// Write what we have said in the conversation.
+		for (var j = 0; j < lines.length; j ++) { 
+			g.fillText(lines[j].join(' '), MAX_X/2 - (dimX/2 - 8), MAX_Y/2 - (dimY/2 - 44 - lineHeight*j));
+		}
+		
+		// Now load the responses:
+		// TODO support more than one response.
+		g.fillStyle = "rgba(80,80,80,1)";
+		dialogue_buttons[dialogue_buttons.length] = new Button(MAX_X/2 - (dimX/2) + 10, 
+															   MAX_Y/2 + dimY/2 - 100,
+															   MAX_X/2 + (dimX/2) - 10, 
+															   MAX_Y/2 + dimY/2,
+															   responses[0][1]);
+		g.fillRect(MAX_X/2 - (dimX/2) + 10, MAX_Y/2+dimY/2-110, dimX - 20, 100);
+		g.fillStyle = "rgba(200,200,200,1)";
+		g.font = "16px Verdana";
+		g.fillText(responses[0][0], MAX_X/2 - (g.measureText(responses[0][0]).width/2), MAX_Y/2 + dimY/2 - 50);
+		
+		//Draw GUI overlay.
+		g.drawImage(document.getElementById("inventory"),0,0) 
 	}
 	
 	/*********************
@@ -105,12 +208,20 @@
 		print("Click at x: " + posx + " y: " + posy);
 		
 		// Cause event(s) to occur based on the location of the mouse click.
-		for (var i = 0; i < current_scene.buttons.length; i++) {
-			current_scene.buttons[i].reactToClickAt(posx, posy);
+		
+		if (worldButtonsEnabled) {
+			for (var i = 0; i < current_scene.buttons.length; i++) {
+				current_scene.buttons[i].reactToClickAt(posx, posy);
+			}
 		}
 		for (var i = 0; i < persistent_buttons.length; i++) {
 			persistent_buttons[i].reactToClickAt(posx, posy);
 		}
+		
+		for (var i = 0; i < dialogue_buttons.length; i++) {
+			dialogue_buttons[i].reactToClickAt(posx, posy);
+		}
+		
 	}
 	
 	function rollover_position(event) {
@@ -131,16 +242,29 @@
 		// End compatibility code, posx & posy contain the clicked position
 		
 		var found = false;
-		for (var i = 0; i < current_scene.buttons.length; i++) {
-			if (current_scene.buttons[i].isWithinBounds(posx, posy)) {
-				found = true;
+		// Display rollover for the world interactions, if flag for worldButtons are enabled.
+		if (worldButtonsEnabled) {
+			for (var i = 0; i < current_scene.buttons.length; i++) {
+				if (current_scene.buttons[i].isWithinBounds(posx, posy)) {
+					found = true;
+				}
 			}
 		}
+		
+		// Handle rollover for GUI elements
 		for (var i = 0; i < persistent_buttons.length; i++) {
 			if (persistent_buttons[i].isWithinBounds(posx, posy)) {
 				found = true;
 			}
 		}
+		
+		// Handle rollover for any dialogue buttons displayed on the screen.
+		for (var i = 0; i < dialogue_buttons.length; i++) {
+			if (dialogue_buttons[i].isWithinBounds(posx, posy)) {
+				found = true;
+			}
+		}
+		
 		
 		if (found)
 			document.getElementById("view").style.cursor = "pointer";
@@ -157,7 +281,7 @@
 	
 	// A list of buttons that exist in multiple scenes, such as the inventory buttons.
 	var persistent_buttons = [];
-	
+
 	// TODO: These numbers are awful. Resolution got messed up or something? The far right of canvas is at 1288.
 	persistent_buttons[persistent_buttons.length] = 
 		new Button(85,565, 130, 610, function() { print("Inventory slot one pressed."); }) 
@@ -166,7 +290,8 @@
 	persistent_buttons[persistent_buttons.length] = 
 		new Button(205,565, 250, 610, function() { print("Inventory slot three pressed."); })
 	persistent_buttons[persistent_buttons.length] = 
-		new Button(265,565, 310, 610, function() { print("Inventory slot four pressed."); })
+		new Button(265,565, 310, 610, function() { print("Inventory slot four pressed.");
+													dialogue("johnny boy", "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.");})
 	
 	// Declaring the various scenes in the game
 	var coffee_shop = new Scene (document.getElementById("coffee_shop_image"));
