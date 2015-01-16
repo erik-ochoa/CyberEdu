@@ -35,6 +35,11 @@
 	function print (s) {
 		document.getElementById("text").innerHTML = document.getElementById("text").innerHTML + s + "<br>";
 	}
+		
+	// character_name says text in the game
+	function say (character_name, text) {
+		print(character_name + ": " + text);
+	}
 	
 	/* Creates dialogue overlay, delays next action until response has been made.
 		Takes:
@@ -140,11 +145,16 @@
 	var Scene = function (image) {
 		this.image = image;
 		this.buttons = [];
+		this.run_after_action = function () {};
 	};
 	
 	Scene.prototype.addButton = function (button) {
 		this.buttons[this.buttons.length] = button;
 	};
+	
+	Scene.prototype.setRunAfterAction = function (f) {
+		this.run_after_action = f;
+	}
 	// End Scene Class
 
 	/**********************
@@ -205,7 +215,7 @@
 		}
 		// End compatibility code, posx & posy contain the clicked position
 		
-		print("Click at x: " + posx + " y: " + posy);
+		//print("Click at x: " + posx + " y: " + posy);
 		
 		// Cause event(s) to occur based on the location of the mouse click.
 		
@@ -217,11 +227,15 @@
 		for (var i = 0; i < persistent_buttons.length; i++) {
 			persistent_buttons[i].reactToClickAt(posx, posy);
 		}
+<<<<<<< HEAD
 		
 		for (var i = 0; i < dialogue_buttons.length; i++) {
 			dialogue_buttons[i].reactToClickAt(posx, posy);
 		}
 		
+=======
+		current_scene.run_after_action();
+>>>>>>> origin/master
 	}
 	
 	function rollover_position(event) {
@@ -277,6 +291,7 @@
 		var g = document.getElementById("view").getContext("2d");
 		g.drawImage(current_scene.image,0,0);
 		g.drawImage(document.getElementById("inventory"),0,0) // fix this lookup.
+		current_scene.run_after_action();
 	}
 	
 	// A list of buttons that exist in multiple scenes, such as the inventory buttons.
@@ -293,15 +308,116 @@
 		new Button(265,565, 310, 610, function() { print("Inventory slot four pressed.");
 													dialogue("johnny boy", "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.");})
 	
+	var player_name = "Bobby";
+	var partner_name = "Ashley";
+	
 	// Declaring the various scenes in the game
 	var coffee_shop = new Scene (document.getElementById("coffee_shop_image"));
-	var manager = new Button (179, 131, 269, 287, function () { print("manager"); });
-	var witness1 = new Button (735, 159, 776, 218, function () { print("witness #1"); });
-	var witness2 = new Button (869, 190, 906, 242, function () {print ("witness #2"); });
-	var tophat = new Button (914, 219, 975, 328, function () { print ("top hat"); });
-	var suspect1 = new Button (726, 230, 765, 282, function () { print ("suspect #1"); });
-	var suspect2 = new Button (754, 298, 841, 398, function () { print ("suspect #2"); });
-	var culprit = new Button (1183, 202, 1240, 280, function () { print ("culprit"); }); // Obviously cannot have this in the final code. Will refractor later.
+	var spoken_to_witness1 = false;
+	var spoken_to_witness2 = false;
+	var spoken_to_tophat = false;
+	var spoken_to_suspect1 = false;
+	var spoken_to_suspect2 = false;
+	var spoken_to_culprit = false;
+	var spoken_to_all_witnesses = false;
+	var spoken_to_all_suspects = false;
+	var entry_message_shown = false;
+	var incorrect_guesses = 0;
+	var manager = new Button (179, 131, 269, 287, function () { 
+		if (spoken_to_all_witnesses && spoken_to_all_suspects) {
+			say("Manager", "Do you know who did it?");
+			print("Click on the person responsible for these crimes!");
+			suspect1.setEnabled(true);
+			suspect2.setEnabled(true);
+			culprit.setEnabled(true);
+		}
+		else {
+			say(player_name, "Hello, ma'am. We are the detectives you called for. Do you have any leads?");
+			say("Manager", "The guy in the suit with a top hat, the guy in the light blue shirt in the back corner, and the girl in a red shirt sitting at the counter all reported to me that they had been robbed after leaving " +
+				"here.");
+			say(partner_name, "Let's go talk to the victims, " + player_name + ".");
+		}
+	});
+	var witness1 = new Button (735, 159, 776, 218, function () { 
+		say(player_name, "Good morning. I'm a detective investigating the robberies that have been occurring here. What can you tell me?");
+		say("Shorts", "I ordered Halloween decorations for my house online through amazon.com, using a credit card, last week while sitting in this cafe. The tracking on the package said that the decorations had indeed shipped, " +
+			"and are in a warehouse in Clarksville, Maryland, and probably will be delivered in one or two days. I used my card once in the grocery store since then, but on my credit card bill I noticed that there was also a charge " +
+			"for a laptop battery on it as well. I just found out today and I'll contact the credit card company once the customer service line opens up.");
+		spoken_to_witness1 = true; 
+		witness1.setEnabled(false); 
+	});
+	var witness2 = new Button (869, 190, 906, 242, function () {
+		say(player_name, "Hello. I'm a detective investigating the robberies that happened here. Do you have any information that could help me?");
+		say("White Pants", "I was in a hurry coming into work yesterday and didn’t have time to pay my credit card bill at my house. Since I cannot live without my morning coffee, I came here and paid my bill online. The " +
+			"payment was successfully received, but that afternoon, when I went to the ATM to withdraw some cash, I found that my bank account balance, which should have been $342, was 0. I then went to the bank for a statement " +
+			"to see if there had been a mistake. The statement showed someone electronically withdrew the $342 I had, and tget transferred the money to a Capital One bank account.");
+		spoken_to_witness2 = true; 
+		witness2.setEnabled(false); 
+	});
+	var tophat = new Button (914, 219, 975, 328, function () { 
+		say(player_name, "Hello, sir. I'm a detective investigating the robberies that happened here. Can you tell me anything about what happened to you?");
+		say("Top Hat", "Two days ago, I was here, browsing the internet on my laptop looking for top hats, because I need one for my role as Abraham Lincoln in the theatre production I am a part of. I purchased one online from" +
+			" amazon.com, using a credit card. The purchase itself was not a scam, for the top hat did arrive as promised. I'm wearing it now. I haven't made any other purchases with the card since, so I am pretty sure my card" +
+			" information was stolen here. Whoever has my card number used it to purchase a USB mouse. I cancelled that card but I couldn't remove my liability from the mouse purchase." ); 
+		spoken_to_tophat = true; 
+		tophat.setEnabled(false); 
+	});
+	var suspect1 = new Button (726, 230, 765, 282, function () { 
+		if (spoken_to_all_witnesses && spoken_to_all_suspects) {
+			incorrect_guesses++;
+			print("incorrect");
+			suspect1.setEnabled(false);
+		}
+		else {
+			say(player_name, "Hello, I'm investigating robberies that have been occurring here recently. Have  you heard anything about them?");
+			say("Red shirt", "No, I've never been robbed here. I'm not using the internet. I've come here for inspiration to attempt to start writing a book.");
+			spoken_to_suspect1 = true; 
+			suspect1.setEnabled(false); 
+		}
+	});
+	var suspect2 = new Button (754, 298, 841, 398, function () { 
+		if (spoken_to_all_witnesses && spoken_to_all_suspects) {
+			incorrect_guesses++;
+			print("incorrect");
+			suspect2.setEnabled(false);
+		}
+		else {
+			say(player_name, "I'm investigating the robberies here. Do you have any information about them?");
+			say("Blue Shoes", "I've never been robbed here. I don't come here often. I'm just looking at cat pictures on the internet. Isn't this the cutest cat you ever saw.");
+			say(partner_name, "No. That's an ugly looking cat.");
+			say("Blue Shoes", "How dare you! That's the second cutest cat in the world, second to mine! What about you. What do you think?");
+			say(player_name, "I don't know. Ask me on another day.");
+			spoken_to_suspect2 = true;
+			suspect2.setEnabled(false); 
+		}
+	});
+	var culprit = new Button (1183, 202, 1240, 280, function () { 
+		if (spoken_to_all_witnesses && spoken_to_all_suspects) {
+			print("correct");
+			culprit.setEnabled(false);
+		}
+		else {
+			say(player_name, "Hello, sir. I'm working on a case involving robberies at this cafe. Do you know anything pertinent to that matter?");
+			say("Gray Suit", "No, I don't. I've never been robbed here. I just lost my job in Cincinnati, and I came here. I'm playing Words with Friends while I wait for job application responses.");
+			spoken_to_culprit = true;
+			culprit.setEnabled(false); 
+		}
+	}); // Obviously cannot have this in the final code. Will refractor later.
+	coffee_shop.setRunAfterAction(function () { 
+		if (!entry_message_shown) {
+			say(partner_name, "Let's speak to the manager and let her know we are here. She's behind the counter.");
+			entry_message_shown = true;
+		}
+		else if (entry_message_shown && !spoken_to_all_witnesses && spoken_to_witness1 && spoken_to_witness2 && spoken_to_tophat && (!spoken_to_suspect1 || !spoken_to_suspect2 || !spoken_to_culprit)) {
+			print(partner_name + ": Let's interview everyone else in here we haven't yet, they might have information or be the one responsible for these robberies.");
+			spoken_to_all_witnesses = true;
+		}
+		else if (spoken_to_witness1 && spoken_to_witness2 && spoken_to_tophat && spoken_to_suspect1 && spoken_to_suspect2 && spoken_to_culprit && !spoken_to_all_suspects) {
+			print(partner_name + ": Let's talk to the manager and tell him who did it.");
+			spoken_to_all_witnesses = true;
+			spoken_to_all_suspects = true;
+		}
+	});
 	coffee_shop.addButton(manager);
 	coffee_shop.addButton(witness1);
 	coffee_shop.addButton(witness2);
@@ -311,10 +427,9 @@
 	coffee_shop.addButton(culprit);
 	
 	var start = new Scene (document.getElementById("go_to_the_coffee_shop_image"));
-	var startButton = new Button (300, 100, 940, 400, function () { print("going to the coffee shop now"); changeScene(coffee_shop); });
+	var startButton = new Button (300, 100, 940, 400, function () { changeScene(coffee_shop); });
 	start.addButton(startButton);
 	
 	// Display the screen
 	changeScene(start);
 </script>
-
