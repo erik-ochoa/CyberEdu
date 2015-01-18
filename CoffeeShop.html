@@ -10,7 +10,10 @@
 	<p id="text"> </p>
 	
 	
-	<div class="image_preloader">
+	<div class="preloader">
+		<!-- Preloading audio -->
+		<audio id="click" src="audio/click.wav" preload="auto"></audio>
+		
 		<!-- Preloading GUI elements -->
 		<img hidden = "true" id="inventory" src="images/inventory.png">
 	
@@ -183,7 +186,9 @@
 	Button.prototype.reactToClickAt = function(x, y) {
 		if (this.isWithinBounds(x, y)) {
 			this.doAction();
+			return true;
 		}
+		return false;
 	};
 	
 	Button.prototype.setEnabled = function(b) {
@@ -222,12 +227,13 @@
 		for (var i = 0; i < persistent_buttons.length; i++) {
 			persistent_buttons[i].reactToClickAt(posx, posy);
 		}
-		var reacted = false;
+		
 		for (var i = 0; i < dialogue_buttons.length; i++) {
-			if (!reacted){
-				reacted = true;
-				dialogue_buttons[i].reactToClickAt(posx, posy);
+			if (dialogue_buttons[i].reactToClickAt(posx, posy)){
+				// play click sound for audio
+				document.getElementById('click').play();
 			}
+
 		}
 		if (worldButtonsEnabled)
 			current_scene.run_after_action();
