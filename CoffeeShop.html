@@ -210,7 +210,7 @@
 		}
 		// End compatibility code, posx & posy contain the clicked position
 		
-		print("Click at x: " + posx + " y: " + posy);
+		//print("Click at x: " + posx + " y: " + posy);
 		
 		// Cause event(s) to occur based on the location of the mouse click.
 		
@@ -317,7 +317,7 @@
 	var spoken_to_all_suspects = false;
 	var entry_message_shown = false;
 	var incorrect_guesses = 0;
-	var manager = new Button (179, 131, 269, 287, function () { 
+	var manager = new Button (215, 135, 289, 288, function () { 
 		if (spoken_to_all_witnesses && spoken_to_all_suspects) {
 			say("Manager", "Do you know who did it?", function () { 
 				say("", "Click on the person responsible for these crimes!", closeDialogue());
@@ -336,7 +336,7 @@
 			manager.setEnabled(false);
 		}
 	});
-	var witness1 = new Button (735, 159, 776, 218, function () { 
+	var witness1 = new Button (771, 182, 800, 232, function () { 
 		say(player_name, "Good morning. I'm a detective investigating the robberies that have been occurring here. What can you tell me?", function () {
 			say("Shorts", "I ordered Halloween decorations for my house online through amazon.com, using a credit card, last week while sitting in this cafe. The tracking on the package said that the decorations had indeed shipped, " +
 			"and are in a warehouse in Clarksville, Maryland, and probably will be delivered in one or two days. I used my card once in the grocery store since then, but on my credit card bill I noticed that there was also a charge " +
@@ -345,7 +345,7 @@
 		spoken_to_witness1 = true; 
 		witness1.setEnabled(false); 
 	});
-	var witness2 = new Button (856, 204, 887, 228, function () {
+	var witness2 = new Button (892, 215, 927, 238, function () {
 		say(player_name, "Hello. I'm a detective investigating the robberies that happened here. Do you have any information that could help me?", function () { 
 			say("White Pants", "I was in a hurry coming into work yesterday and did not have time to pay my credit card bill at my house. Since I cannot live without my morning coffee, I came here and paid my bill online. The " +
 				"payment was successfully received, but that afternoon, when I went to the ATM to withdraw some cash, I found that my bank account balance, which should have been $342, was 0. I then went to the bank for a statement " +
@@ -354,7 +354,7 @@
 		spoken_to_witness2 = true; 
 		witness2.setEnabled(false); 
 	});
-	var tophat = new Button (606, 239, 672, 305, function () { 
+	var tophat = new Button (630, 246, 702, 318, function () { 
 		say(player_name, "Hello, sir. I'm a detective investigating the robberies that happened here. Can you tell me anything about what happened to you?", function () { 
 			say("Top Hat", "Two days ago, I was here, browsing the internet on my laptop looking for top hats, because I need one for my role as Abraham Lincoln in the theatre production I am a part of. I purchased one online from" +
 				" amazon.com, using a credit card. The purchase itself was not a scam, for the top hat did arrive as promised. I'm wearing it now. I haven't made any other purchases with the card since, so I am pretty sure my card" +
@@ -363,7 +363,7 @@
 		spoken_to_tophat = true; 
 		tophat.setEnabled(false); 
 	});
-	var suspect1 = new Button (746, 336, 854, 442, function () { 
+	var suspect1 = new Button (779, 349, 892, 464, function () { 
 		if (spoken_to_all_witnesses && spoken_to_all_suspects) {
 			incorrect_guesses++;
 			say(player_name, "The man in the red shirt is responsible.", function () {
@@ -390,7 +390,7 @@
 			suspect1.setEnabled(false); 
 		}
 	});
-	var suspect2 = new Button (1160, 210, 1225, 268, function () { 
+	var suspect2 = new Button (1207, 221, 1277, 275, function () { 
 		if (spoken_to_all_witnesses && spoken_to_all_suspects) {
 			incorrect_guesses++;
 			say(player_name, "The man in the gray suit is responsible.", function () {
@@ -423,7 +423,7 @@
 			suspect2.setEnabled(false); 
 		}
 	});
-	var culprit = new Button (841, 292, 1001, 355, function () { 
+	var culprit = new Button (980, 301, 1044, 371, function () { 
 		if (spoken_to_all_witnesses && spoken_to_all_suspects) {
 			say(player_name, "The man in the blue shoes is responsible.", function () { 
 				say("Manager", "Okay, I'll call the police.", function () {
