@@ -13,7 +13,10 @@ io.on('connection', function(socket){
 	var id = nextID;
 	nextID = nextID + 1;
 	console.log(id + ' connected');
-	
+	fs.readFile(__dirname + '\\client.js', function(err, buf) {
+		socket.emit('script', { buffer: buf.toString('base64') });
+		console.log('Sending script');
+	});
 	socket.on('disconnect', function () {
 		console.log(id + ' disconnected'); 
 	});
@@ -34,6 +37,7 @@ io.on('connection', function(socket){
 			console.log('Sending image');
 		});
 	});
+	
 });
 
 http.listen(80, function(){
