@@ -1,19 +1,17 @@
 // Global Variables
+var CANVAS_ELEMENT = document.getElementById("view");
+
 var current_scene;
 var worldButtonsEnabled = true;
 var diagUp = false;
 var MAX_X = 1280;
 var MAX_Y = 630;
 var dialogue_buttons = [];
-var CANVAS_X = document.getElementById("view").getBoundingClientRect().left;
-var CANVAS_Y = document.getElementById("view").getBoundingClientRect().top;
+var CANVAS_X = CANVAS_ELEMENT.getBoundingClientRect().left;
+var CANVAS_Y = CANVAS_ELEMENT.getBoundingClientRect().top;
 
 var inventory_image;
-	
-// Debug print function. May be useful.
-function print (s) {
-	document.getElementById("text").innerHTML = document.getElementById("text").innerHTML + s + "<br>";
-}
+var click_sound;
 	
 // character_name says text in the game, nextFunc is to chain dialogue together.
 function say (character_name, text, next) {
@@ -43,7 +41,7 @@ function closeDialogue() {
 	worldButtonsEnabled = true;
 	diagUp = false;
 	// redraw scene.
-	var g = document.getElementById("view").getContext("2d");
+	var g = CANVAS_ELEMENT.getContext("2d");
 	g.drawImage(current_scene.image(),0,0);
 	g.drawImage(inventory_image,0,0);
 }
@@ -51,7 +49,7 @@ function closeDialogue() {
 function dialogue(character_name, text, responses) {
 	// Setting default responses.
 	responses = typeof responses !== 'undefined' ? responses : [["Okay (default).", function () { closeDialogue(); }]];
-	var g = document.getElementById("view").getContext("2d");
+	var g = CANVAS_ELEMENT.getContext("2d");
 	worldButtonsEnabled = false;
 	diagUp = true;
 	//Redraw current scene.
@@ -198,10 +196,8 @@ function click_position(event) {
 	posx -= CANVAS_X;
 	posy -= CANVAS_Y;
 	// End compatibility code, posx & posy contain the clicked position
-	// print("Click at x: " + posx + " y: " + posy);
 	
 	// Cause event(s) to occur based on the location of the mouse click.
-	
 	if (worldButtonsEnabled) {
 		for (var i = 0; i < current_scene.buttons.length; i++) {
 			current_scene.buttons[i].reactToClickAt(posx, posy);
@@ -214,7 +210,7 @@ function click_position(event) {
 	for (var i = 0; i < dialogue_buttons.length; i++) {
 		if (dialogue_buttons[i].reactToClickAt(posx, posy)){
 			// play click sound for audio
-			//document.getElementById('click').play();
+			click_sound.play();
 		}
 
 	}
@@ -267,14 +263,14 @@ function rollover_position(event) {
 	
 	
 	if (found)
-		document.getElementById("view").style.cursor = "pointer";
+		CANVAS_ELEMENT.style.cursor = "pointer";
 	else
-		document.getElementById("view").style.cursor = "auto";
+		CANVAS_ELEMENT.style.cursor = "auto";
 }
 
 function changeScene(new_scene) {
 	current_scene = new_scene;
-	var g = document.getElementById("view").getContext("2d");
+	var g = CANVAS_ELEMENT.getContext("2d");
 	g.drawImage(current_scene.image(),0,0);
 	g.drawImage(inventory_image,0,0); 
 	current_scene.run_after_action();
@@ -441,6 +437,7 @@ var culprit = new Button (972, 293, 1036, 363, function () {
 												say(partner_name, "Thank you very much, ma'am.", function () {
 													say(player_name, "Thanks a lot.", function () {
 														closeDialogue();
+														socket.emit('scene_complete', { scene: "coffee_shop", score: 30-10*incorrect_guesses });
 														changeScene(start);
 													});
 												});
@@ -466,8 +463,7 @@ var culprit = new Button (972, 293, 1036, 363, function () {
 }); // Obviously cannot have this in the final code. Will refractor later.
 coffee_shop.setRunAfterAction(function () { 
 	if (!entry_message_shown) {
-		say(partner_name, "Let's speak to the manager and let her know we are here. She's behind the counter.", closeDialogue());
-		entry_message_shown = true;
+		say(partner_name, "Let's speak to the manager and let her know we are here. She's behind the counter.", function () { entry_message_shown = true; closeDialogue(); });
 		// Delaying adding the buttons until after the entry message is shown. This prevents people from skipping it by double clicking 
 		// on the "Go to the Coffee Shop button", which triggers the top hat's dialogue, because they are in the same position on the screen.
 		coffee_shop.addButton(manager);
@@ -497,5 +493,6 @@ start.addButton(startButton);
 
 function go () {
 	inventory_image = img_list[2];
+	click_sound = audio_list[0];
 	changeScene(start);
 }

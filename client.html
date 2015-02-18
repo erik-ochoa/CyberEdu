@@ -7,28 +7,18 @@
 
 <body>
 	<canvas id="view" width="1280" height="630" style="border:1px solid #000000; position:relative;" onclick="click_position()" onmousemove="rollover_position()"> </canvas>	
-	<p id="text"> </p><canvas id="view" > 
+	<p id="text"> </p> 
 </body>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-	var socket = io();
+	var socket = io();	
 	
-	// Debug print function
+	// Debug print function. May be useful.
 	function print (s) {
 		document.getElementById("text").innerHTML = document.getElementById("text").innerHTML + s + "<br>";
 	}
 	
-	/*
-		The following code segment grabs the images from the server and places them in a list
-		img_no	image
-		0		Coffee Shop
-		1		Start Screen
-		2 		Inventory
-	*/
-	var img_list = [];
-	var images_received = 0;
-	var EXPECTED_IMAGES = 3;
 	/* Grabs the script from the server and adds it to the document. 
 	I know it works in IE. If this works in Firefox and Chrome as well, 
 	we can hide the script from the user in this manner, so they cannot view source on it. */
@@ -37,21 +27,46 @@
 		script.src = 'data:;base64,' + info.buffer;
 		document.body.appendChild(script);		
 	});
+	
+	/* Grabs the resources from the server. Game starts when all resources have been downloaded. */
+	var received_files = 0;
+	var EXPECTED_FILES = 4;
+	
+	/*
+		img_no	image
+		0		Coffee Shop
+		1		Start Screen
+		2 		Inventory
+	*/
+	var img_list = [];
 	socket.on("image", function(info) {
 		var img = new Image();
 		// Need to wait for image to load before drawing it
 		img.onload = function () {
-			images_received++;
+			received_files++;
 			img_list[img.id] = img;
-			if (img_list.length == EXPECTED_IMAGES)
+			if (received_files == EXPECTED_FILES)
 				go();
 		}
 		img.src = 'data:image/jpeg;base64,' + info.buffer;
 		img.id = info.image;
 	});
+	
+	/*
+		audio_no	sound
+		0   		click
+	*/
+	var audio_list = [];
+	socket.on("audio", function(info) {
+		var sound = document.createElement("audio");
+		sound.src = 'data:audio/wav;base64,' + info.buffer;
+		sound.preload = "auto";
+		received_files++;
+		audio_list[info.audio] = sound;
+		if (received_files == EXPECTED_FILES)
+			go();
+	});
 	socket.emit('request_image');
-	
-	
+	socket.emit('request_audio');
 </script>
-
 </html>

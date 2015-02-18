@@ -13,10 +13,11 @@ io.on('connection', function(socket){
 	var id = nextID;
 	nextID = nextID + 1;
 	console.log(id + ' connected');
+	
 	fs.readFile(__dirname + '\\client.js', function(err, buf) {
 		socket.emit('script', { buffer: buf.toString('base64') });
-		console.log('Sending script');
 	});
+	
 	socket.on('disconnect', function () {
 		console.log(id + ' disconnected'); 
 	});
@@ -24,20 +25,26 @@ io.on('connection', function(socket){
 	socket.on('request_image', function () {
 		fs.readFile(__dirname + '\\images\\coffee_shop.jpg', function(err, buf){
 			socket.emit('image', { image: 0, buffer: buf.toString('base64') });
-			console.log('Sending image');
 		});
 	
 		fs.readFile(__dirname + '\\images\\go_to_the_coffee_shop.jpg', function(err, buf){
 			socket.emit('image', { image: 1, buffer: buf.toString('base64') });
-			console.log('Sending image');
 		});
 	
 		fs.readFile(__dirname + '\\images\\inventory.png', function (err, buf){
 			socket.emit('image', { image: 2, buffer: buf.toString('base64') });
-			console.log('Sending image');
 		});
 	});
 	
+	socket.on('request_audio', function () {
+		fs.readFile(__dirname + '\\audio\\click.wav', function(err, buf) {
+			socket.emit('audio', { audio: 0, buffer: buf.toString('base64') });
+		});
+	});
+	
+	socket.on('scene_complete', function (info) {
+		console.log('Player ' + id + ' completed ' + info.scene + ' with score ' + info.score);
+	});
 });
 
 http.listen(80, function(){
