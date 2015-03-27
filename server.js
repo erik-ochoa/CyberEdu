@@ -34,11 +34,33 @@ io.on('connection', function(socket){
 		fs.readFile(__dirname + '\\images\\inventory.png', function (err, buf){
 			socket.emit('image', { image: 2, buffer: buf.toString('base64') });
 		});
+		
+		fs.readFile(__dirname + '\\images\\mall.png', function (err, buf){
+			socket.emit('image', { image: 3, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\freephonesoftware.png', function (err, buf){
+			socket.emit('image', { image: 4, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\hookmyphoneup.png', function (err, buf){
+			socket.emit('image', { image: 5, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\opensourcephones.png', function (err, buf){
+			socket.emit('image', { image: 6, buffer: buf.toString('base64') });
+		});
 	});
 	
 	socket.on('request_audio', function () {
 		fs.readFile(__dirname + '\\audio\\click.wav', function(err, buf) {
 			socket.emit('audio', { audio: 0, buffer: buf.toString('base64') });
+		});
+	});
+	
+	socket.on('request_video', function (info) {
+		fs.readFile(__dirname + '\\video\\' + info + '.mp4', function(err, buf) {
+			socket.emit('video', { video: 0, buffer: buf.toString('base64') });
 		});
 	});
 	

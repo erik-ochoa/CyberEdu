@@ -1,11 +1,10 @@
 // Global Variables
-var CANVAS_ELEMENT = document.getElementById("view");
 
 var current_scene;
 var worldButtonsEnabled = true;
 var diagUp = false;
 var MAX_X = 1280;
-var MAX_Y = 630;
+var MAX_Y = 690;
 var dialogue_buttons = [];
 var CANVAS_X = CANVAS_ELEMENT.getBoundingClientRect().left;
 var CANVAS_Y = CANVAS_ELEMENT.getBoundingClientRect().top;
@@ -200,11 +199,16 @@ function click_position(event) {
 	// Cause event(s) to occur based on the location of the mouse click.
 	if (worldButtonsEnabled) {
 		for (var i = 0; i < current_scene.buttons.length; i++) {
-			current_scene.buttons[i].reactToClickAt(posx, posy);
+			if (current_scene.buttons[i].reactToClickAt(posx, posy)) {
+				click_sound.play();
+			}
 		}
 	}
 	for (var i = 0; i < persistent_buttons.length; i++) {
-		persistent_buttons[i].reactToClickAt(posx, posy);
+		if (persistent_buttons[i].reactToClickAt(posx, posy)) {
+			// play click sound for audio
+			click_sound.play();
+		}
 	}
 	
 	for (var i = 0; i < dialogue_buttons.length; i++) {
@@ -236,6 +240,8 @@ function rollover_position(event) {
 	posx -= CANVAS_X;
 	posy -= CANVAS_Y;
 	// End compatibility code, posx & posy contain the clicked position
+	
+	document.getElementById("text").innerHTML = "(" + posx + ", " + posy + ")";
 	
 	var found = false;
 	// Display rollover for the world interactions, if flag for worldButtons are enabled.
@@ -439,6 +445,8 @@ var culprit = new Button (972, 293, 1036, 363, function () {
 														closeDialogue();
 														socket.emit('scene_complete', { scene: "coffee_shop", score: 30-10*incorrect_guesses });
 														changeScene(start);
+														goToCoffeeShopButton.setEnabled(false);
+														play_video("mfa");
 													});
 												});
 											});
@@ -488,11 +496,40 @@ coffee_shop.setRunAfterAction(function () {
 });
 
 var start = new Scene (1);
-var startButton = new Button (300, 100, 940, 400, function () { changeScene(coffee_shop); });
-start.addButton(startButton);
+var goToCoffeeShopButton = new Button (300, 100, 940, 400, function () { changeScene(coffee_shop); });
+var goToTheMallButton = new Button (300, 470, 532, 530, function () { changeScene(mall); });
+start.addButton(goToCoffeeShopButton);
+start.addButton(goToTheMallButton);
+
+var mall = new Scene (3);
+var goToFreePhoneSoftware = new Button(300, 457, 873, 690, function () { changeScene(free_phone_software); });
+var goToHookMyPhoneUp = new Button (569, 68, 993, 367, function () { changeScene(hook_my_phone_up); });
+var goToOpenSourcePhones = new Button (41, 68, 451, 367, function () { changeScene (open_source_phones); });
+mall.addButton(goToFreePhoneSoftware);
+mall.addButton(goToHookMyPhoneUp);
+mall.addButton(goToOpenSourcePhones);
+
+var free_phone_software = new Scene (4);
+free_phone_software.addButton(goToTheMallButton);
+
+var hook_my_phone_up = new Scene (5);
+hook_my_phone_up.addButton(goToTheMallButton);
+
+var open_source_phones = new Scene (6);
+open_source_phones.addButton(goToTheMallButton);
 
 function go () {
 	inventory_image = img_list[2];
 	click_sound = audio_list[0];
 	changeScene(start);
+}
+
+/* Returns to the game after playing a video (or any action that deleted the canvas) */
+function return_to_game () {
+	document.getElementById('viewport').innerHTML = HTML_FOR_CANVAS;
+	CANVAS_ELEMENT = document.getElementById("view")
+	var g = CANVAS_ELEMENT.getContext("2d");
+	g.drawImage(current_scene.image(),0,0);
+	g.drawImage(inventory_image,0,0);
+	current_scene.run_after_action();
 }

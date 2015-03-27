@@ -6,15 +6,21 @@
 </head>
 
 <body>
-	<canvas id="view" width="1280" height="630" style="border:1px solid #000000; position:relative;" onclick="click_position()" onmousemove="rollover_position()"> </canvas>	
+	<div id="viewport">
+	
+	</div>
 	<p id="text"> </p> 
 </body>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-	var socket = io();	
+	var socket = io();
 	
-	// Debug print function. May be useful.
+	var HTML_FOR_CANVAS = '<canvas id="view" width="1280" height="690" style="border:1px solid #000000; position:relative;" onclick="click_position()" onmousemove="rollover_position()"> </canvas>';
+	document.getElementById('viewport').innerHTML = HTML_FOR_CANVAS;
+	var CANVAS_ELEMENT = document.getElementById("view");
+
+	// Debug print function. Prints messages to server console. May be useful.
 	function print (s) {
 		document.getElementById("text").innerHTML = document.getElementById("text").innerHTML + s + "<br>";
 	}
@@ -30,13 +36,17 @@
 	
 	/* Grabs the resources from the server. Game starts when all resources have been downloaded. */
 	var received_files = 0;
-	var EXPECTED_FILES = 4;
+	var EXPECTED_FILES = 8;
 	
 	/*
 		img_no	image
 		0		Coffee Shop
 		1		Start Screen
 		2 		Inventory
+		3		Mall
+		4		FreePhoneSoftware.com
+		5		HookMyPhoneUp.net
+		6		OpenSourcePhones.org
 	*/
 	var img_list = [];
 	socket.on("image", function(info) {
@@ -68,5 +78,17 @@
 	});
 	socket.emit('request_image');
 	socket.emit('request_audio');
+	
+	socket.on("video", function(info) {
+		var html_for_video = '<video width="640" height="480" controls><source src="data:video/mp4;base64,' + info.buffer+ '"</source></video>';
+		html_for_video += '<button onclick="return_to_game()">Return To Game</button>';
+		document.getElementById('viewport').innerHTML = html_for_video;
+	});
+	
+	/* A video name is its file name, without the extension */
+	function play_video (name) {
+		document.getElementById('viewport').innerHTML = '<p>Loading video...</p>';
+		socket.emit('request_video', name);
+	}
 </script>
 </html>
