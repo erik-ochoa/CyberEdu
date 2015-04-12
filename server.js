@@ -50,6 +50,10 @@ io.on('connection', function(socket){
 		fs.readFile(__dirname + '\\images\\opensourcephones.png', function (err, buf){
 			socket.emit('image', { image: 6, buffer: buf.toString('base64') });
 		});
+		
+		fs.readFile(__dirname + '\\images\\browser_widescreen.jpg', function (err, buf){
+			socket.emit('image', { image: 7, buffer: buf.toString('base64') });
+		});
 	});
 	
 	socket.on('request_audio', function () {

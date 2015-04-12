@@ -36,7 +36,7 @@
 	
 	/* Grabs the resources from the server. Game starts when all resources have been downloaded. */
 	var received_files = 0;
-	var EXPECTED_FILES = 8;
+	var EXPECTED_FILES = 9;
 	
 	/*
 		img_no	image
@@ -47,6 +47,7 @@
 		4		FreePhoneSoftware.com
 		5		HookMyPhoneUp.net
 		6		OpenSourcePhones.org
+		7		Blank Web Browser
 	*/
 	var img_list = [];
 	socket.on("image", function(info) {
@@ -61,7 +62,6 @@
 		img.src = 'data:image/jpeg;base64,' + info.buffer;
 		img.id = info.image;
 	});
-	
 	/*
 		audio_no	sound
 		0   		click

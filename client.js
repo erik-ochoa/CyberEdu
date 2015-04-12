@@ -1,5 +1,4 @@
 // Global Variables
-
 var current_scene;
 var worldButtonsEnabled = true;
 var diagUp = false;
@@ -41,8 +40,8 @@ function closeDialogue() {
 	diagUp = false;
 	// redraw scene.
 	var g = CANVAS_ELEMENT.getContext("2d");
-	g.drawImage(current_scene.image(),0,0);
-	g.drawImage(inventory_image,0,0);
+	current_scene.draw(g);
+//	g.drawImage(inventory_image,0,0);
 }
 
 function dialogue(character_name, text, responses) {
@@ -52,7 +51,7 @@ function dialogue(character_name, text, responses) {
 	worldButtonsEnabled = false;
 	diagUp = true;
 	//Redraw current scene.
-	g.drawImage(current_scene.image(),0,0); // TODO I'll be honest I do not know how the scoping on this works.
+	//current_scene.draw(g); // TODO I'll be honest I do not know how the scoping on this works.
 	// Dark gray overlay
 	g.fillStyle = "rgba(0,0,0,0.5)";
 	g.fillRect(0,0,MAX_X,MAX_Y);
@@ -72,7 +71,6 @@ function dialogue(character_name, text, responses) {
 	g.fillStyle = "rgba(200,200,200,1)";
 	g.font = "16px Verdana";
 	
-
 	var textWidth = dimX - 16;
 	var lineHeight = 20;
 	var words = text.split(' ');
@@ -107,7 +105,7 @@ function dialogue(character_name, text, responses) {
 	g.fillText(responses[0][0], MAX_X/2 - (g.measureText(responses[0][0]).width/2), MAX_Y/2 + dimY/2 - 50);
 	
 	//Draw GUI overlay.
-	g.drawImage(inventory_image,0,0) 
+//	g.drawImage(inventory_image,0,0) 
 }
 
 /*********************
@@ -118,7 +116,8 @@ Scene Class Definition
 var Scene = function (img_no) {
 	this.img_no = img_no;
 	this.buttons = [];
-	this.run_after_action = function () {};
+	this.textFields = [];
+	this.run_after_action = function () { };
 };
 
 Scene.prototype.image = function () {
@@ -129,9 +128,18 @@ Scene.prototype.addButton = function (button) {
 	this.buttons[this.buttons.length] = button;
 };
 
+Scene.prototype.addTextField = function (textField) {
+	this.textFields[this.textFields.length] = textField;
+	this.button[this.buttons.length] = textField.getButton();
+};
+
 Scene.prototype.setRunAfterAction = function (f) {
 	this.run_after_action = f;
-}
+};
+
+Scene.prototype.draw = function (g) {
+	g.drawImage(img_list[this.img_no],0,0);
+};
 // End Scene Class
 
 /**********************
@@ -150,6 +158,7 @@ var Button = function(topLeftX, topLeftY, bottomRightX, bottomRightY, fun) {
 	this.y2 = bottomRightY;
 	this.action = fun;
 	this.enabled = true;
+	this.text = "";
 };
 
 // returns true if a point is within the bounds of the button
@@ -175,7 +184,63 @@ Button.prototype.setEnabled = function(b) {
 };
 // End Button class
 
+var activeTextField = null;
 
+document.onkeydown = function (e) {
+	// key code for shift is 16.
+	// a-z are 65-90
+	var key = e.keyCode ? e.keyCode : e.which;
+	print(key);
+	if (activeTextField != null && worldButtonsEnabled) {
+		var g = CANVAS_ELEMENT.getContext("2d");
+		g.font = "30px Arial";
+		if (key >= 65 && key <= 90) {
+			activeTextField.text += 'abcdefghijklmnopqrstuvwxyz'.charAt(key-65);
+			g.fillText(activeTextField.text, activeTextField.x1, activeTextField.y2);
+		}
+		else if (key == 46) {
+			activeTextField.text = activeTextField.text.substring(0, activeTextField.text.length - 1);
+			current_scene.draw(g);
+			g.fillText(activeTextField.text, activeTextField.x1, activeTextField.y2);
+		}
+		else if (key >= 186 && key <= 191 && key != 187 && key != 189) {
+			activeTextField.text += ': , ./'.charAt(key-186);
+			g.fillText(activeTextField.text, activeTextField.x1, activeTextField.y2);
+		}
+		else if (key == 13) {
+			// Enter pressed, take action.
+		}
+		else if (key == 32) {
+			activeTextField.text += " ";
+			g.fillText(activeTextField.text, activeTextField.x1, activeTextField.y2);
+		}
+	}
+};
+
+/*// TextField class definition
+var TextField = function (topLeftX, topLeftY, bottomRightX, bottomRightY) {
+	this.x1 = topLeftX;
+	this.y1 = topLeftY;
+	this.x2 = bottomRightX;
+	this.y2 = bottomRightY;
+	this.text = "";
+	this.button = new Button(x1, y1, x2, y2, function () { print("a"); });
+};
+
+TextField.prototype.getButton = function () {
+	return (this.button);
+};
+
+TextField.prototype.addText = function(c) {
+	text += c;
+};
+
+TextField.prototype.draw = function (g) {
+	g.font("30px Arial");
+	g.fillText(this.x1, this.y1, this.text);
+};
+*/
+// End TextField class
 
 function click_position(event) {
 	// Compatibility Code taken from http://www.quirksmode.org/js/events_properties.html
@@ -196,6 +261,8 @@ function click_position(event) {
 	posy -= CANVAS_Y;
 	// End compatibility code, posx & posy contain the clicked position
 	
+	// Clear out the activeTextField, so it resets if you click outside it
+	activeTextField = null;
 	// Cause event(s) to occur based on the location of the mouse click.
 	if (worldButtonsEnabled) {
 		for (var i = 0; i < current_scene.buttons.length; i++) {
@@ -241,7 +308,7 @@ function rollover_position(event) {
 	posy -= CANVAS_Y;
 	// End compatibility code, posx & posy contain the clicked position
 	
-	document.getElementById("text").innerHTML = "(" + posx + ", " + posy + ")";
+	//document.getElementById("text").innerHTML = "(" + posx + ", " + posy + ")";
 	
 	var found = false;
 	// Display rollover for the world interactions, if flag for worldButtons are enabled.
@@ -277,15 +344,15 @@ function rollover_position(event) {
 function changeScene(new_scene) {
 	current_scene = new_scene;
 	var g = CANVAS_ELEMENT.getContext("2d");
-	g.drawImage(current_scene.image(),0,0);
-	g.drawImage(inventory_image,0,0); 
+	current_scene.draw(g);
+//	g.drawImage(inventory_image,0,0); 
 	current_scene.run_after_action();
 }
 
 // A list of buttons that exist in multiple scenes, such as the inventory buttons.
 var persistent_buttons = [];
 
-persistent_buttons[persistent_buttons.length] = 
+/*persistent_buttons[persistent_buttons.length] = 
 	new Button(77,557, 122, 602, function() { print("Inventory slot one pressed."); }) 
 persistent_buttons[persistent_buttons.length] = 
 	new Button(137,557, 182, 602, function() { print("Inventory slot two pressed."); })
@@ -293,7 +360,7 @@ persistent_buttons[persistent_buttons.length] =
 	new Button(197,557, 242, 602, function() { print("Inventory slot three pressed."); })
 persistent_buttons[persistent_buttons.length] = 
 	new Button(257,557, 302, 602, function() { print("Inventory slot four pressed."); })
-
+*/
 var player_name = "Bobby";
 var partner_name = "Ashley";
 
@@ -468,20 +535,24 @@ var culprit = new Button (972, 293, 1036, 363, function () {
 		spoken_to_culprit = true;
 		culprit.setEnabled(false); 
 	}
-}); // Obviously cannot have this in the final code. Will refractor later.
+});
 coffee_shop.setRunAfterAction(function () { 
 	if (!entry_message_shown) {
-		say(partner_name, "Let's speak to the manager and let her know we are here. She's behind the counter.", function () { entry_message_shown = true; closeDialogue(); });
-		// Delaying adding the buttons until after the entry message is shown. This prevents people from skipping it by double clicking 
-		// on the "Go to the Coffee Shop button", which triggers the top hat's dialogue, because they are in the same position on the screen.
-		coffee_shop.addButton(manager);
-		coffee_shop.addButton(witness1);
-		coffee_shop.addButton(witness2);
-		coffee_shop.addButton(witness3);
-		coffee_shop.addButton(tophat);
-		coffee_shop.addButton(suspect1);
-		coffee_shop.addButton(suspect2);
-		coffee_shop.addButton(culprit);
+		say(partner_name, "Let's speak to the manager and let her know we are here. She's behind the counter.", function () { 
+			entry_message_shown = true; 
+			closeDialogue(); 
+			// Delaying adding the buttons until after the entry message is shown. This prevents people from skipping it by double clicking 
+			// on the "Go to the Coffee Shop button", which triggers the top hat's dialogue, because they are in the same position on the screen.
+			coffee_shop.addButton(manager);
+			coffee_shop.addButton(witness1);
+			coffee_shop.addButton(witness2);
+			coffee_shop.addButton(witness3);
+			coffee_shop.addButton(tophat);
+			coffee_shop.addButton(suspect1);
+			coffee_shop.addButton(suspect2);
+			coffee_shop.addButton(culprit);
+		});
+		
 	}
 	else if (entry_message_shown && !spoken_to_all_witnesses && spoken_to_witness1 && spoken_to_witness2 && spoken_to_tophat && spoken_to_witness3 && (!spoken_to_suspect1 || !spoken_to_suspect2 || !spoken_to_culprit)) {
 		say(partner_name, "Let's interview everyone else in here we haven't yet, they might have information or be the one responsible for these robberies.", closeDialogue());
@@ -498,8 +569,10 @@ coffee_shop.setRunAfterAction(function () {
 var start = new Scene (1);
 var goToCoffeeShopButton = new Button (300, 100, 940, 400, function () { changeScene(coffee_shop); });
 var goToTheMallButton = new Button (300, 470, 532, 530, function () { changeScene(mall); });
+var goToWebBrowser = new Button (600, 470, 832, 530, function () { changeScene(web_browser); });
 start.addButton(goToCoffeeShopButton);
 start.addButton(goToTheMallButton);
+start.addButton(goToWebBrowser);
 
 var mall = new Scene (3);
 var goToFreePhoneSoftware = new Button(300, 457, 873, 690, function () { changeScene(free_phone_software); });
@@ -518,6 +591,10 @@ hook_my_phone_up.addButton(goToTheMallButton);
 var open_source_phones = new Scene (6);
 open_source_phones.addButton(goToTheMallButton);
 
+var web_browser = new Scene(7);
+var browser_bar = new Button (160, 20, 800, 50, function () { activeTextField = browser_bar; });
+web_browser.addButton(browser_bar);
+
 function go () {
 	inventory_image = img_list[2];
 	click_sound = audio_list[0];
@@ -529,7 +606,7 @@ function return_to_game () {
 	document.getElementById('viewport').innerHTML = HTML_FOR_CANVAS;
 	CANVAS_ELEMENT = document.getElementById("view")
 	var g = CANVAS_ELEMENT.getContext("2d");
-	g.drawImage(current_scene.image(),0,0);
-	g.drawImage(inventory_image,0,0);
+	current_scene.draw(g);
+//	g.drawImage(inventory_image,0,0);
 	current_scene.run_after_action();
 }
