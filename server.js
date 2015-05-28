@@ -4,6 +4,7 @@ var io = require('socket.io')(http);
 var fs = require('fs');
 
 var nextID = 0;
+var used_usernames = [];
 
 app.get('/', function(req, res){
 	res.sendFile(__dirname + '\\client.html');
@@ -35,24 +36,32 @@ io.on('connection', function(socket){
 			socket.emit('image', { image: 2, buffer: buf.toString('base64') });
 		});
 		
-		fs.readFile(__dirname + '\\images\\mall.png', function (err, buf){
+		fs.readFile(__dirname + '\\images\\mall 1.jpg', function (err, buf){
 			socket.emit('image', { image: 3, buffer: buf.toString('base64') });
 		});
 		
-		fs.readFile(__dirname + '\\images\\freephonesoftware.png', function (err, buf){
+		fs.readFile(__dirname + '\\images\\Freephonesoftware.jpg', function (err, buf){
 			socket.emit('image', { image: 4, buffer: buf.toString('base64') });
 		});
 		
-		fs.readFile(__dirname + '\\images\\hookmyphoneup.png', function (err, buf){
+		fs.readFile(__dirname + '\\images\\Hookupmyphonedotnet.jpg', function (err, buf){
 			socket.emit('image', { image: 5, buffer: buf.toString('base64') });
 		});
 		
-		fs.readFile(__dirname + '\\images\\opensourcephones.png', function (err, buf){
+		fs.readFile(__dirname + '\\images\\Opensourcephones.jpg', function (err, buf){
 			socket.emit('image', { image: 6, buffer: buf.toString('base64') });
 		});
 		
 		fs.readFile(__dirname + '\\images\\browser_widescreen.jpg', function (err, buf){
 			socket.emit('image', { image: 7, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\registration_page_demo.png', function (err, buf){
+			socket.emit('image', { image: 8, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\404.png', function (err, buf) {
+			socket.emit('image', { image: 9, buffer: buf.toString('base64') });
 		});
 	});
 	
@@ -68,9 +77,35 @@ io.on('connection', function(socket){
 		});
 	});
 	
+	socket.on('register', function (info) {
+		var username_already_taken = false;
+		console.log('User ' + id + ' registration information:\nusername: ' + info.username + '\npassword: ' + info.password + '\nemail: ' + info.email + '\nmfa: ' + info.mfa);
+		for (var i = 0; i < used_usernames.length; i++)
+			if (used_usernames[i] == info.username)
+				username_already_taken = true;
+		if (username_already_taken) {
+			socket.emit('register_success', { success: false });
+		} 
+		else {
+			fs.appendFile(__dirname + '\\users.txt', info.username + ' ' + info.password + ' ' + info.email + ' ' + info.mfa + '\r\n', function (err) {	});
+			used_usernames[used_usernames.length] = info.username;
+			socket.emit('register_success', { success: true });
+		}
+	});
+	
 	socket.on('scene_complete', function (info) {
 		console.log('Player ' + id + ' completed ' + info.scene + ' with score ' + info.score);
 	});
+});
+
+fs.readFile(__dirname + '\\users.txt', {encoding: 'utf-8'}, function (err, buf) {
+	if (buf) {
+		lines = buf.toString().split("\r\n");
+		for (var i = 0; i < lines.length; i++) {
+			columns = lines[i].split(" ");
+			used_usernames[used_usernames.length] = columns[0];
+		}
+	}
 });
 
 http.listen(80, function(){

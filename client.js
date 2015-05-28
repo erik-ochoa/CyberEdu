@@ -1,9 +1,10 @@
 // Global Variables
 var current_scene;
+var previous_world_scene;
 var worldButtonsEnabled = true;
 var diagUp = false;
 var MAX_X = 1280;
-var MAX_Y = 690;
+var MAX_Y = 630;
 var dialogue_buttons = [];
 var CANVAS_X = CANVAS_ELEMENT.getBoundingClientRect().left;
 var CANVAS_Y = CANVAS_ELEMENT.getBoundingClientRect().top;
@@ -51,7 +52,7 @@ function dialogue(character_name, text, responses) {
 	worldButtonsEnabled = false;
 	diagUp = true;
 	//Redraw current scene.
-	//current_scene.draw(g); // TODO I'll be honest I do not know how the scoping on this works.
+	current_scene.draw(g); // TODO I'll be honest I do not know how the scoping on this works.
 	// Dark gray overlay
 	g.fillStyle = "rgba(0,0,0,0.5)";
 	g.fillRect(0,0,MAX_X,MAX_Y);
@@ -116,7 +117,6 @@ Scene Class Definition
 var Scene = function (img_no) {
 	this.img_no = img_no;
 	this.buttons = [];
-	this.textFields = [];
 	this.run_after_action = function () { };
 };
 
@@ -128,17 +128,25 @@ Scene.prototype.addButton = function (button) {
 	this.buttons[this.buttons.length] = button;
 };
 
-Scene.prototype.addTextField = function (textField) {
-	this.textFields[this.textFields.length] = textField;
-	this.button[this.buttons.length] = textField.getButton();
-};
-
 Scene.prototype.setRunAfterAction = function (f) {
 	this.run_after_action = f;
 };
 
 Scene.prototype.draw = function (g) {
+	g.fillStyle = 'rgba(0,0,0,1)';
+	g.fillRect(0, 0, MAX_X, MAX_Y);
 	g.drawImage(img_list[this.img_no],0,0);
+	for (var i = 0; i < this.buttons.length; i++) {
+		if (this.buttons[i].protect_text) {
+			astricks = "";
+			for (var j = 0; j < this.buttons[i].text.length; j++)
+				astricks += "*";
+			g.fillText(astricks,this.buttons[i].x1,this.buttons[i].y2);
+		}
+		else {
+			g.fillText(this.buttons[i].text,this.buttons[i].x1,this.buttons[i].y2);
+		}
+	}
 };
 // End Scene Class
 
@@ -159,6 +167,7 @@ var Button = function(topLeftX, topLeftY, bottomRightX, bottomRightY, fun) {
 	this.action = fun;
 	this.enabled = true;
 	this.text = "";
+	this.protect_text = false;
 };
 
 // returns true if a point is within the bounds of the button
@@ -185,62 +194,66 @@ Button.prototype.setEnabled = function(b) {
 // End Button class
 
 var activeTextField = null;
+var holding_shift = false;
 
 document.onkeydown = function (e) {
 	// key code for shift is 16.
 	// a-z are 65-90
 	var key = e.keyCode ? e.keyCode : e.which;
-	print(key);
+	if (key == 16)
+		holding_shift = true;
+	//print(key);
 	if (activeTextField != null && worldButtonsEnabled) {
 		var g = CANVAS_ELEMENT.getContext("2d");
 		g.font = "30px Arial";
 		if (key >= 65 && key <= 90) {
-			activeTextField.text += 'abcdefghijklmnopqrstuvwxyz'.charAt(key-65);
-			g.fillText(activeTextField.text, activeTextField.x1, activeTextField.y2);
+			if (holding_shift)
+				activeTextField.text += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.charAt(key-65);
+			else
+				activeTextField.text += 'abcdefghijklmnopqrstuvwxyz'.charAt(key-65);
+			current_scene.draw(g);
 		}
-		else if (key == 46) {
+		else if (key >= 48 && key <= 57) {
+			if (holding_shift)
+				activeTextField.text += ')!@#$%^&*('.charAt(key-48);
+			else
+				activeTextField.text += '0123456789'.charAt(key-48);
+			current_scene.draw(g);
+		}
+		else if (key == 8) {
+			// Backspace. Prevent default because default is a shortcut to pressing the back button on the browser.
+			e.preventDefault();
 			activeTextField.text = activeTextField.text.substring(0, activeTextField.text.length - 1);
 			current_scene.draw(g);
-			g.fillText(activeTextField.text, activeTextField.x1, activeTextField.y2);
 		}
-		else if (key >= 186 && key <= 191 && key != 187 && key != 189) {
-			activeTextField.text += ': , ./'.charAt(key-186);
-			g.fillText(activeTextField.text, activeTextField.x1, activeTextField.y2);
+		else if (key >= 186 && key <= 191) {
+			if (holding_shift)
+				activeTextField.text += ':+<_>?'.charAt(key-186);
+			else
+				activeTextField.text += ';=,-./'.charAt(key-186);
+			current_scene.draw(g);
 		}
 		else if (key == 13) {
-			// Enter pressed, take action.
+			if (activeTextField == browser_bar) {
+				if (browser_bar.text == "https://register.cyber.edu/") {
+					changeScene(registration_page);
+				}
+				else {
+					changeScene(four_oh_four);
+				}
+			}
 		}
 		else if (key == 32) {
 			activeTextField.text += " ";
-			g.fillText(activeTextField.text, activeTextField.x1, activeTextField.y2);
 		}
 	}
 };
 
-/*// TextField class definition
-var TextField = function (topLeftX, topLeftY, bottomRightX, bottomRightY) {
-	this.x1 = topLeftX;
-	this.y1 = topLeftY;
-	this.x2 = bottomRightX;
-	this.y2 = bottomRightY;
-	this.text = "";
-	this.button = new Button(x1, y1, x2, y2, function () { print("a"); });
+document.onkeyup = function (e) {
+	var key = e.keyCode ? e.keyCode : e.which;
+	if (key == 16)
+		holding_shift = false;
 };
-
-TextField.prototype.getButton = function () {
-	return (this.button);
-};
-
-TextField.prototype.addText = function(c) {
-	text += c;
-};
-
-TextField.prototype.draw = function (g) {
-	g.font("30px Arial");
-	g.fillText(this.x1, this.y1, this.text);
-};
-*/
-// End TextField class
 
 function click_position(event) {
 	// Compatibility Code taken from http://www.quirksmode.org/js/events_properties.html
@@ -268,6 +281,8 @@ function click_position(event) {
 		for (var i = 0; i < current_scene.buttons.length; i++) {
 			if (current_scene.buttons[i].reactToClickAt(posx, posy)) {
 				click_sound.play();
+				return; // Must leave the method here because otherwise the changes in the scene will happen immediately, which means that the list of active buttons changes.
+						// When that occurs, another button may be clicked before the user saw it, and whether or not that happens is also dependent on the order of buttons in the list.
 			}
 		}
 	}
@@ -275,6 +290,7 @@ function click_position(event) {
 		if (persistent_buttons[i].reactToClickAt(posx, posy)) {
 			// play click sound for audio
 			click_sound.play();
+			return;
 		}
 	}
 	
@@ -282,6 +298,7 @@ function click_position(event) {
 		if (dialogue_buttons[i].reactToClickAt(posx, posy)){
 			// play click sound for audio
 			click_sound.play();
+			return;
 		}
 
 	}
@@ -308,7 +325,7 @@ function rollover_position(event) {
 	posy -= CANVAS_Y;
 	// End compatibility code, posx & posy contain the clicked position
 	
-	//document.getElementById("text").innerHTML = "(" + posx + ", " + posy + ")";
+	document.getElementById("text").innerHTML = "(" + posx + ", " + posy + ")";
 	
 	var found = false;
 	// Display rollover for the world interactions, if flag for worldButtons are enabled.
@@ -342,8 +359,12 @@ function rollover_position(event) {
 }
 
 function changeScene(new_scene) {
+	if (current_scene && current_scene.img_no <= 6) {
+		previous_world_scene = current_scene;
+	}
 	current_scene = new_scene;
 	var g = CANVAS_ELEMENT.getContext("2d");
+	g.font = "30px Arial";
 	current_scene.draw(g);
 //	g.drawImage(inventory_image,0,0); 
 	current_scene.run_after_action();
@@ -570,35 +591,114 @@ var start = new Scene (1);
 var goToCoffeeShopButton = new Button (300, 100, 940, 400, function () { changeScene(coffee_shop); });
 var goToTheMallButton = new Button (300, 470, 532, 530, function () { changeScene(mall); });
 var goToWebBrowser = new Button (600, 470, 832, 530, function () { changeScene(web_browser); });
+goToTheMallButton.text = "Go to the mall";
+goToWebBrowser.text = "Go to web browser";
 start.addButton(goToCoffeeShopButton);
 start.addButton(goToTheMallButton);
 start.addButton(goToWebBrowser);
 
 var mall = new Scene (3);
-var goToFreePhoneSoftware = new Button(300, 457, 873, 690, function () { changeScene(free_phone_software); });
-var goToHookMyPhoneUp = new Button (569, 68, 993, 367, function () { changeScene(hook_my_phone_up); });
-var goToOpenSourcePhones = new Button (41, 68, 451, 367, function () { changeScene (open_source_phones); });
+var goToFreePhoneSoftware = new Button(696, 320, 793, 414, function () { changeScene(free_phone_software); });
+var goToHookMyPhoneUp = new Button (1, 208, 185, 610, function () { changeScene(hook_my_phone_up); });
+var goToOpenSourcePhones = new Button (1201, 310, 1269, 500, function () { changeScene (open_source_phones); });
+var mall_woman_walking = new Button (600, 341, 632, 452, function () { say("Dark Blue Dress", "Hey, what's up?", closeDialogue()); });
 mall.addButton(goToFreePhoneSoftware);
 mall.addButton(goToHookMyPhoneUp);
 mall.addButton(goToOpenSourcePhones);
+mall.addButton(mall_woman_walking);
 
-var free_phone_software = new Scene (4);
-free_phone_software.addButton(goToTheMallButton);
+var free_phone_software = new Scene (4); 
+var install_free_phone_software = new Button (484, 414, 696, 440, function () { say ("", "Install phone OS from freephonesoftware.net", closeDialogue()); });
+var exit_free_phone_software = new Button (977, 274, 1051, 518, function () { changeScene(mall); });
+var free_phone_software_yellow_backpack = new Button (380, 308, 417, 465, function () { say("Yellow Backpack", "Hi", closeDialogue()); });
+var free_phone_software_white_shirt = new Button (742, 282, 801, 450, function () { say("White Shirt", "Hello, how can I help you?", closeDialogue()); });
+var free_phone_software_purple_shirt = new Button (893, 300, 950, 484, function () { say("Purple Shirt", "This man's product is a bit too good to be true", closeDialogue()); });
+exit_free_phone_software.text = "Back to Mall";
+free_phone_software.addButton(install_free_phone_software);
+free_phone_software.addButton(exit_free_phone_software);
+free_phone_software.addButton(free_phone_software_yellow_backpack);
+free_phone_software.addButton(free_phone_software_white_shirt);
+free_phone_software.addButton(free_phone_software_purple_shirt); 
 
-var hook_my_phone_up = new Scene (5);
-hook_my_phone_up.addButton(goToTheMallButton);
+var hook_my_phone_up = new Scene (5); 
+var exit_hook_my_phone_up = new Button (725, 189, 823, 290, function () { changeScene(mall); });
+var install_hook_my_phone_up = new Button (930, 329, 1099, 442, function () { say("", "Install phone OS from hookupmyphone.net?", closeDialogue()); });
+var hook_my_phone_up_green_shirt = new Button (595, 218, 656, 461, function () { say("Green Shirt", "Hello", closeDialogue()); });
+var hook_my_phone_up_red_heels = new Button (843, 243, 911, 485, function () { say("Red Heels", "Hello", closeDialogue()); });
+var hook_my_phone_up_pink_shirt = new Button (330, 266, 400, 385, function () { say("Magenta Shirt", "Hello", closeDialogue()); });
+var hook_my_phone_up_man = new Button (436, 191, 502, 426, function () { say("Bowtie", "Hello", closeDialogue()); });
+exit_hook_my_phone_up.text = "Back to Mall";
+hook_my_phone_up.addButton(install_hook_my_phone_up);
+hook_my_phone_up.addButton(exit_hook_my_phone_up);
+hook_my_phone_up.addButton(hook_my_phone_up_green_shirt);
+hook_my_phone_up.addButton(hook_my_phone_up_red_heels);
+hook_my_phone_up.addButton(hook_my_phone_up_pink_shirt);
+hook_my_phone_up.addButton(hook_my_phone_up_man); 
 
-var open_source_phones = new Scene (6);
-open_source_phones.addButton(goToTheMallButton);
+var open_source_phones = new Scene (6); 
+var exit_open_source_phones = new Button (500, 600, 600, 630, function () { changeScene(mall); });
+var install_open_source_phones = new Button (410, 132, 643, 297, function () { say("", "Install phone OS from opensourcephones.org?", closeDialogue()); });
+var open_source_phones_employee = new Button (242, 208, 342, 341, function () { say("Red Tie", "Hello, how can I help you today?", closeDialogue()); });
+var open_source_phones_woman = new Button (731, 282, 807, 445, function () { say("Yellow Shirt", "Hello", closeDialogue()); });
+var open_source_phones_backpack = new Button (1045, 267, 1138, 486, function () { say("Blue Backpack", "Hi", closeDialogue()); }); 
+exit_open_source_phones.text = "Back to Mall";
+open_source_phones.addButton(exit_open_source_phones);
+open_source_phones.addButton(install_open_source_phones);
+open_source_phones.addButton(open_source_phones_employee);
+open_source_phones.addButton(open_source_phones_backpack);
+open_source_phones.addButton(open_source_phones_woman); 
 
 var web_browser = new Scene(7);
-var browser_bar = new Button (160, 20, 800, 50, function () { activeTextField = browser_bar; });
+var browser_bar = new Button (189, 20, 931, 61, function () { activeTextField = browser_bar; });
+var browser_x_button = new Button (1042, 28, 1067, 54, function () { changeScene(previous_world_scene); });
 web_browser.addButton(browser_bar);
+web_browser.addButton(browser_x_button);
+
+var registration_page = new Scene(8);
+var username_field = new Button (390, 160, 850, 200, function () { activeTextField = username_field; });
+var password_field = new Button (390, 240, 850, 280, function () { activeTextField = password_field; });
+password_field.protect_text = true;
+//var email_field = new Button (390, 394, 830, 434, function () { activeTextField = email_field; });
+//var mfa_check_box = new Button (667, 305, 703, 338, function () { mfa_check_box.text = (mfa_check_box.text == "x") ? "" : "x"; current_scene.draw(CANVAS_ELEMENT.getContext("2d")); });
+var registration_submit = new Button (728, 469, 850, 515, function () {
+	//if (mfa_check_box.text == "x" && email_field.text == "") {
+	//	alert("An email address is required for two-factor authentication.");
+	//} 
+	/*else*/ if (username_field.text == "" || password_field.text == "") {
+		alert("Both a username and a password are required.");
+	}
+	else {
+		// Valid registration, notify server
+		socket.emit ('register', { username: username_field.text, password: password_field.text, email: "", mfa: false });
+		//socket.emit('register', { username: username_field.text, password: password_field.text, email: email_field.text, mfa: (mfa_check_box.text == "x") });
+	}
+});
+socket.on('register_success', function (info) {
+	if (info.success) {
+		player_name = username_field.text;
+		changeScene(previous_world_scene);
+	}
+	else
+		alert("Unfortunately, the username you entered is already taken.");
+});
+registration_page.addButton(browser_bar);
+registration_page.addButton(browser_x_button);
+registration_page.addButton(username_field);
+registration_page.addButton(password_field);
+//registration_page.addButton(email_field);
+//registration_page.addButton(mfa_check_box);
+registration_page.addButton(registration_submit);
+
+var four_oh_four = new Scene (9);
+four_oh_four.addButton(browser_bar);
+four_oh_four.addButton(browser_x_button);
 
 function go () {
 	inventory_image = img_list[2];
 	click_sound = audio_list[0];
-	changeScene(start);
+	previous_world_scene = start;
+	browser_bar.text = "https://register.cyber.edu/";
+	changeScene(registration_page);
 }
 
 /* Returns to the game after playing a video (or any action that deleted the canvas) */

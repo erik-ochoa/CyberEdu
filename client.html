@@ -16,7 +16,7 @@
 <script>
 	var socket = io();
 	
-	var HTML_FOR_CANVAS = '<canvas id="view" width="1280" height="690" style="border:1px solid #000000; position:relative;" onclick="click_position()" onmousemove="rollover_position()"> </canvas>';
+	var HTML_FOR_CANVAS = '<canvas id="view" width="1280" height="630" style="border:1px solid #000000; position:relative;" onclick="click_position()" onmousemove="rollover_position()"> </canvas>';
 	document.getElementById('viewport').innerHTML = HTML_FOR_CANVAS;
 	var CANVAS_ELEMENT = document.getElementById("view");
 
@@ -36,7 +36,7 @@
 	
 	/* Grabs the resources from the server. Game starts when all resources have been downloaded. */
 	var received_files = 0;
-	var EXPECTED_FILES = 9;
+	var EXPECTED_FILES = 11;
 	
 	/*
 		img_no	image
@@ -48,6 +48,8 @@
 		5		HookMyPhoneUp.net
 		6		OpenSourcePhones.org
 		7		Blank Web Browser
+		8		Account Registration Page
+		9		404 Not Found
 	*/
 	var img_list = [];
 	socket.on("image", function(info) {
@@ -87,8 +89,9 @@
 	
 	/* A video name is its file name, without the extension */
 	function play_video (name) {
-		document.getElementById('viewport').innerHTML = '<p>Loading video...</p>';
-		socket.emit('request_video', name);
+		document.getElementById('viewport').innerHTML = "<p>You have completed the mission.</p> <p>Go watch the video on Wi-Fi sniffing.</p>";
+		//document.getElementById('viewport').innerHTML = '<p>Loading video...</p>';
+		//socket.emit('request_video', name);
 	}
 </script>
 </html>
