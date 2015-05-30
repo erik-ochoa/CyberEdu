@@ -89,9 +89,8 @@
 	
 	/* A video name is its file name, without the extension */
 	function play_video (name) {
-		document.getElementById('viewport').innerHTML = "<p>You have completed the mission.</p> <p>Go watch the video on Wi-Fi sniffing.</p>";
-		//document.getElementById('viewport').innerHTML = '<p>Loading video...</p>';
-		//socket.emit('request_video', name);
+		document.getElementById('viewport').innerHTML = '<p>Loading video...</p>';
+		socket.emit('request_video', name);
 	}
 </script>
 </html>

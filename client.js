@@ -658,13 +658,10 @@ var registration_page = new Scene(8);
 var username_field = new Button (390, 160, 850, 200, function () { activeTextField = username_field; });
 var password_field = new Button (390, 240, 850, 280, function () { activeTextField = password_field; });
 password_field.protect_text = true;
-//var email_field = new Button (390, 394, 830, 434, function () { activeTextField = email_field; });
-//var mfa_check_box = new Button (667, 305, 703, 338, function () { mfa_check_box.text = (mfa_check_box.text == "x") ? "" : "x"; current_scene.draw(CANVAS_ELEMENT.getContext("2d")); });
+// MFA setting choice is for later in the game. The module in the lecture hall where passwords are stolen will result in the player's password being stolen unless they check this box
+var mfa_check_box = new Button (667, 305, 703, 338, function () { mfa_check_box.text = (mfa_check_box.text == "x") ? "" : "x"; current_scene.draw(CANVAS_ELEMENT.getContext("2d")); });
 var registration_submit = new Button (728, 469, 850, 515, function () {
-	//if (mfa_check_box.text == "x" && email_field.text == "") {
-	//	alert("An email address is required for two-factor authentication.");
-	//} 
-	/*else*/ if (username_field.text == "" || password_field.text == "") {
+	if (username_field.text == "" || password_field.text == "") {
 		alert("Both a username and a password are required.");
 	}
 	else {
@@ -685,8 +682,7 @@ registration_page.addButton(browser_bar);
 registration_page.addButton(browser_x_button);
 registration_page.addButton(username_field);
 registration_page.addButton(password_field);
-//registration_page.addButton(email_field);
-//registration_page.addButton(mfa_check_box);
+registration_page.addButton(mfa_check_box);
 registration_page.addButton(registration_submit);
 
 var four_oh_four = new Scene (9);
