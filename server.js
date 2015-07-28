@@ -63,6 +63,62 @@ io.on('connection', function(socket){
 		fs.readFile(__dirname + '\\images\\404.png', function (err, buf) {
 			socket.emit('image', { image: 9, buffer: buf.toString('base64') });
 		});
+		
+		fs.readFile(__dirname + '\\images\\phone.png', function (err, buf) {
+			socket.emit('image', { image:10, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\phone_off.gif', function (err, buf) {
+			socket.emit('image', { image:11, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\phone_home.png', function (err, buf) {
+			socket.emit('image', { image:12, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\phone_install_software.png', function (err, buf) {
+			socket.emit('image', { image:13, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\freephonesoftwarewebpage.png', function (err, buf) {
+			socket.emit('image', { image:14, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\Hookupmyphonedotnetwebpage.png', function (err, buf) {
+			socket.emit('image', { image:15, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\Opensourcephoneswebpage.png', function (err, buf) {
+			socket.emit('image', { image:16, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\phone_all_programs_screen.png', function (err, buf) {
+			socket.emit('image', { image:17, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\phone_inbox_screen.png', function (err, buf) {
+			socket.emit('image', { image:18, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\Library.jpg', function (err, buf) {
+			socket.emit('image', { image:19, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\Librarian-Close-Up.jpg', function (err, buf) {
+			socket.emit('image', { image:20, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\Zoom-1.jpg', function (err, buf) {
+			socket.emit('image', { image:21, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\Zoom-2.jpg', function (err, buf) {
+			socket.emit('image', { image:22, buffer: buf.toString('base64') });
+		});
+		
+		fs.readFile(__dirname + '\\images\\Zoom-3.jpg', function (err, buf) {
+			socket.emit('image', { image:23, buffer: buf.toString('base64') });
+		});
 	});
 	
 	socket.on('request_audio', function () {

@@ -11,7 +11,9 @@ var CANVAS_Y = CANVAS_ELEMENT.getBoundingClientRect().top;
 
 var inventory_image;
 var click_sound;
-	
+var phone_state = 1; // -1: Not in player's possession, 0: Hidden, 1: Visible in the corner, 2: Fully extended. Change it with the changePhoneState(int) function, not directly.
+var phone_screen = 11; // Image no for phone screen. 11 is blank. To change the phone screen while the phone is active, modify phone_screen directly, then call changePhoneState(2);
+
 // character_name says text in the game, nextFunc is to chain dialogue together.
 function say (character_name, text, next) {
 	next = typeof next !== 'undefined' ? next : closeDialogue;
@@ -93,17 +95,21 @@ function dialogue(character_name, text, responses) {
 	}
 	dialogue_buttons = []; // MAKE SURE DIALOGUE BUTTONS ARE CLEAN.
 	// Now load the responses:
-	// TODO support more than one response.
-	g.fillStyle = "rgba(80,80,80,1)";
-	dialogue_buttons[dialogue_buttons.length] = new Button(MAX_X/2 - (dimX/2) + 10, 
-														   MAX_Y/2 + dimY/2 - 100,
-														   MAX_X/2 + (dimX/2) - 10, 
-														   MAX_Y/2 + dimY/2,
-														   responses[0][1]);
-	g.fillRect(MAX_X/2 - (dimX/2) + 10, MAX_Y/2+dimY/2-110, dimX - 20, 100);
-	g.fillStyle = "rgba(200,200,200,1)";
-	g.font = "16px Verdana";
-	g.fillText(responses[0][0], MAX_X/2 - (g.measureText(responses[0][0]).width/2), MAX_Y/2 + dimY/2 - 50);
+	var dialog_buttons_left_edge = MAX_X/2 - dimX/2 + 5;
+	var dialog_buttons_right_edge = MAX_X/2 + dimX/2 - 5;
+	var dialog_buttons_width = (dialog_buttons_right_edge - dialog_buttons_left_edge)/responses.length;
+	for (var j = 0; j < responses.length; j++) {
+		dialogue_buttons[dialogue_buttons.length] = new Button(dialog_buttons_left_edge + dialog_buttons_width*j + 5, 
+														   MAX_Y/2 + dimY/2 - 110,
+														   dialog_buttons_left_edge + dialog_buttons_width*(j+1) - 5, 
+														   MAX_Y/2 + dimY/2 - 10,
+														   responses[j][1]);
+		g.fillStyle = "rgba(80,80,80,1)";
+		g.fillRect(dialog_buttons_left_edge + dialog_buttons_width*j + 5, MAX_Y/2+dimY/2 - 110, dialog_buttons_width - 10, 100);
+		g.fillStyle = "rgba(200,200,200,1)";
+		g.font = "16px Verdana";
+		g.fillText(responses[j][0], dialog_buttons_left_edge + dialog_buttons_width*j + dialog_buttons_width/2 - (g.measureText(responses[j][0]).width/2), MAX_Y/2 + dimY/2 - 50);
+	}		   
 	
 	//Draw GUI overlay.
 //	g.drawImage(inventory_image,0,0) 
@@ -134,17 +140,50 @@ Scene.prototype.setRunAfterAction = function (f) {
 
 Scene.prototype.draw = function (g) {
 	g.fillStyle = 'rgba(0,0,0,1)';
+	g.font = "30px Arial";
 	g.fillRect(0, 0, MAX_X, MAX_Y);
 	g.drawImage(img_list[this.img_no],0,0);
+	if (phone_state == 1) {
+		g.drawImage(img_list[10], MAX_X - 200, MAX_Y - 50);
+	}
+	else if (phone_state == 2) {
+		g.drawImage(img_list[10], MAX_X - 200, MAX_Y - 400);
+		g.drawImage(img_list[phone_screen], MAX_X - (200-13), MAX_Y - (400-56));
+		if (phone_screen == 18)
+			drawEmailInbox(g);
+	}
+	g.font = "11px Arial"; // Switch font to draw phone buttons.
+	for (var i = 0; i < persistent_buttons.length; i++) {
+		if (persistent_buttons[i].protect_text) {
+			astricks = "";
+			for (var j = 0; j < persistent_buttons[i].text.length; j++)
+				astricks += "*";
+			if (activeTextField == persistent_buttons[i])
+				astricks += "|";
+			g.fillText(astricks,persistent_buttons[i].x1,persistent_buttons[i].y2);
+		}
+		else {
+			text_to_draw = persistent_buttons[i].text;
+			if (activeTextField == persistent_buttons[i])
+				text_to_draw += "|";
+			g.fillText(text_to_draw,persistent_buttons[i].x1,persistent_buttons[i].y2);
+		}
+	}
+	g.font = "30px Arial";
 	for (var i = 0; i < this.buttons.length; i++) {
 		if (this.buttons[i].protect_text) {
 			astricks = "";
 			for (var j = 0; j < this.buttons[i].text.length; j++)
 				astricks += "*";
+			if (activeTextField == this.buttons[i])
+				astricks += "|";
 			g.fillText(astricks,this.buttons[i].x1,this.buttons[i].y2);
 		}
 		else {
-			g.fillText(this.buttons[i].text,this.buttons[i].x1,this.buttons[i].y2);
+			text_to_draw = this.buttons[i].text;
+			if (activeTextField == this.buttons[i])
+				text_to_draw += "|";
+			g.fillText(text_to_draw,this.buttons[i].x1,this.buttons[i].y2);
 		}
 	}
 };
@@ -193,6 +232,287 @@ Button.prototype.setEnabled = function(b) {
 };
 // End Button class
 
+function changePhoneState (new_state) {
+	if (new_state == 0 || new_state == -1) {
+		phone_down.setEnabled(false);
+		phone_up.setEnabled(false);
+		phone_home.setEnabled(false);
+		phone_internet.setEnabled(false);
+		phone_all_programs.setEnabled(false);
+		phone_inbox.setEnabled(false);
+		phone_back.setEnabled(false);
+		phone_email_trash.setEnabled(false);
+		phone_email_left_arrow.setEnabled(false);
+		phone_email_right_arrow.setEnabled(false);
+		for (var i = 0; i < phone_uninstall_buttons.length; i++) {
+				phone_uninstall_buttons[i].setEnabled(false);
+				phone_uninstall_buttons[i].text = "";
+		}	
+	}
+	else if (new_state == 1) {
+		phone_down.setEnabled(false);
+		phone_up.setEnabled(true);
+		phone_home.setEnabled(false);
+		phone_internet.setEnabled(false);
+		phone_all_programs.setEnabled(false);
+		phone_inbox.setEnabled(false);
+		phone_back.setEnabled(false);
+		phone_email_trash.setEnabled(false);
+		phone_email_left_arrow.setEnabled(false);
+		phone_email_right_arrow.setEnabled(false);
+		for (var i = 0; i < phone_uninstall_buttons.length; i++) {
+				phone_uninstall_buttons[i].setEnabled(false);
+				phone_uninstall_buttons[i].text = "";
+			}	
+		}
+	else if (new_state == 2) {
+		phone_down.setEnabled(true);
+		phone_up.setEnabled(false);
+		phone_home.setEnabled(true);		
+		if (phone_screen == 12) {
+			phone_internet.setEnabled(true);
+			phone_all_programs.setEnabled(true);
+			phone_inbox.setEnabled(true);
+			phone_back.setEnabled(false);
+			phone_email_trash.setEnabled(false);
+			phone_email_left_arrow.setEnabled(false);
+			phone_email_right_arrow.setEnabled(false);
+			for (var i = 0; i < phone_uninstall_buttons.length; i++) {
+				phone_uninstall_buttons[i].setEnabled(false);
+				phone_uninstall_buttons[i].text = "";
+			}
+		}
+		else if (phone_screen == 17) {
+			phone_internet.setEnabled(false);
+			phone_all_programs.setEnabled(false);
+			phone_inbox.setEnabled(false);
+			phone_back.setEnabled(true);
+			phone_email_trash.setEnabled(false);
+			phone_email_left_arrow.setEnabled(false);
+			phone_email_right_arrow.setEnabled(false);
+			for (var i = 0; i < phone_uninstall_buttons.length; i++) {
+				if (i+1 <= phone_software_apps.length) {
+					phone_uninstall_buttons[i].setEnabled(true);
+					phone_uninstall_buttons[i].text = phone_software_apps[i] + "  Remove?";
+				}
+				else {
+					phone_uninstall_buttons[i].setEnabled(false);
+					phone_uninstall_buttons[i].text = "";
+				}
+			}
+		}
+		else if (phone_screen == 18) {
+			phone_internet.setEnabled(false);
+			phone_all_programs.setEnabled(false);
+			phone_inbox.setEnabled(false);
+			phone_back.setEnabled(true);
+			if (email_inbox.length > 0)
+				phone_email_trash.setEnabled(true);
+			if (email_inbox_index != 0)
+				phone_email_left_arrow.setEnabled(true);
+			if (email_inbox_index < email_inbox.length - 1)
+				phone_email_right_arrow.setEnabled(true);
+			for (var i = 0; i < phone_uninstall_buttons.length; i++) {
+				phone_uninstall_buttons[i].setEnabled(false);
+				phone_uninstall_buttons[i].text = "";
+			}		
+		}
+		else {
+			phone_internet.setEnabled(false);
+			phone_all_programs.setEnabled(false);
+			phone_inbox.setEnabled(false);
+			phone_back.setEnabled(false);
+			phone_email_trash.setEnabled(false);
+			phone_email_left_arrow.setEnabled(false);
+			phone_email_right_arrow.setEnabled(false);
+			for (var i = 0; i < phone_uninstall_buttons.length; i++) {
+				phone_uninstall_buttons[i].setEnabled(false);
+				phone_uninstall_buttons[i].text = "";
+			}
+		}
+	}
+	phone_state = new_state;
+	var g = CANVAS_ELEMENT.getContext('2d');
+	current_scene.draw(g);
+}
+
+var phone_software_installed = false;
+var phone_software_apps = [];
+var email_inbox = [];
+var email_inbox_index = 0;
+
+var phone_down = new Button (MAX_X - 200, MAX_Y - 400, MAX_X, MAX_Y - 350, function () {
+	phone_screen = 11;
+	changePhoneState(1);
+});
+if (phone_state != 2) {
+	phone_down.setEnabled(false);
+}
+
+var phone_up = new Button (MAX_X - 200, MAX_Y - 50, MAX_X, MAX_Y, function () {
+	changePhoneState(2);
+	phone_up("phone_up");
+});
+if (phone_state != 1) {
+	phone_up.setEnabled(false);
+}
+
+var phone_home = new Button (MAX_X - (200-80), MAX_Y - (400-355), MAX_X - (200-120), MAX_Y - (400-390), function () {
+	if (phone_software_installed)
+		phone_screen = 12;
+	else
+		phone_screen = 13;
+	changePhoneState(2);
+});
+if (phone_state != 2) {
+	phone_home.setEnabled(false);
+}
+
+var phone_internet = new Button (1205, 515, 1266, 577, function () {
+	changePhoneState(0);
+	changeScene(web_browser);
+});
+if (phone_state != 2 || phone_screen != 12) {
+	phone_internet.setEnabled(false);
+}
+var phone_all_programs = new Button (1087, 535, 1130, 577, function () {
+	phone_screen = 17;
+	changePhoneState(2);
+});
+if (phone_state != 2 || phone_screen != 12) {
+	phone_all_programs.setEnabled(false);
+}
+
+var phone_inbox = new Button (1151, 544, 1183, 577, function () {
+	phone_screen = 18;
+	changePhoneState(2);
+});
+if (phone_state != 2 || phone_screen != 12) {
+	phone_inbox.setEnabled(false);
+}
+
+var phone_back = new Button (1093, 285, 1145, 330, function () {
+	phone_screen = 12;
+	changePhoneState(2);
+});
+if (phone_state != 2 || (phone_screen != 17 && phone_screen != 18)) {
+	phone_back.setEnabled(false);
+}
+
+var NUM_PHONE_UNINSTALL_BUTTONS = 3;
+var phone_uninstall_buttons = [];
+for (var i = 0; i < NUM_PHONE_UNINSTALL_BUTTONS; i++) {
+	phone_uninstall_buttons[i] = new Button(1093, 340+30*i, 1265, 360+30*i, function () {
+		/* Scoping behavior: i within this block is equal to NUM_PHONE_UNINSTALL_BUTTONS, except within
+			the for loop (var i = 0; ...) */
+		var temp = [];
+		var index_of_self;
+		for (var i = 0; i < phone_uninstall_buttons.length; i++)
+			if (phone_uninstall_buttons[i] == this)
+				index_of_self = i;
+		for (var j = 0; j < phone_software_apps.length; j++)
+			if (j != index_of_self)
+				temp[temp.length] = phone_software_apps[j];
+		phone_software_apps = temp;
+		changePhoneState(2);
+	});
+	phone_uninstall_buttons[i].setEnabled(false);
+}
+
+var phone_email_trash = new Button(1153, 528, 1204, 577, function () {
+	var temp = []
+	for (var i = 0; i < email_inbox.length; i++)
+		if (i != email_inbox_index)
+			temp[temp.length] = email_inbox[i];
+	email_inbox = temp;
+	if (email_inbox.length == 0) {
+		email_inbox_index = 0;
+		phone_email_trash.setEnabled(false);
+	}
+	else if (email_inbox_index >= email_inbox.length)
+		email_inbox_index = email_inbox_index - 1;
+	if (email_inbox_index == 0)
+		phone_email_left_arrow.setEnabled(false);
+	if (email_inbox_index  == email_inbox.length - 1)
+		phone_email_right_arrow.setEnabled(false);
+	var g = CANVAS_ELEMENT.getContext("2d");
+	current_scene.draw(g);
+});
+
+var phone_email_left_arrow = new Button(1093, 541, 1148, 577, function () {
+	email_inbox_index = email_inbox_index - 1;
+	if (email_inbox_index == 0)
+		phone_email_left_arrow.setEnabled(false);
+	if (email_inbox_index < email_inbox.length - 1)
+		phone_email_right_arrow.setEnabled(true);
+	var g = CANVAS_ELEMENT.getContext("2d");
+	current_scene.draw(g);
+
+});
+
+var phone_email_right_arrow = new Button(1208, 541, 1269, 577, function () {
+	email_inbox_index = email_inbox_index + 1;
+	phone_email_left_arrow.setEnabled(true);
+	if (email_inbox_index == email_inbox.length -1)
+		phone_email_right_arrow.setEnabled(false);
+	var g = CANVAS_ELEMENT.getContext("2d");
+	current_scene.draw(g);
+});
+if (phone_state != 2 || phone_screen != 18) {
+	phone_email_trash.setEnabled(false);
+	phone_email_left_arrow.setEnabled(false);
+	phone_email_right_arrow.setEnabled(false);
+}
+
+function addToInbox(subject, body, sender, attachments) {
+	email_inbox[email_inbox.length] = { subject:subject, body:body, sender:sender, attachments:attachments };
+	if (email_inbox_index < email_inbox.length - 1 && phone_state == 2 && phone_screen == 18)
+		email_inbox_right_arrow.setEnabled(true);
+	var g = CANVAS_ELEMENT.getContext("2d");
+	if (phone_state == 2 && phone_screen == 18)
+		current_scene.draw(g);
+}
+
+function drawEmailInbox (g) {
+	var hold_font = g.font;
+	g.font = "11px Arial"
+	if (email_inbox.length > 0) {
+		g.fillText("Viewing message " + (email_inbox_index + 1) + " of " + email_inbox.length, 1125, 330);
+		var lineHeight = 13;
+		g.fillText(email_inbox[email_inbox_index].sender, 1140, 345);
+		g.fillText(email_inbox[email_inbox_index].subject, 1154, 364);
+		var y = 384;
+		for (var i = 0; i < email_inbox[email_inbox_index].attachments.length; i++) {
+			g.fillText(email_inbox[email_inbox_index].attachments[i], 1184, y)
+			y += lineHeight
+		}
+		if (y < 400) 
+			y = 400;
+		var textWidth = 1261 - 1099
+		var words = email_inbox[email_inbox_index].body.split(' ');
+		var lines = [["   "]];
+		var i = 0;
+		
+		while (i < words.length) {
+			//print(g.measureText(lines[lines.length-1].join(' ') + ' ' + words[i]).width);
+			while (g.measureText(lines[lines.length-1].join(' ') + ' ' + words[i]).width < textWidth && i < words.length) {
+				lines[lines.length-1].push(words[i]);
+				i++;
+			}
+			// Line has over filled, so add a new line in and continue from there
+			lines.push([""]);
+		}
+		for (var j = 0; j < lines.length; j ++) { 
+			g.fillText(lines[j].join(' '), 1099, y + lineHeight*j);
+		}
+			
+	} else 
+		g.fillText("No messages.", 1125, 330);
+	g.font = hold_font;
+}
+
+addToInbox("TEST", "TEST TEST a very long line here, trying to test the capability to draw multiple lines with Thomas's code.", "TEST", ["Attach", "Attach2"]);
+
 var activeTextField = null;
 var holding_shift = false;
 
@@ -238,6 +558,15 @@ document.onkeydown = function (e) {
 				if (browser_bar.text == "https://register.cyber.edu/") {
 					changeScene(registration_page);
 				}
+				else if (browser_bar.text == "freephonesoftware.com") {
+					changeScene(free_phone_software_web_page);
+				}
+				else if (browser_bar.text == "hookmyphoneup.net") {
+					changeScene(hook_my_phone_up_web_page);
+				}
+				else if (browser_bar.text == "opensourcephones.org") {
+					changeScene(open_source_phones_web_page);
+				}
 				else {
 					changeScene(four_oh_four);
 				}
@@ -245,6 +574,7 @@ document.onkeydown = function (e) {
 		}
 		else if (key == 32) {
 			activeTextField.text += " ";
+			current_scene.draw(g);
 		}
 	}
 };
@@ -275,32 +605,37 @@ function click_position(event) {
 	// End compatibility code, posx & posy contain the clicked position
 	
 	// Clear out the activeTextField, so it resets if you click outside it
-	activeTextField = null;
+	setActiveTextField(null);
 	// Cause event(s) to occur based on the location of the mouse click.
-	if (worldButtonsEnabled) {
-		for (var i = 0; i < current_scene.buttons.length; i++) {
-			if (current_scene.buttons[i].reactToClickAt(posx, posy)) {
-				click_sound.play();
-				return; // Must leave the method here because otherwise the changes in the scene will happen immediately, which means that the list of active buttons changes.
-						// When that occurs, another button may be clicked before the user saw it, and whether or not that happens is also dependent on the order of buttons in the list.
-			}
-		}
-	}
+	var found = false;
 	for (var i = 0; i < persistent_buttons.length; i++) {
-		if (persistent_buttons[i].reactToClickAt(posx, posy)) {
+		if (!found && persistent_buttons[i].reactToClickAt(posx, posy)) {
 			// play click sound for audio
 			click_sound.play();
-			return;
+			found = true;	// Must leave the method here because otherwise the changes in the scene will happen immediately, which means that the list of active buttons changes.
+							// When that occurs, another button may be clicked before the user saw it, and whether or not that happens is also dependent on the order of buttons in the list.
+							// However, cannot just return, because of current_scene.run_after_action() call.
 		}
 	}
 	
-	for (var i = 0; i < dialogue_buttons.length; i++) {
-		if (dialogue_buttons[i].reactToClickAt(posx, posy)){
-			// play click sound for audio
-			click_sound.play();
-			return;
+	if (!found && worldButtonsEnabled) {
+		for (var i = 0; i < current_scene.buttons.length; i++) {
+			if (!found && current_scene.buttons[i].reactToClickAt(posx, posy)) {
+				click_sound.play();
+				found = true;
+			}
 		}
+	}
+	
+	if (!found) {
+		for (var i = 0; i < dialogue_buttons.length; i++) {
+			if (!found && dialogue_buttons[i].reactToClickAt(posx, posy)){
+				// play click sound for audio
+				click_sound.play();
+				found = true;
+			}
 
+		}
 	}
 	if (worldButtonsEnabled)
 		current_scene.run_after_action();
@@ -359,19 +694,40 @@ function rollover_position(event) {
 }
 
 function changeScene(new_scene) {
-	if (current_scene && current_scene.img_no <= 6) {
+	if (current_scene && (current_scene.img_no <= 6 || current_scene.img_no >= 19)) {
 		previous_world_scene = current_scene;
 	}
 	current_scene = new_scene;
 	var g = CANVAS_ELEMENT.getContext("2d");
-	g.font = "30px Arial";
 	current_scene.draw(g);
 //	g.drawImage(inventory_image,0,0); 
 	current_scene.run_after_action();
 }
 
+function setActiveTextField(aButton) {
+	var g = CANVAS_ELEMENT.getContext("2d");
+	activeTextField = aButton;
+	current_scene.draw(g);
+}
+
 // A list of buttons that exist in multiple scenes, such as the inventory buttons.
 var persistent_buttons = [];
+
+persistent_buttons[persistent_buttons.length] = phone_down;
+persistent_buttons[persistent_buttons.length] = phone_up;
+persistent_buttons[persistent_buttons.length] = phone_home;
+persistent_buttons[persistent_buttons.length] = phone_internet;
+persistent_buttons[persistent_buttons.length] = phone_all_programs;
+persistent_buttons[persistent_buttons.length] = phone_inbox;
+persistent_buttons[persistent_buttons.length] = phone_back;
+
+for (var i = 0; i < phone_uninstall_buttons.length; i++) {
+	persistent_buttons[persistent_buttons.length] = phone_uninstall_buttons[i];
+}
+
+persistent_buttons[persistent_buttons.length] = phone_email_trash;
+persistent_buttons[persistent_buttons.length] = phone_email_left_arrow;
+persistent_buttons[persistent_buttons.length] = phone_email_right_arrow;
 
 /*persistent_buttons[persistent_buttons.length] = 
 	new Button(77,557, 122, 602, function() { print("Inventory slot one pressed."); }) 
@@ -384,6 +740,9 @@ persistent_buttons[persistent_buttons.length] =
 */
 var player_name = "Bobby";
 var partner_name = "Ashley";
+
+addToInbox("Testing", "Hey, does this work?", player_name, []);
+addToInbox("Hello", "Hey, its your partner", partner_name, []);
 
 // Declaring the various scenes in the game
 var coffee_shop = new Scene (0);
@@ -503,9 +862,21 @@ var suspect2 = new Button (1199, 213, 1269, 267, function () {
 		say(player_name, "I'm investigating the robberies here. Do you have any information about them?", function () { 
 			say("Gray Suit", "I've never been robbed here. I don't come here often. I'm just looking at cat pictures on the internet. Isn't this the cutest cat you ever saw.", function () { 
 				say(partner_name, "No. That's an ugly looking cat.", function () { 
-					say("Gray Suit", "How dare you! That's the second cutest cat in the world, second to mine! What about you. What do you think?", function () { 
-						say(player_name, "I don't know. Ask me on another day.", closeDialogue());
-					});
+					dialogue("Gray Suit", "How dare you! That's the second cutest cat in the world, second to mine! What about you. What do you think?", [
+						["It's cute", function () {
+							say(player_name, "Yes, it is a pretty cute cat", function () {
+								say("Gray Suit", "You've got a good sense for cat cuteness. I'm glad you agree with me.", closeDialogue());
+							});
+						}],
+						["It's ugly", function () {
+							say(player_name, "I agree with " + partner_name + ". That cat is ugly", function () {
+								say("Gray Suit", "You guys don't know what your talking about when it comes to cats.", closeDialogue());
+							});
+						}],
+						["Unsure", function () { 
+							say(player_name, "I don't know. Ask me on another day.", closeDialogue());
+						}]
+					]);
 				});
 			});
 		});
@@ -575,7 +946,7 @@ coffee_shop.setRunAfterAction(function () {
 		});
 		
 	}
-	else if (entry_message_shown && !spoken_to_all_witnesses && spoken_to_witness1 && spoken_to_witness2 && spoken_to_tophat && spoken_to_witness3 && (!spoken_to_suspect1 || !spoken_to_suspect2 || !spoken_to_culprit)) {
+	else if (entry_message_shown && !spoken_to_all_witnesses && spoken_to_witness1 && spoken_to_witness2 && spoken_to_tophat && (!spoken_to_suspect1 || !spoken_to_suspect2 || !spoken_to_culprit)) {
 		say(partner_name, "Let's interview everyone else in here we haven't yet, they might have information or be the one responsible for these robberies.", closeDialogue());
 		spoken_to_all_witnesses = true;
 	}
@@ -591,13 +962,17 @@ var start = new Scene (1);
 var goToCoffeeShopButton = new Button (300, 100, 940, 400, function () { changeScene(coffee_shop); });
 var goToTheMallButton = new Button (300, 470, 532, 530, function () { changeScene(mall); });
 var goToWebBrowser = new Button (600, 470, 832, 530, function () { changeScene(web_browser); });
+var goToTheLibrary = new Button (64, 470, 256, 530, function () { changeScene(library); });
 goToTheMallButton.text = "Go to the mall";
 goToWebBrowser.text = "Go to web browser";
+goToTheLibrary.text = "Go to the library";
 start.addButton(goToCoffeeShopButton);
 start.addButton(goToTheMallButton);
 start.addButton(goToWebBrowser);
+start.addButton(goToTheLibrary);
 
 var mall = new Scene (3);
+var mall_entry_message_shown = false;
 var goToFreePhoneSoftware = new Button(696, 320, 793, 414, function () { changeScene(free_phone_software); });
 var goToHookMyPhoneUp = new Button (1, 208, 185, 610, function () { changeScene(hook_my_phone_up); });
 var goToOpenSourcePhones = new Button (1201, 310, 1269, 500, function () { changeScene (open_source_phones); });
@@ -606,9 +981,19 @@ mall.addButton(goToFreePhoneSoftware);
 mall.addButton(goToHookMyPhoneUp);
 mall.addButton(goToOpenSourcePhones);
 mall.addButton(mall_woman_walking);
+mall.setRunAfterAction(function () {
+	if (!mall_entry_message_shown) {
+		mall_entry_message_shown = true;
+		say (player_name, "(I just found this phone, but its not working. Maybe I can find what I need in here.)", function () {
+			say("Saleman", "COME TO FREEPHONESOFTWARE.COM! A PHONE APPLICATION PROVIDING THE BASIC FUNCTUNALITY YOU NEED, 100% FREE, NO QUESTIONS ASKED!", function () {
+				say(player_name, "(That might be what I need)", closeDialogue());
+			});
+		});
+	}
+});
 
 var free_phone_software = new Scene (4); 
-var install_free_phone_software = new Button (484, 414, 696, 440, function () { say ("", "Install phone OS from freephonesoftware.net", closeDialogue()); });
+var install_free_phone_software = new Button (484, 414, 696, 440, function () { browser_bar.text = "freephonesoftware.com"; changeScene(free_phone_software_web_page); changePhoneState(0); });
 var exit_free_phone_software = new Button (977, 274, 1051, 518, function () { changeScene(mall); });
 var free_phone_software_yellow_backpack = new Button (380, 308, 417, 465, function () { say("Yellow Backpack", "Hi", closeDialogue()); });
 var free_phone_software_white_shirt = new Button (742, 282, 801, 450, function () { say("White Shirt", "Hello, how can I help you?", closeDialogue()); });
@@ -622,7 +1007,7 @@ free_phone_software.addButton(free_phone_software_purple_shirt);
 
 var hook_my_phone_up = new Scene (5); 
 var exit_hook_my_phone_up = new Button (725, 189, 823, 290, function () { changeScene(mall); });
-var install_hook_my_phone_up = new Button (930, 329, 1099, 442, function () { say("", "Install phone OS from hookupmyphone.net?", closeDialogue()); });
+var install_hook_my_phone_up = new Button (930, 329, 1099, 442, function () { browser_bar.text = "hookmyphoneup.net"; changeScene(hook_my_phone_up_web_page); changePhoneState(0); });
 var hook_my_phone_up_green_shirt = new Button (595, 218, 656, 461, function () { say("Green Shirt", "Hello", closeDialogue()); });
 var hook_my_phone_up_red_heels = new Button (843, 243, 911, 485, function () { say("Red Heels", "Hello", closeDialogue()); });
 var hook_my_phone_up_pink_shirt = new Button (330, 266, 400, 385, function () { say("Magenta Shirt", "Hello", closeDialogue()); });
@@ -637,7 +1022,7 @@ hook_my_phone_up.addButton(hook_my_phone_up_man);
 
 var open_source_phones = new Scene (6); 
 var exit_open_source_phones = new Button (500, 600, 600, 630, function () { changeScene(mall); });
-var install_open_source_phones = new Button (410, 132, 643, 297, function () { say("", "Install phone OS from opensourcephones.org?", closeDialogue()); });
+var install_open_source_phones = new Button (410, 132, 643, 297, function () { browser_bar.text = "opensourcephones.org"; changeScene(open_source_phones_web_page); changePhoneState(0); });
 var open_source_phones_employee = new Button (242, 208, 342, 341, function () { say("Red Tie", "Hello, how can I help you today?", closeDialogue()); });
 var open_source_phones_woman = new Button (731, 282, 807, 445, function () { say("Yellow Shirt", "Hello", closeDialogue()); });
 var open_source_phones_backpack = new Button (1045, 267, 1138, 486, function () { say("Blue Backpack", "Hi", closeDialogue()); }); 
@@ -649,14 +1034,14 @@ open_source_phones.addButton(open_source_phones_backpack);
 open_source_phones.addButton(open_source_phones_woman); 
 
 var web_browser = new Scene(7);
-var browser_bar = new Button (189, 20, 931, 61, function () { activeTextField = browser_bar; });
-var browser_x_button = new Button (1042, 28, 1067, 54, function () { changeScene(previous_world_scene); });
+var browser_bar = new Button (189, 20, 931, 61, function () { setActiveTextField(browser_bar); });
+var browser_x_button = new Button (1042, 28, 1067, 54, function () { changeScene(previous_world_scene); if (phone_state == 0) changePhoneState(1) });
 web_browser.addButton(browser_bar);
 web_browser.addButton(browser_x_button);
 
 var registration_page = new Scene(8);
-var username_field = new Button (390, 160, 850, 200, function () { activeTextField = username_field; });
-var password_field = new Button (390, 240, 850, 280, function () { activeTextField = password_field; });
+var username_field = new Button (390, 160, 850, 200, function () { setActiveTextField(username_field); });
+var password_field = new Button (390, 240, 850, 280, function () { setActiveTextField(password_field); });
 password_field.protect_text = true;
 // MFA setting choice is for later in the game. The module in the lecture hall where passwords are stolen will result in the player's password being stolen unless they check this box
 var mfa_check_box = new Button (667, 305, 703, 338, function () { mfa_check_box.text = (mfa_check_box.text == "x") ? "" : "x"; current_scene.draw(CANVAS_ELEMENT.getContext("2d")); });
@@ -688,6 +1073,244 @@ registration_page.addButton(registration_submit);
 var four_oh_four = new Scene (9);
 four_oh_four.addButton(browser_bar);
 four_oh_four.addButton(browser_x_button);
+
+var free_phone_software_web_page = new Scene (14);
+var phone_virus_downloaded = 0;
+var free_phone_software_download_button = new Button (330, 506, 977, 631, function () { 
+	changeScene(previous_world_scene); 
+	phone_screen = 11; 
+	phone_software_installed = false; 
+	changePhoneState(2); 
+	phone_virus_downloaded = 1;
+	say(player_name, "(I don't think that worked... that probably isn't good.)", closeDialogue());
+	phone_software_apps[phone_software_apps.length] = "trojan.horse";
+});
+free_phone_software_web_page.addButton(browser_bar);
+free_phone_software_web_page.addButton(browser_x_button);
+free_phone_software_web_page.addButton(free_phone_software_download_button);
+
+var hook_my_phone_up_web_page = new Scene (15);
+var hook_my_phone_up_download_button = new Button (329, 281, 905, 439, function () { 
+	changeScene(previous_world_scene); 
+	phone_screen = 12; 
+	phone_software_installed = true; 
+	changePhoneState(2); 
+	say(player_name, "(That looks like it worked... my phone's working now)", function () { closeDialogue(); changeScene(start); });
+	socket.emit('scene_complete', { scene: "mall", score: 20 - 10*phone_virus_downloaded });
+	if (phone_virus_downloaded < 0.5)
+		phone_virus_downloaded = 0.5;
+	phone_software_apps[phone_software_apps.length] = "Conduit Search Helper";
+	phone_software_apps[phone_software_apps.length] = "24x7x52 Tech Support";
+});
+hook_my_phone_up_web_page.addButton(browser_bar);
+hook_my_phone_up_web_page.addButton(browser_x_button);
+hook_my_phone_up_web_page.addButton(hook_my_phone_up_download_button);
+
+var open_source_phones_web_page = new Scene (16);
+var open_source_phones_download_button = new Button (329, 281, 905, 439, function () { 
+	changeScene(previous_world_scene); 
+	phone_screen = 12; 
+	phone_software_installed = true; 
+	changePhoneState(2); 
+	say(player_name, "(That looks like it worked... my phone's working now)", function () { closeDialogue(); changeScene(start); });
+	socket.emit('scene_complete', { scene: "mall", score: 30 - 15*phone_virus_downloaded });
+});
+open_source_phones_web_page.addButton(browser_bar);
+open_source_phones_web_page.addButton(browser_x_button);
+open_source_phones_web_page.addButton(open_source_phones_download_button);
+
+var library = new Scene (19);
+var library_entry_message_shown = false;
+var librarian_spoken_to_once = false;
+var library_have_flash_drive1 = false;
+
+var librarian_button = new Button (1058, 246, 1224, 415, function () { 
+	changeScene(library_librarian);
+});
+var abandoned_computer_button = new Button (576, 342, 693, 469, function () {
+	changeScene(library_abandoned_computer);
+});
+var student1_button = new Button (722, 342, 845, 461, function () {
+	changeScene(library_student1);
+}); 
+var student2_button = new Button (854, 312, 893, 347, function () {
+	changeScene(library_student2);
+});
+var student3_button = new Button (451, 299, 495, 384, function () {
+	changeScene(library_student3);
+});
+var guy_at_whiteboard = new Button (2, 229, 104, 338, function () {
+	say("Striped Shirt", "What's the integral of sin^2 (x)?", closeDialogue());
+});
+library.addButton(librarian_button);
+library.addButton(abandoned_computer_button);
+library.addButton(student1_button);
+library.addButton(student2_button);
+library.addButton(student3_button);
+library.addButton(guy_at_whiteboard);
+library.setRunAfterAction(function () {
+	if (!library_entry_message_shown) {
+		say(partner_name, "Why don't we go talk to the librarian? She's sitting at the desk over on the right.", closeDialogue());
+		library_entry_message_shown = true;
+	}
+});
+
+var library_librarian = new Scene (20);
+var librarian_dialogue_options = [
+	["I don't know yet.", function () {
+		say(player_name, "I'm not sure yet.", function () {
+			say("Librarian", "Ok, come talk to me if you figure something out.", function () {
+				closeDialogue();
+				changeScene(library);
+			});
+		});
+	}]
+];
+var talk_to_librarian = new Button (123, 77, 602, 611, function () {
+	if (librarian_spoken_to_once) {
+		dialogue("Librarian", "Do you know what's causing the problem?", librarian_dialogue_options);
+	}
+	else {
+		say(partner_name, "Hello ma'am. We're the detectives that you asked to come help. What can you tell us about what is happening?", function () {
+			say("Librarian", "Thanks for coming. About a day ago, one of the computers in the computer lab stopped working normally, and instead, " +
+							 "It got stuck on some strange website. Since then, it seems like every few hours, another computer is lost to this virus, " +
+							 "and I don't know what is causing it or how to remove it. I need you to find the cause, and if you can, show me how to fix " +
+							 "one of the computers, if you can find a solution.", function () {
+				say(partner_name, "We'll do our best, ma'am.", function () {
+					closeDialogue();
+					librarian_spoken_to_once = true;
+					changeScene(library);
+				});
+			});
+		});
+	}
+});
+library_librarian.addButton(talk_to_librarian);
+
+var library_abandoned_computer = new Scene (21);
+var abandoned_computer_temp_browser_bar = "";
+var abandoned_computer_temp_browser_bar_enabled = false;
+var abandoned_computer_infected = false;
+var abandoned_usb =  new Button (248 , 517, 320, 573, function () {
+	dialogue("", "It's a red flash drive.", [["Do nothing", function () {
+		closeDialogue();
+	}], ["Take it.", function () {
+		say("", "You take the red flash drive", function () {
+			abandoned_usb.setEnabled(false);
+			closeDialogue();
+			changeScene(library);
+		});
+	}],
+	["Put it in the computer", function () {
+		abandoned_computer_infected = true;
+		say(partner_name, "I don't think that was good. Take a look at the web browser. It's on some sketchy looking website.", closeDialogue());
+	}]]);
+});
+var abandoned_computer_web_browsers = new Button (540, 61, 658, 167, function () {
+	if (abandoned_computer_infected) {
+		abandoned_computer_temp_browser_bar = browser_bar.text;
+		abandoned_computer_temp_browser_bar_enabled = true;
+		browser_bar.text = "freephonesoftware.com"
+		changeScene(free_phone_software_web_page);
+	}
+	else {
+		changeScene(web_browser);
+	}
+});
+var abandoned_computer_back_button = new Button(0, 0, 100, 100, function () {
+	changeScene(library);
+});
+abandoned_computer_back_button.text = "Back"
+library_abandoned_computer.setRunAfterAction(function () {
+	if (abandoned_computer_temp_browser_bar_enabled) {
+		browser_bar.text = abandoned_computer_temp_browser_bar; 
+		abandoned_computer_temp_browser_bar_enabled = false;
+	}
+});
+library_abandoned_computer.addButton(abandoned_usb);
+library_abandoned_computer.addButton(abandoned_computer_web_browsers);
+library_abandoned_computer.addButton(abandoned_computer_back_button);
+
+var library_student1 = new Scene (22);
+library_student1.setRunAfterAction(function () {
+	say(player_name, "Do you have any papers due today?", function () {
+		say("Glasses", "No. I'm just here to work on a programming project.", function () {
+			say("Glasses", "What?! What the heck?! <Furious Banging on Keyboard>", function () {
+				var temp = browser_bar.text;
+				browser_bar.text = "freephonesoftware.com";
+				changeScene(free_phone_software_web_page);
+				say("Glasses", "ARGH! It's totally locked up! I don't have time for this!", function () {
+					say(player_name, "What did you do to it?", function () {
+						say("Glasses", "All I've done is login in a plugin in a USB drive, someone else must have messed with it", function () {
+							say(player_name, "Where did you find it?", function () {
+								say("Glasses", "It was right here on the table, in front of the computer.", function () {
+									say(partner_name, "Can I have that? It might have caused the virus that just infected your computer. " +
+													  "The autorun could be setup to automatically execute malware files.", function () {
+										say("Glasses", "Sure, take it. I don't need it.", function () {
+											closeDialogue();
+											changeScene(library);
+											browser_bar.text = temp;
+											student1_button.setEnabled(false);
+											librarian_dialogue_options[librarian_dialogue_options.length] = ["The USB drive from Glasses.", function () {
+												say(player_name, "It's this USB drive. The kid with the glasses plugged it in to his computer and he was redirected to a suspicious website.", function () {
+													dialogue("Librarian", "Great! Do you think you can fix or should I call the IT guys?", [
+														["Let me fix it!", function () {
+															say(player_name, "Sure, I think I can fix it.", function () {
+																say("PROGRAMMER", "Under Construction", function () {
+																	closeDialogue();
+																	changeScene(library);
+																});
+															});
+														}],
+														["Call in the IT Professionals", function () {
+															say(player_name, "I don't think I can fix it. Get the IT guys to do it.", function () {
+																say("Librarian", "Ok, that's fine. Thanks for your help! You've done enough.", function () {
+																	closeDialogue();
+																	changeScene(start);
+																});
+															});
+														}]
+													]);
+												});
+											}];
+											library_have_flash_drive1 = true;
+										});
+									});
+								});
+							});
+						});
+					});
+				});
+			});
+		});
+	});
+});
+
+var library_student2 = new Scene (23);
+library_student2.setRunAfterAction(function () {
+	say(player_name, "Do you know if there is anything wrong with this computer?", function () {
+		say("Pale Yellow Shirt", "I’m pretty sure it’s working fine. I haven’t had any problems with it yet. I just got here though. I have a paper due tonight and I haven’t started it yet. But if something strange happens while you are here, I’ll let you know.", function () {
+			closeDialogue();
+			changeScene(library);
+			student2_button.setEnabled(false);
+		});
+	});
+});
+
+var library_student3 = new Scene (23);
+library_student3.setRunAfterAction(function () {
+	say(player_name, "Have you been experiencing any difficulty with these computers?", function () {
+		say("Red Shirt", "I don't think so. And I don't have time to check. I've been working all night on this paper! It's due at the start of class, in one hour.", function () {
+			say(player_name, "Well hurry up and finish then, so I can check this computer.", function () {
+				say("Red Shirt", "Believe me, I am working as fast as I can.", function () {
+					closeDialogue();
+					changeScene(library);
+					student3_button.setEnabled(false);
+				});
+			});
+		});
+	});
+});
 
 function go () {
 	inventory_image = img_list[2];

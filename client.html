@@ -24,7 +24,6 @@
 	function print (s) {
 		document.getElementById("text").innerHTML = document.getElementById("text").innerHTML + s + "<br>";
 	}
-	
 	/* Grabs the script from the server and adds it to the document. 
 	I know it works in IE. If this works in Firefox and Chrome as well, 
 	we can hide the script from the user in this manner, so they cannot view source on it. */
@@ -36,7 +35,7 @@
 	
 	/* Grabs the resources from the server. Game starts when all resources have been downloaded. */
 	var received_files = 0;
-	var EXPECTED_FILES = 11;
+	var EXPECTED_FILES = 25;
 	
 	/*
 		img_no	image
@@ -50,6 +49,20 @@
 		7		Blank Web Browser
 		8		Account Registration Page
 		9		404 Not Found
+		10		Phone
+		11		Phone Screen Off
+		12		Phone Screen Home
+		13		Phone Screen Install Software
+		14		Web site for FreePhoneSoftware.com
+		15		Web site for HookMyPhoneUp.net
+		16		Web site for OpenSourcePhones.org
+		17		Phone all programs screen
+		18		Phone E-mail mailbox screen
+		19		Library
+		20		Librarian
+		21		Computer with USB
+		22		Computer with Python code
+		23		Computer with Word doc
 	*/
 	var img_list = [];
 	socket.on("image", function(info) {
