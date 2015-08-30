@@ -1,0 +1,147 @@
+{
+    "current_scene": {
+        "img_no": 8,
+        "buttons": [
+            {
+                "x1": 189,
+                "y1": 20,
+                "x2": 931,
+                "y2": 61,
+                "action": "function () { setActiveTextField(browser_bar); }",
+                "enabled": true,
+                "text": "https://register.cyber.edu/",
+                "protect_text": false
+            },
+            {
+                "x1": 1042,
+                "y1": 28,
+                "x2": 1067,
+                "y2": 54,
+                "action": "function () { changeScene(previous_world_scene); if (phone_state == 0) changePhoneState(1) }",
+                "enabled": true,
+                "text": "",
+                "protect_text": false
+            },
+            {
+                "x1": 390,
+                "y1": 160,
+                "x2": 850,
+                "y2": 200,
+                "action": "function () { setActiveTextField(username_field); }",
+                "enabled": true,
+                "text": "",
+                "protect_text": false
+            },
+            {
+                "x1": 390,
+                "y1": 240,
+                "x2": 850,
+                "y2": 280,
+                "action": "function () { setActiveTextField(password_field); }",
+                "enabled": true,
+                "text": "",
+                "protect_text": true
+            },
+            {
+                "x1": 667,
+                "y1": 305,
+                "x2": 703,
+                "y2": 338,
+                "action": "function () { mfa_check_box.text = (mfa_check_box.text == \"x\") ? \"\" : \"x\"; current_scene.draw(CANVAS_ELEMENT.getContext(\"2d\")); }",
+                "enabled": true,
+                "text": "",
+                "protect_text": false
+            },
+            {
+                "x1": 728,
+                "y1": 469,
+                "x2": 850,
+                "y2": 515,
+                "action": "function () {\r\n\tif (username_field.text == \"\" || password_field.text == \"\") {\r\n\t\talert(\"Both a username and a password are required.\");\r\n\t}\r\n\telse {\r\n\t\t// Valid registration, notify server\r\n\t\tsocket.emit ('register', { username: username_field.text, password: password_field.text, email: \"\", mfa: false });\r\n\t\t//socket.emit('register', { username: username_field.text, password: password_field.text, email: email_field.text, mfa: (mfa_check_box.text == \"x\") });\r\n\t}\r\n}",
+                "enabled": true,
+                "text": "",
+                "protect_text": false
+            }
+        ],
+        "run_after_action": "function () { }"
+    },
+    "previous_world_scene": {
+        "img_no": 1,
+        "buttons": [
+            {
+                "x1": 300,
+                "y1": 100,
+                "x2": 940,
+                "y2": 400,
+                "action": "function () { changeScene(coffee_shop); }",
+                "enabled": true,
+                "text": "",
+                "protect_text": false
+            },
+            {
+                "x1": 300,
+                "y1": 470,
+                "x2": 532,
+                "y2": 530,
+                "action": "function () { changeScene(mall); }",
+                "enabled": true,
+                "text": "Go to the mall",
+                "protect_text": false
+            },
+            {
+                "x1": 64,
+                "y1": 470,
+                "x2": 256,
+                "y2": 530,
+                "action": "function () { changeScene(library); }",
+                "enabled": true,
+                "text": "Go to the library",
+                "protect_text": false
+            }
+        ],
+        "run_after_action": "function () { }"
+    },
+    "worldButtonsEnabled": true,
+    "diagUp": false,
+    "dialogue_buttons": [],
+    "phone_state": 1,
+    "phone_screen": 11,
+    "phone_software_installed": false,
+    "phone_software_apps": [],
+    "email_inbox": [
+        {
+            "subject": "TEST",
+            "body": "TEST TEST a very long line here, trying to test the capability to draw multiple lines with Thomas's code.",
+            "sender": "TEST",
+            "attachments": [
+                "Attach",
+                "Attach2"
+            ]
+        },
+        {
+            "subject": "Testing",
+            "body": "Hey, does this work?",
+            "sender": "Bobby",
+            "attachments": []
+        },
+        {
+            "subject": "Hello",
+            "body": "Hey, its your partner",
+            "sender": "Ashley",
+            "attachments": []
+        }
+    ],
+    "email_inbox_index": 0,
+    "player_name": "Bobby",
+    "partner_name": "Ashley",
+    "browser_bar": {
+        "x1": 189,
+        "y1": 20,
+        "x2": 931,
+        "y2": 61,
+        "action": "function () { setActiveTextField(browser_bar); }",
+        "enabled": true,
+        "text": "https://register.cyber.edu/",
+        "protect_text": false
+    }
+}

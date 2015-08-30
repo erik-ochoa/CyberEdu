@@ -14,7 +14,9 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-	var socket = io();
+	var SERVER_HOSTNAME = 'jrhansf.student.umd.edu';
+
+	var socket = io.connect('http://' + SERVER_HOSTNAME);
 	
 	var HTML_FOR_CANVAS = '<canvas id="view" width="1280" height="630" style="border:1px solid #000000; position:relative;" onclick="click_position()" onmousemove="rollover_position()"> </canvas>';
 	document.getElementById('viewport').innerHTML = HTML_FOR_CANVAS;
@@ -35,7 +37,7 @@
 	
 	/* Grabs the resources from the server. Game starts when all resources have been downloaded. */
 	var received_files = 0;
-	var EXPECTED_FILES = 25;
+	var EXPECTED_FILES = 26;
 	
 	/*
 		img_no	image
@@ -63,6 +65,7 @@
 		21		Computer with USB
 		22		Computer with Python code
 		23		Computer with Word doc
+		24		Computer file system
 	*/
 	var img_list = [];
 	socket.on("image", function(info) {
@@ -94,16 +97,11 @@
 	socket.emit('request_image');
 	socket.emit('request_audio');
 	
-	socket.on("video", function(info) {
-		var html_for_video = '<video width="640" height="480" controls><source src="data:video/mp4;base64,' + info.buffer+ '"</source></video>';
-		html_for_video += '<button onclick="return_to_game()">Return To Game</button>';
-		document.getElementById('viewport').innerHTML = html_for_video;
-	});
-	
-	/* A video name is its file name, without the extension */
+	/* A video name is its name on the server side. */
 	function play_video (name) {
-		document.getElementById('viewport').innerHTML = '<p>Loading video...</p>';
-		socket.emit('request_video', name);
+		var html_for_video = '<p><a href="http://localhost/' + name + '"' + '>Watch the Video!</a></p>';
+		html_for_video += '<button onclick="return_to_game()">Return To Game</button>';
+		document.getElementById('viewport').innerHTML = html_for_video
 	}
 </script>
 </html>

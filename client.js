@@ -14,6 +14,15 @@ var click_sound;
 var phone_state = 1; // -1: Not in player's possession, 0: Hidden, 1: Visible in the corner, 2: Fully extended. Change it with the changePhoneState(int) function, not directly.
 var phone_screen = 11; // Image no for phone screen. 11 is blank. To change the phone screen while the phone is active, modify phone_screen directly, then call changePhoneState(2);
 
+socket.on('load_save', function (info) {
+	var parsed = JSON.parse(info, function (key, value) {
+		if (key.match(/function\s*()\s*{/)) 
+			return eval(value);
+		else
+			return value;
+	});
+});
+
 // character_name says text in the game, nextFunc is to chain dialogue together.
 function say (character_name, text, next) {
 	next = typeof next !== 'undefined' ? next : closeDialogue;
@@ -108,11 +117,36 @@ function dialogue(character_name, text, responses) {
 		g.fillRect(dialog_buttons_left_edge + dialog_buttons_width*j + 5, MAX_Y/2+dimY/2 - 110, dialog_buttons_width - 10, 100);
 		g.fillStyle = "rgba(200,200,200,1)";
 		g.font = "16px Verdana";
-		g.fillText(responses[j][0], dialog_buttons_left_edge + dialog_buttons_width*j + dialog_buttons_width/2 - (g.measureText(responses[j][0]).width/2), MAX_Y/2 + dimY/2 - 50);
+		//g.fillText(responses[j][0], dialog_buttons_left_edge + dialog_buttons_width*j + dialog_buttons_width/2 - (g.measureText(responses[j][0]).width/2), MAX_Y/2 + dimY/2 - 50);
+		drawTextInBox(g, responses[j][0], dialog_buttons_left_edge + dialog_buttons_width*j + 5, 
+														   MAX_Y/2 + dimY/2 - 110,
+														   dialog_buttons_left_edge + dialog_buttons_width*(j+1) - 5, 
+														   MAX_Y/2 + dimY/2 - 10); 
 	}		   
 	
 	//Draw GUI overlay.
 //	g.drawImage(inventory_image,0,0) 
+}
+
+function drawTextInBox(g, text, x1, y1, x2, y2) {
+	var textWidth = x2 - x1;
+	var words = text.split(' ');
+	var lines = [[""]];
+	
+	var i = 0;
+	
+	while (i < words.length) {
+		while (g.measureText(lines[lines.length-1].join(' ') + ' ' + words[i]).width < textWidth && i < words.length) {
+			lines[lines.length-1].push(words[i]);
+			i++;
+		}
+		// Line has over filled, so add a new line in and continue from there
+		lines.push([""]);
+	}
+	var line_height = 20;
+	for (var j = 0; j < lines.length; j ++) { 
+		g.fillText(lines[j].join(' '), x1 + textWidth/2 - g.measureText(lines[j].join(' ')).width/2, y1 + (y2 - y1)/2 + line_height*(j+1) - line_height/2*lines.length);
+	}
 }
 
 /*********************
@@ -231,6 +265,340 @@ Button.prototype.setEnabled = function(b) {
 	this.enabled = b;
 };
 // End Button class
+/************
+File System Class Defintion
+************/
+// Class for a computer's file system
+// Constructor creates an empty file system.
+// Current known issue: Switching to the phone internet browser within the file system screen has a problem switching back to the correct scene.
+var FileSystem = function() {
+	this.current_directory = "";
+	// A file is just an element. A folder is an array, whose first element is the folder name and subsequent are the files.
+	this.files = ["Root"];
+};
+
+FileSystem.prototype.cd = function (directory) {
+	if (directory == "~")
+		this.current_directory = "";
+	else if (directory == "..") {
+		folders = this.current_directory.split('/');
+		var newFolders = []
+		for (var i = 0; i < folders.length - 1; i++)
+			newFolders[i] = folders[i];
+		this.current_directory = newFolders.join('/');
+	} else {
+		var folders = directory.split('/');
+		if (folders[0] == "~") {
+			search_directory = "";
+			new_folders = []
+			for (var i = 1; i < folders.length; i++)
+				new_folders[new_folders.length] = folders[i];
+			folders = new_folders;
+		} else {
+			search_directory = this.current_directory;
+		}
+		for (var i = 0; i < folders.length - 1; i++)
+			search_directory = (search_directory == "" ? folders[i] : search_directory + '/' + folders[i]);
+		if (this.folderExists(search_directory, folders[folders.length - 1])) {
+			this.current_directory = (search_directory == "" ? folders[folders.length - 1] : search_directory + '/' + folders[folders.length - 1]);
+		}
+		else
+			print("cd(" + directory + ") failed!");
+	}
+};
+
+FileSystem.prototype.listCurrentDirectory = function () {
+	if (this.current_directory == "") {
+		result = [];
+		for (var i = 1; i < this.files.length; i++) {
+			if (this.isFolder(this.files[i]))
+				result[i - 1] = this.files[i][0];
+			else
+				result[i - 1] = this.files[i];
+		}
+		return result;
+	} else {
+		folders = this.current_directory.split('/');
+		current = this.files;
+		var i = 0;
+		var next = 0;
+		while (i < folders.length && next != -1) {
+			next = -1;
+			for (var j = 1; j < current.length; j++) {
+				if (this.isFolder(current[j]) && current[j][0] == folders[i])
+					next = j;	
+			}
+			if (next != -1) {
+				i++;
+				current = current[next];
+			}
+		}
+		if (i == folders.length) {
+			result = [];
+			for (var j = 1; j < current.length; j++) {
+				if (this.isFolder(current[j]))
+					result[j - 1] = current[j][0];
+				else
+					result[j - 1] = current[j];
+			}
+			return result;
+		} else {
+			print("ListCurrentDirectory Failed!");
+			return ["FATAL ERROR", "Current Directory was invalid", this.current_directory];
+		}
+	}
+};
+
+
+FileSystem.prototype.folderExists = function (path, name) {
+	if (path == "") {
+		for (var i = 1; i < this.files.length; i++) {
+			if (this.isFolder(this.files[i]) && this.files[i][0] == name)
+				return true;
+		}
+		return false;
+	} else {
+		var folders = path.split('/');
+		var current = this.files;
+		var i = 0;
+		var next = 0;
+		while (i < folders.length && next != -1) {
+			next = -1;
+			for (var j = 1; j < current.length; j++) {
+				if (this.isFolder(current[j]) && current[j][0] == folders[i])
+					next = j;	
+			}
+			if (next != -1) {
+				i++;
+				current = current[next];
+			}
+		}
+		if (i == folders.length) {
+			for (var j = 1; j < current.length; j++)
+				if (this.isFolder(current[j]) && current[j][0] == name)
+					return true;
+			return false;
+		} else
+			return false;
+	}
+};
+
+FileSystem.prototype.addFile = function(path, name) {
+	if (path == "") {
+		this.files[this.files.length] = name;
+	} else {
+		var folders = path.split('/');
+		var current = this.files;
+		var i = 0;
+		var next = 0;
+		while (i < folders.length && next != -1) {
+			next = -1;
+			for (var j = 1; j < current.length; j++) 
+				if (this.isFolder(current[j]) && folders[i] == current[j][0]) 
+					next = j;
+			if (next != -1) {
+				i++;
+				current = current[next];
+			}
+		}
+		// If i == folders.length, then the path was traversed successfully
+		if (i == folders.length)
+			current[current.length] = name;
+		else
+			print("WARNING: addFile(" + path + ", " + name + ") failed!");
+	}
+};
+
+FileSystem.prototype.addFolder = function(path, name) {
+	if (path == "") {
+		this.files[this.files.length] = [name];
+	} else {
+		folders = path.split('/');
+		current = this.files;
+		var i = 0;
+		var next = 0;
+		while (i < folders.length && next != -1) {
+			next = -1;
+			for (var j = 1; j < current.length; j++) 
+				if (this.isFolder(current[j]) && folders[i] == current[j][0]) 
+					next = j;
+			if (next != -1) {
+				i++;
+				current = current[next];
+			}
+		}
+		// If i == folders.length, then the path was traversed successfully
+		if (i == folders.length)
+			current[current.length] = [name];
+		else
+			print("WARNING: addFolder(" + path + ", " + name + ") failed!");
+	}
+}
+
+FileSystem.prototype.remove = function(path, name) {
+	if (path == "") {
+		var temp = [this.files[0]]
+		for (var i = 1; i < this.files.length; i++)
+			if (this.files[i][0] != name)
+				temp[temp.length] = this.files[i];
+		this.files = temp;
+	} else {
+		var folders = path.split('/');
+		var current = this.files;
+		var i = 0;
+		var next = 0;
+		while (i < folders.length && next != -1) {
+			next = -1;
+			for (var j = 1; j < current.length; j++) 
+				if (this.isFolder(current[j]) && folders[i] == current[j][0]) 
+					next = j;
+			if (next != -1) {
+				i++;
+				current = current[next];
+			}
+		}
+		if (i == folders.length) {
+			for (var j = 1; j < current.length; j++) {
+				if ((this.isFolder(current[j]) && current[j][0] == name) || (current[j] == name)) {
+					current.splice(j, 1);
+					j--;
+				}
+			}
+		} else {
+			print("WARNING: removeFile(" + path + ", " + name + ") failed");
+		}
+	}
+};
+
+FileSystem.prototype.isFolder = function(someObject) {
+	if (Array.isArray) {
+		return Array.isArray(someObject) && someObject.length >= 1;
+	} else {
+		return Object.prototype.toString.call(someObject) == Object.prototype.toString.call([]) && someObject.length >= 1;
+	}
+};
+
+FileSystem.prototype.getButtonList = function () {
+	var buttons = [];
+	
+	var path_bar = new Button(10, 90, 10, 90, function () {} );
+	path_bar.text = this.current_directory;
+	path_bar.setEnabled(false);
+	buttons[buttons.length] = path_bar;
+	
+	var current_filesystem = this;
+	
+	if (this.current_directory == "") {
+		file_system_up_button.action = function () {};
+	} else {
+		file_system_up_button.action = function () {
+			current_filesystem.cd("..");
+			computer_file_system.buttons = current_filesystem.getButtonList();
+			current_scene.draw(CANVAS_ELEMENT.getContext('2d'));
+		};
+	}
+	buttons[buttons.length] = file_system_up_button;
+	
+	buttons[buttons.length] = file_system_x_button;
+	
+	
+	var ls = this.listCurrentDirectory();
+	var g = CANVAS_ELEMENT.getContext('2d');
+	g.font = "30px Arial";
+	for (var i = 0; i < ls.length; i++) {
+		var item_button = new Button (290, 140 + i*40, 290 + g.measureText(ls[i]).width, 175 + i*40, function () {
+			// Scoping problem: i == ls.length here, not what it was when the button was created. Therefore, the buttons
+			// text must be depended on to change directories
+			if (current_filesystem.folderExists(current_filesystem.current_directory, this.text))
+				current_filesystem.cd(this.text);
+			computer_file_system.buttons = current_filesystem.getButtonList();
+			current_scene.draw(CANVAS_ELEMENT.getContext('2d'));
+		});
+		item_button.text = ls[i];
+		
+		var remove_item_button = new Button(1100, 140 + i*40, 1100 + g.measureText("Delete?").width, 175 + i*40, function () {
+			// Same scoping problem as before, must find own index and subtract 1 to get text.
+			// Also can add one to get whether its a File or Folder
+			var index_of_self = -1;
+			for (var i = 0; i < current_scene.buttons.length; i++)
+				if (current_scene.buttons[i] == this)
+					index_of_self = i;
+			if (index_of_self < 0) {
+				print("ERROR: remove_item_button could not find index of self");
+			}
+			else {
+				var is_folder = current_scene.buttons[index_of_self + 1].text == "Folder";
+				var message = "Are you sure you want to remove the " + (is_folder ? "folder" : "file") + " " + current_scene.buttons[index_of_self - 1].text + (is_folder ? " and all of its contents?" : "?");
+				dialogue("Remove File?", message, [
+					["Yes", function () {
+						current_filesystem.remove(current_filesystem.current_directory, current_scene.buttons[index_of_self - 1].text);
+						var file_removed = current_scene.buttons[index_of_self -1].text;
+						computer_file_system.buttons = current_filesystem.getButtonList();
+						// Fixed the virus in the Library scene!
+						if (current_filesystem == infected_library_computer_file_system && file_removed == "trojan.horse") {
+							say("Librarian", "You did it! You fixed the computer! I can get the rest.", function () {
+								library_score += 10;
+								closeDialogue();
+								goToTheLibrary.setEnabled(false);
+								changeScene(start);
+								socket.emit('scene_complete', { scene:"library", score:library_score });
+								play_video('virusremoval');
+							});
+						} else {
+							closeDialogue(); // closeDialogue() will redraw automatically.
+						}
+					}],
+					["No", function () { 
+						closeDialogue(); 
+					}]
+				]);
+			}
+		});
+		remove_item_button.text = "Delete?";
+		
+		var item_type = new Button(1000, 140 + i*40, 1000, 175 + i*40, function () {});
+		item_type.setEnabled(false);
+		item_type.text = this.folderExists(this.current_directory, ls[i]) ? "Folder" : "File";
+		
+		if (!current_filesystem.folderExists(this.current_directory, ls[i]))
+			item_button.setEnabled(false);
+		
+		buttons[buttons.length] = item_button;
+		buttons[buttons.length] = remove_item_button;
+		buttons[buttons.length] = item_type;
+		
+	}
+	
+	var home_button = new Button (10, 140, 10 + g.measureText("Home").width, 175, function () {
+		current_filesystem.cd("~");
+		computer_file_system.buttons = current_filesystem.getButtonList();
+		current_scene.draw(CANVAS_ELEMENT.getContext('2d'));
+	});
+	home_button.text = "Home";
+	
+	buttons[buttons.length] = home_button;
+	
+	for (var i = 1; i < this.files.length; i++) {
+		if (this.isFolder(this.files[i])) {
+			var item_button = new Button (10, 140 + i*40, 10 + g.measureText(this.files[i][0]).width, 175 + i*40, function () {
+				if (current_filesystem.folderExists("", this.text))
+					current_filesystem.cd("~/" + this.text);
+				else
+					print("ya goofed: Error in FileSystem.getButtonList()");
+				computer_file_system.buttons = current_filesystem.getButtonList();
+				current_scene.draw(CANVAS_ELEMENT.getContext('2d'));
+			});
+			
+			item_button.text = this.files[i][0];
+			
+			buttons[buttons.length] = item_button;
+		}
+	}
+
+	return buttons;
+};
+
+// End file system class
 
 function changePhoneState (new_state) {
 	if (new_state == 0 || new_state == -1) {
@@ -469,8 +837,9 @@ function addToInbox(subject, body, sender, attachments) {
 	if (email_inbox_index < email_inbox.length - 1 && phone_state == 2 && phone_screen == 18)
 		email_inbox_right_arrow.setEnabled(true);
 	var g = CANVAS_ELEMENT.getContext("2d");
-	if (phone_state == 2 && phone_screen == 18)
+	if (phone_state == 2 && phone_screen == 18) {
 		current_scene.draw(g);
+	}
 }
 
 function drawEmailInbox (g) {
@@ -639,6 +1008,30 @@ function click_position(event) {
 	}
 	if (worldButtonsEnabled)
 		current_scene.run_after_action();
+	if (found || worldButtonsEnabled) {
+		socket.emit('save_game', JSON.stringify({
+			// General variables.
+			current_scene: current_scene, 
+			previous_world_scene: previous_world_scene,
+			worldButtonsEnabled: worldButtonsEnabled,
+			diagUp: diagUp, 
+			dialogue_buttons: dialogue_buttons, 
+			phone_state : phone_state, 
+			phone_screen: phone_screen, 
+			phone_software_installed: phone_software_installed,
+			phone_software_apps: phone_software_apps,
+			email_inbox: email_inbox,
+			email_inbox_index: email_inbox_index,
+			player_name: player_name,
+			partner_name: partner_name,
+			browser_bar: browser_bar
+		}, function (key, value) {
+			if (typeof value === 'function')
+				return value.toString();
+			else
+				return value;
+		}, 4));
+	}	
 }
 
 function rollover_position(event) {
@@ -660,7 +1053,7 @@ function rollover_position(event) {
 	posy -= CANVAS_Y;
 	// End compatibility code, posx & posy contain the clicked position
 	
-	document.getElementById("text").innerHTML = "(" + posx + ", " + posy + ")";
+	// document.getElementById("text").innerHTML = "(" + posx + ", " + posy + ")";
 	
 	var found = false;
 	// Display rollover for the world interactions, if flag for worldButtons are enabled.
@@ -694,7 +1087,7 @@ function rollover_position(event) {
 }
 
 function changeScene(new_scene) {
-	if (current_scene && (current_scene.img_no <= 6 || current_scene.img_no >= 19)) {
+	if (current_scene && (current_scene.img_no <= 6 || (current_scene.img_no >= 19 && current_scene.img_no < 24))) {
 		previous_world_scene = current_scene;
 	}
 	current_scene = new_scene;
@@ -707,7 +1100,8 @@ function changeScene(new_scene) {
 function setActiveTextField(aButton) {
 	var g = CANVAS_ELEMENT.getContext("2d");
 	activeTextField = aButton;
-	current_scene.draw(g);
+	if (!diagUp)
+		current_scene.draw(g); 
 }
 
 // A list of buttons that exist in multiple scenes, such as the inventory buttons.
@@ -905,7 +1299,7 @@ var culprit = new Button (972, 293, 1036, 363, function () {
 														socket.emit('scene_complete', { scene: "coffee_shop", score: 30-10*incorrect_guesses });
 														changeScene(start);
 														goToCoffeeShopButton.setEnabled(false);
-														play_video("mfa");
+														play_video("wifisniff");
 													});
 												});
 											});
@@ -968,7 +1362,7 @@ goToWebBrowser.text = "Go to web browser";
 goToTheLibrary.text = "Go to the library";
 start.addButton(goToCoffeeShopButton);
 start.addButton(goToTheMallButton);
-start.addButton(goToWebBrowser);
+//start.addButton(goToWebBrowser);
 start.addButton(goToTheLibrary);
 
 var mall = new Scene (3);
@@ -1123,6 +1517,8 @@ var library = new Scene (19);
 var library_entry_message_shown = false;
 var librarian_spoken_to_once = false;
 var library_have_flash_drive1 = false;
+var library_fixing_the_computer = false;
+var library_score = 0;
 
 var librarian_button = new Button (1058, 246, 1224, 415, function () { 
 	changeScene(library_librarian);
@@ -1142,12 +1538,16 @@ var student3_button = new Button (451, 299, 495, 384, function () {
 var guy_at_whiteboard = new Button (2, 229, 104, 338, function () {
 	say("Striped Shirt", "What's the integral of sin^2 (x)?", closeDialogue());
 });
+var library_exit_door = new Button (402, 243, 422, 258, function () {
+	changeScene(start);
+});
 library.addButton(librarian_button);
 library.addButton(abandoned_computer_button);
 library.addButton(student1_button);
 library.addButton(student2_button);
 library.addButton(student3_button);
 library.addButton(guy_at_whiteboard);
+library.addButton(library_exit_door);
 library.setRunAfterAction(function () {
 	if (!library_entry_message_shown) {
 		say(partner_name, "Why don't we go talk to the librarian? She's sitting at the desk over on the right.", closeDialogue());
@@ -1166,8 +1566,29 @@ var librarian_dialogue_options = [
 		});
 	}]
 ];
+var librarian_fixing_the_computer_dialog_options = [
+	["Not yet. I'm still working on it", function () {
+		say(player_name, "Not yet. I'm still working on it", function () {
+			say("Librarian", "Okay. If you can't get it, that's okay.", function () {
+				closeDialogue();
+				changeScene(computer_file_system); 
+			});
+		});
+	}],
+	["Sorry. I can't find the problem. Get the IT guys", function () {
+		say(player_name, "Sorry. I couldn't figure it out. You'll have to call in the IT professionals.", function () {
+			say("Librarian", "That's fine. You've already done enough. Thanks for all the help!", function () {
+				closeDialogue();
+				changeScene(start);
+			});
+		});
+	}]
+];
 var talk_to_librarian = new Button (123, 77, 602, 611, function () {
-	if (librarian_spoken_to_once) {
+	if (library_fixing_the_computer) {
+		dialogue("Librarian", "Did you get it fixed?", librarian_fixing_the_computer_dialog_options);
+	}
+	else if (librarian_spoken_to_once) {
 		dialogue("Librarian", "Do you know what's causing the problem?", librarian_dialogue_options);
 	}
 	else {
@@ -1185,26 +1606,99 @@ var talk_to_librarian = new Button (123, 77, 602, 611, function () {
 		});
 	}
 });
+var abandoned_computer_back_button = new Button(0, 0, 100, 100, function () {
+	changeScene(library);
+});
+abandoned_computer_back_button.text = "Back";
 library_librarian.addButton(talk_to_librarian);
+library_librarian.addButton(abandoned_computer_back_button);
 
 var library_abandoned_computer = new Scene (21);
 var abandoned_computer_temp_browser_bar = "";
 var abandoned_computer_temp_browser_bar_enabled = false;
 var abandoned_computer_infected = false;
-var abandoned_usb =  new Button (248 , 517, 320, 573, function () {
-	dialogue("", "It's a red flash drive.", [["Do nothing", function () {
+var library_have_flash_drive2 = false;
+var librarian_dialogue_option_both_usbs = ["Both flash drives.", function () {
+	say(player_name, "It's these two USB drives. I found this one abandoned in front of a computer, and this one the kid with the " +
+ 					 "glasses plugged into his computer and it redirected him to a suspicious website.", function () {
+		library_score += 20;
+		dialogue("Librarian", "Great! Do you think you can fix or should I call the IT guys?", [
+			["Let me fix it!", function () {
+				say(player_name, "Sure, I think I can fix it.", function () {
+					say("Librarian", "Ok, then check out this computer. If you can't figure it out, that's okay.", function () {
+						closeDialogue();
+						library_fixing_the_computer = true;						
+						computer_file_system.buttons = infected_library_computer_file_system.getButtonList();
+						changeScene(computer_file_system);
+					});
+				});
+			}],
+			["Call in the IT Professionals.", function () {
+				say(player_name, "I don't think I can fix it. Get the IT guys to do it.", function () {
+					say("Librarian", "Ok, that's fine. Thanks for your help! You've done enough.", function () {
+						closeDialogue();
+						goToTheLibrary.setEnabled(false);
+						changeScene(start);
+						socket.emit('scene_complete', { scene:"library", score:library_score });
+						play_video('virusremoval');
+					});
+				});
+			}]
+		]);
+	});
+}];
+
+var abandoned_usb_dialog_options = [
+	["Do nothing", function () {
 		closeDialogue();
 	}], ["Take it.", function () {
-		say("", "You take the red flash drive", function () {
+		say("", "You take the red flash drive.", function () {
 			abandoned_usb.setEnabled(false);
+			librarian_dialogue_options[librarian_dialogue_options.length] = ["The abandoned red flash drive.", function () {
+				say(player_name, "It's this USB drive. I found it abandoned in front of a computer.", function () {
+					library_score += 10;
+					dialogue("Librarian", "Great! Do you think you can fix or should I call the IT guys?", [
+						["Let me fix it!", function () {
+							say(player_name, "Sure, I think I can fix it.", function () {
+								say("Librarian", "Ok, then check out this computer. If you can't figure it out, that's okay.", function () {
+									closeDialogue();
+									computer_file_system.buttons = infected_library_computer_file_system.getButtonList();
+									library_fixing_the_computer = true;
+									changeScene(computer_file_system);
+								});
+							});
+						}],
+						["Call in the IT Professionals", function () {
+							say(player_name, "I don't think I can fix it. Get the IT guys to do it.", function () {
+								say("Librarian", "Ok, that's fine. Thanks for your help! You've done enough.", function () {
+									closeDialogue();
+									goToTheLibrary.setEnabled(false);
+									changeScene(start);
+									socket.emit('scene_complete', { scene:"library", score:library_score });
+									play_video('virusremoval');
+								});
+							});
+						}]
+					]);
+				});
+			}];
+			library_have_flash_drive2 = true;
+			if (library_have_flash_drive1 && library_have_flash_drive2) {
+				librarian_dialogue_options[librarian_dialogue_options.length] = librarian_dialogue_option_both_usbs;
+			}
 			closeDialogue();
-			changeScene(library);
 		});
 	}],
 	["Put it in the computer", function () {
 		abandoned_computer_infected = true;
 		say(partner_name, "I don't think that was good. Take a look at the web browser. It's on some sketchy looking website.", closeDialogue());
-	}]]);
+		library_score -= 5;
+		// Delete this option from the dialog.
+		abandoned_usb_dialog_options = [abandoned_usb_dialog_options[0], abandoned_usb_dialog_options[1]]; 
+		library_computer_file_system.addFile("Downloads", "trojan.horse");
+	}]];
+var abandoned_usb =  new Button (248 , 517, 320, 573, function () {
+	dialogue("", "It's a red flash drive.", abandoned_usb_dialog_options);
 });
 var abandoned_computer_web_browsers = new Button (540, 61, 658, 167, function () {
 	if (abandoned_computer_infected) {
@@ -1217,10 +1711,10 @@ var abandoned_computer_web_browsers = new Button (540, 61, 658, 167, function ()
 		changeScene(web_browser);
 	}
 });
-var abandoned_computer_back_button = new Button(0, 0, 100, 100, function () {
-	changeScene(library);
+var abandoned_computer_file_system = new Button (671, 161, 901, 354, function () {
+	computer_file_system.buttons = library_computer_file_system.getButtonList();
+	changeScene(computer_file_system);
 });
-abandoned_computer_back_button.text = "Back"
 library_abandoned_computer.setRunAfterAction(function () {
 	if (abandoned_computer_temp_browser_bar_enabled) {
 		browser_bar.text = abandoned_computer_temp_browser_bar; 
@@ -1230,6 +1724,7 @@ library_abandoned_computer.setRunAfterAction(function () {
 library_abandoned_computer.addButton(abandoned_usb);
 library_abandoned_computer.addButton(abandoned_computer_web_browsers);
 library_abandoned_computer.addButton(abandoned_computer_back_button);
+library_abandoned_computer.addButton(abandoned_computer_file_system);
 
 var library_student1 = new Scene (22);
 library_student1.setRunAfterAction(function () {
@@ -1253,12 +1748,15 @@ library_student1.setRunAfterAction(function () {
 											student1_button.setEnabled(false);
 											librarian_dialogue_options[librarian_dialogue_options.length] = ["The USB drive from Glasses.", function () {
 												say(player_name, "It's this USB drive. The kid with the glasses plugged it in to his computer and he was redirected to a suspicious website.", function () {
+													library_score += 10;
 													dialogue("Librarian", "Great! Do you think you can fix or should I call the IT guys?", [
 														["Let me fix it!", function () {
 															say(player_name, "Sure, I think I can fix it.", function () {
-																say("PROGRAMMER", "Under Construction", function () {
+																say("Librarian", "Ok, then check out this computer. If you can't figure it out, that's okay.", function () {
 																	closeDialogue();
-																	changeScene(library);
+																	library_fixing_the_computer = true;
+																	computer_file_system.buttons = infected_library_computer_file_system.getButtonList();
+																	changeScene(computer_file_system);
 																});
 															});
 														}],
@@ -1266,7 +1764,10 @@ library_student1.setRunAfterAction(function () {
 															say(player_name, "I don't think I can fix it. Get the IT guys to do it.", function () {
 																say("Librarian", "Ok, that's fine. Thanks for your help! You've done enough.", function () {
 																	closeDialogue();
+																	goToTheLibrary.setEnabled(false);
 																	changeScene(start);
+																	socket.emit('scene_complete', { scene:"library", score:library_score });
+																	play_video('virusremoval');
 																});
 															});
 														}]
@@ -1274,6 +1775,9 @@ library_student1.setRunAfterAction(function () {
 												});
 											}];
 											library_have_flash_drive1 = true;
+											if (library_have_flash_drive1 && library_have_flash_drive2) {
+												librarian_dialogue_options[librarian_dialogue_options.length] = librarian_dialogue_option_both_usbs;
+											}
 										});
 									});
 								});
@@ -1311,6 +1815,83 @@ library_student3.setRunAfterAction(function () {
 		});
 	});
 });
+
+// TEST of file system 
+
+var library_computer_file_system = new FileSystem ();
+library_computer_file_system.addFolder("", "Documents");
+library_computer_file_system.addFolder("", "Downloads");
+library_computer_file_system.addFile("Documents", "hi.txt");
+library_computer_file_system.addFolder("Documents", "Stuff");
+library_computer_file_system.cd("Documents");
+library_computer_file_system.addFile("Documents/Stuff", "bye.txt");
+library_computer_file_system.cd("Stuff");
+	
+var computer_file_system = new Scene (24);
+computer_file_system.setRunAfterAction(function () {
+	if (phone_state != 0) changePhoneState(0);
+});
+var file_system_x_button = new Button (1180, 0, 1280, 100, function () {
+	changeScene(previous_world_scene);
+	if (phone_state == 0)
+		changePhoneState(1);
+});
+file_system_x_button.text = "Quit";
+var file_system_up_button = new Button (1130, 0, 1170, 100, function () {
+
+});
+file_system_up_button.text = "Up";
+
+var infected_library_computer_file_system = new FileSystem();
+infected_library_computer_file_system.addFolder("", "Desktop");
+
+infected_library_computer_file_system.addFolder("", "Documents");
+infected_library_computer_file_system.addFile("Documents", "HIST201 Paper.docx");
+
+infected_library_computer_file_system.addFolder("", "Downloads");
+infected_library_computer_file_system.addFile("Downloads", "vietnam_war_protest_poster.pdf");
+infected_library_computer_file_system.addFile("Downloads", "lyndon_b_johnson_1964_campaign_speech.pdf");
+
+infected_library_computer_file_system.addFolder("", "Pictures");
+infected_library_computer_file_system.addFolder("Pictures", "Sample Pictures");
+infected_library_computer_file_system.addFile("Pictures/Sample Pictures", "horses.jpg");
+infected_library_computer_file_system.addFile("Pictures/Sample Pictures", "lighthouse.jpg");
+infected_library_computer_file_system.addFile("Pictures/Sample Pictures", "penguins.jpg");
+infected_library_computer_file_system.addFile("Pictures/Sample Pictures", "tulips.jpg");
+infected_library_computer_file_system.addFile("Pictures", "neon_cat.gif");
+
+infected_library_computer_file_system.addFolder("", "Music");
+infected_library_computer_file_system.addFolder("Music", "Sample Music");
+infected_library_computer_file_system.addFile("Music/Sample Music", "Steal Away.mp3");
+infected_library_computer_file_system.addFile("Music/Sample Music", "Take the A-Train.mp3");
+infected_library_computer_file_system.addFile("Music/Sample Music", "Themes from the Unfinished Symphony.mp3");
+
+infected_library_computer_file_system.addFolder("", "Videos");
+infected_library_computer_file_system.addFolder("Videos", "Sample Videos");
+infected_library_computer_file_system.addFile("Videos/Sample Videos", "Wildlife.mpg");
+
+infected_library_computer_file_system.addFolder("", "Computer");
+infected_library_computer_file_system.addFolder("Computer", "Program Files");
+infected_library_computer_file_system.addFolder("Computer/Program Files", "Microsoft Office"); 
+infected_library_computer_file_system.addFile("Computer/Program Files/Microsoft Office", "Word 2013.exe");
+infected_library_computer_file_system.addFile("Computer/Program Files/Microsoft Office", "Excel 2013.exe");
+infected_library_computer_file_system.addFile("Computer/Program Files/Microsoft Office", "Power Point 2013.exe");
+infected_library_computer_file_system.addFile("Computer/Program Files/Microsoft Office", "One Note 2013.exe");
+infected_library_computer_file_system.addFolder("Computer/Program Files", "Java");
+infected_library_computer_file_system.addFolder("Computer/Program Files/Java", "jre7");
+infected_library_computer_file_system.addFile("Computer/Program Files/Java/jre7", "COPYRIGHT");
+infected_library_computer_file_system.addFile("Computer/Program Files/Java/jre7", "LICENSE");
+infected_library_computer_file_system.addFile("Computer/Program Files/Java/jre7", "readme.txt");
+infected_library_computer_file_system.addFile("Computer/Program Files/Java/jre7", "javawr.jar");
+infected_library_computer_file_system.addFile("Computer/Program Files/Java/jre7", "tools.jar");
+infected_library_computer_file_system.addFile("Computer/Program Files/Java/jre7", "charsets.jar");
+infected_library_computer_file_system.addFolder("Computer/Program Files", "Internet Explorer");
+infected_library_computer_file_system.addFolder("Computer/Program Files/Internet Explorer", "Plugins");
+infected_library_computer_file_system.addFile("Computer/Program Files/Internet Explorer/Plugins", "bingsearchbar.dll");
+infected_library_computer_file_system.addFile("Computer/Program Files/Internet Explorer/Plugins", "adobePDFLinkHelper.dll");
+infected_library_computer_file_system.addFile("Computer/Program Files/Internet Explorer/Plugins", "Java Plug-in SSV Helper.dll");
+infected_library_computer_file_system.addFile("Computer/Program Files/Internet Explorer/Plugins", "trojan.horse");
+infected_library_computer_file_system.addFile("Computer/Program Files/Internet Explorer", "ie10.exe");
 
 function go () {
 	inventory_image = img_list[2];

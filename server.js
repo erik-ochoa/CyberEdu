@@ -1,22 +1,93 @@
 var app = require('express')();
-var http = require('http').Server(app);
+var http_lib = require('http');
+var https = require('https');
+var http = http_lib.Server(app);
 var io = require('socket.io')(http);
 var fs = require('fs');
+
+var SERVER_HOSTNAME = 'jrhansf.student.umd.edu';
 
 var nextID = 0;
 var used_usernames = [];
 
-app.get('/', function(req, res){
-	res.sendFile(__dirname + '\\client.html');
+var ticket_to_username = [];
+
+app.get('/login', function(req, res) {
+	res.redirect('https://login.umd.edu/cas/login?service=http%3A%2F%2F' + SERVER_HOSTNAME + '%2F');
+});
+
+app.get('/', function (req, res) {
+	if (req.query.ticket) {
+		var request_path = '/cas/validate?ticket=' + req.query.ticket + '&service=http%3A%2F%2F' + SERVER_HOSTNAME + '%2F';
+		https.get({ 
+			host: 'login.umd.edu', 
+			path: request_path }, function (validation_response) {
+				var response_text = "";
+				validation_response.on('data', function (chunk) {
+					response_text += chunk.toString();
+				});
+				validation_response.on('end', function () {
+					response_text = response_text.split('\n');
+					if (response_text[0] == "yes") {
+						var username = response_text[1];
+						ticket_to_username[ticket_to_username.length] = [req.query.ticket, username];
+						res.sendFile(__dirname + '\\client.html');
+					} else {
+						res.sendFile(__dirname + '\\loginfailed.html');
+					}
+				});
+			}
+		);
+	} else {
+		res.redirect('https://login.umd.edu/cas/login?service=http%3A%2F%2F' + SERVER_HOSTNAME + '%2F');
+	}	
+});
+
+app.get('/mfa', function(req, res) {
+	res.sendFile(__dirname + '\\video\\mfa.mp4');
+});
+
+app.get('/passwords', function(req, res) {
+	res.sendFile(__dirname + '\\video\\Video 1 Passwords.mp4');
+});
+
+app.get('/virusremoval', function(req, res) {
+	res.sendFile(__dirname + '\\video\\virusremoval.mp4');
+});
+
+app.get('/wifisniff', function(req, res) {
+	res.sendFile(__dirname + '\\video\\wifisniff.mp4');
 });
 
 io.on('connection', function(socket){	
+	var ticket = socket.handshake.headers.referer.split('ticket=')[1];
+	var username = "";
+	var saved_game_state;
+	for (var i = 0; i < ticket_to_username.length; i++)
+		if (ticket_to_username[i][0] == ticket)
+			username = 	ticket_to_username.splice(i, 1)[0][1]
+		
+	if (username != "") {
+		fs.readFile(__dirname + '\\users\\' + username, function (err, buf) {
+			if (err && err.code == "ENOENT") {
+				// Ignore this error, means a never before seen user has connected, and their data file doesn't exist
+			} else if (err) {
+				throw err;
+			} else {
+				saved_game_state = buf.toString('utf-8');
+			}
+		});
+	}
 	var id = nextID;
 	nextID = nextID + 1;
 	console.log(id + ' connected');
 	
 	fs.readFile(__dirname + '\\client.js', function(err, buf) {
 		socket.emit('script', { buffer: buf.toString('base64') });
+		if (saved_game_state) {
+			socket.emit('load_save', saved_game_state);
+			console.log('load_save event emitted');
+		}
 	});
 	
 	socket.on('disconnect', function () {
@@ -119,17 +190,15 @@ io.on('connection', function(socket){
 		fs.readFile(__dirname + '\\images\\Zoom-3.jpg', function (err, buf) {
 			socket.emit('image', { image:23, buffer: buf.toString('base64') });
 		});
+		
+		fs.readFile(__dirname + '\\images\\computer_file_system.png', function (err, buf) {
+			socket.emit('image', { image:24, buffer: buf.toString('base64') });
+		});
 	});
 	
 	socket.on('request_audio', function () {
 		fs.readFile(__dirname + '\\audio\\click.wav', function(err, buf) {
 			socket.emit('audio', { audio: 0, buffer: buf.toString('base64') });
-		});
-	});
-	
-	socket.on('request_video', function (info) {
-		fs.readFile(__dirname + '\\video\\' + info + '.mp4', function(err, buf) {
-			socket.emit('video', { video: 0, buffer: buf.toString('base64') });
 		});
 	});
 	
@@ -151,6 +220,15 @@ io.on('connection', function(socket){
 	
 	socket.on('scene_complete', function (info) {
 		console.log('Player ' + id + ' completed ' + info.scene + ' with score ' + info.score);
+	});
+	
+	socket.on('save_game', function (info) {
+		fs.writeFile(__dirname + '\\users\\' + username, info, function (err) {
+			if (err) {
+				console.log("IO error in socket.on save_game");
+				console.log(err);
+			}
+		});
 	});
 });
 
