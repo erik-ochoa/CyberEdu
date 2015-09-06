@@ -3,6 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<title>CyberEDU</title>
+	<link rel="shortcut icon" href="http://jrhansf.student.umd.edu/favicon"></link>
 </head>
 
 <body>
@@ -26,18 +27,26 @@
 	function print (s) {
 		document.getElementById("text").innerHTML = document.getElementById("text").innerHTML + s + "<br>";
 	}
+	
+	/* Grabs the resources from the server. Game starts when all resources have been downloaded. */
+	var received_files = 0;
+	var EXPECTED_FILES = 27;
+	
 	/* Grabs the script from the server and adds it to the document. 
 	I know it works in IE. If this works in Firefox and Chrome as well, 
 	we can hide the script from the user in this manner, so they cannot view source on it. */
 	socket.on("script", function(info) {
 	    var script = document.createElement("SCRIPT");
 		script.src = 'data:;base64,' + info.buffer;
-		document.body.appendChild(script);		
+		document.body.appendChild(script);
+		received_files++;
+		if (info.save_inbound) {
+			EXPECTED_FILES += 1;
+			print("Retrieving your save file, please be patient");
+		}
+		if (received_files == EXPECTED_FILES)
+			go();
 	});
-	
-	/* Grabs the resources from the server. Game starts when all resources have been downloaded. */
-	var received_files = 0;
-	var EXPECTED_FILES = 26;
 	
 	/*
 		img_no	image

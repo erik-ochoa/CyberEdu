@@ -12,8 +12,8 @@ var used_usernames = [];
 
 var ticket_to_username = [];
 
-app.get('/login', function(req, res) {
-	res.redirect('https://login.umd.edu/cas/login?service=http%3A%2F%2F' + SERVER_HOSTNAME + '%2F');
+app.get('/favicon', function (req, res) {
+	res.sendFile(__dirname + '\\icons\\logo.ico');
 });
 
 app.get('/', function (req, res) {
@@ -74,21 +74,24 @@ io.on('connection', function(socket){
 			} else if (err) {
 				throw err;
 			} else {
-				saved_game_state = buf.toString('utf-8');
+				saved_game_state = buf.toString();
 			}
+			
+			fs.readFile(__dirname + '\\client.js', function(err, buf) {
+				socket.emit('script', { save_inbound: saved_game_state ? 1 : 0, buffer: buf.toString('base64') });
+				if (saved_game_state) {
+					socket.emit('load_save', saved_game_state);
+					console.log('load_save event emitted');
+				}
+			});
 		});
 	}
 	var id = nextID;
 	nextID = nextID + 1;
 	console.log(id + ' connected');
 	
-	fs.readFile(__dirname + '\\client.js', function(err, buf) {
-		socket.emit('script', { buffer: buf.toString('base64') });
-		if (saved_game_state) {
-			socket.emit('load_save', saved_game_state);
-			console.log('load_save event emitted');
-		}
-	});
+	var seq_no = 0;
+
 	
 	socket.on('disconnect', function () {
 		console.log(id + ' disconnected'); 
@@ -223,13 +226,19 @@ io.on('connection', function(socket){
 	});
 	
 	socket.on('save_game', function (info) {
-		fs.writeFile(__dirname + '\\users\\' + username, info, function (err) {
-			if (err) {
-				console.log("IO error in socket.on save_game");
-				console.log(err);
-			}
-		});
-	});
+		if (info.sequence_no > seq_no) {
+			console.log(id + ' saving seq_no ' + info.sequence_no);
+			fs.writeFile(__dirname + '\\users\\' + username, info.data, function (err) {
+				if (err) {
+					console.log("IO error in socket.on save_game");
+					console.log(err);
+				}
+			});
+			seq_no = info.sequence_no;
+		} else {
+			console.log(id + ' save rejected ' + info.sequence_no);
+		}
+	}); 
 });
 
 fs.readFile(__dirname + '\\users.txt', {encoding: 'utf-8'}, function (err, buf) {
