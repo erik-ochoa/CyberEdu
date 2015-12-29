@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>CyberEDU</title>
+		<link rel="shortcut icon" href ="http://localhost/favicon.ico"/>
+
+		<!-- This code centers the canvas and the videos on the screen. -->
+		<style>
+			canvas {
+				display: block;
+				margin-left: auto;
+				margin-right: auto;
+			}
+			video {
+				display: block;
+				margin-left: auto;
+				margin-right: auto;
+			}
+		</style>
+	</head>
+	
+	<body>
+		<canvas id="view" width="1280" height="630" style="border:1px solid #000000; position:relative;" onclick="click_position()" onmousemove="rollover_position()"></canvas>
+
+		<!-- Video content. Videos are hidden by declaring the size as 0, until they are needed -->
+		<video id="video/mfa" width="0" height="0">
+			<source src="/video/mfa.mp4"/>
+		</video>
+		
+		<!-- Game images. Hidden from view by declaring the size as 0 -->
+		<img id="image/404" src="/images/404.png" width="0" height="0"/>
+		<img id="image/browser/blank" src="/images/browser.jpg" width="0" height="0"/>
+		<img id="image/phone" src="/images/phone.png" width="0" height="0"/>
+		<img id="image/phone/screen/off" src="/images/phone_screen_off.gif" width="0" height="0"/>
+		<img id="image/phone/screen/on" src="/images/phone_screen_on.gif" width="0" height="0"/>
+		
+		<!-- Game audio files -->
+		<audio id="audio/mall" preload="auto" loop="loop">
+			<source src="/audio/mall_music.mp3"/>
+		</audio>
+		
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="/index.js"></script>
+
+	</body>
+</html>
