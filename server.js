@@ -2,7 +2,7 @@ var app = require('http').createServer(handler)
 var io = require('socket.io')(app);
 var fs = require('fs');
 
-app.listen(80);
+app.listen(8011);
 
 function handler (request, response) {
 	console.log("HTTP request received for " + request.url);
@@ -39,6 +39,8 @@ function handler (request, response) {
 /* An invisible, rectangular button. Optionally may have associated text.
  * The first five arguments (name through y2) are required.
  * The last four (text through layer) are optional, but if text is provided, all must be provided.
+ *
+ * This constructor is also used to build text input fields. In that case, all input arguments are required.
  */
 var Button = function (name, x1, y1, x2, y2, text, font, font_color, layer) {
 	if (typeof text !== 'undefined' && (typeof font === 'undefined' || typeof font_color === 'undefined' || typeof layer === 'undefined'))
@@ -128,6 +130,22 @@ var Dialog = function (name, title, text, options) {
 	this.options = options;
 };
 
+/* A folder within a computer file system. */
+var Folder = function (name, contents) {
+	this.type = 'folder';
+	this.name = name;
+	this.contents = contents;
+	
+	// Add the contents to the screen.
+	// Possible issue: path bar. Solution: setup the screen, as with the dialog.
+};
+
+/* A computer's file system. */
+var FileSystem = function () {
+	this.currentDirectory = "";
+	// A file is a string. A folder is object with three elements, name: a string, the name of the folder, contents:, an array of files and folders, and screen, the screen for this folder.
+	this.files = new Folder ("", []);
+}
 // Constants
 var PHONE_X = 200;
 var PHONE_Y_RAISED = 400;
@@ -266,6 +284,50 @@ function setup_dialog_screen(dialog, canvas, previous_screen) {
 	dialog.screen.extras.push(previous_screen);
 }
 
+// Gets the folder object for the current directory of the specified file system
+function get_folder (filesystem, path) {
+	if (path == "") {
+		return filesystem.files;
+	} else {
+		path = path.split('/');
+		var current = filesystem.files;
+		
+		for (var i = 0; i < path.length; i++) {
+			var found = false;
+			for (var j = 0; !found && j < current.contents.length; j++) {
+				if (current.contents[j].name == path[i]) {
+					found = true;
+					current = current.contents[j];
+				}
+			}
+			if (!found)
+				return null;
+		}
+		
+		return current;
+	}
+}
+
+// Returns the screen object that belongs to the currentDirectory of the file system. If the currentDirectory is invalid, will cause a crash.
+// Possible future improvement: return some screen indicating an error occurred, rather than crashing the whole server!
+function get_current_screen (filesystem) {
+	return get_folder(filesystem, filesystem.currentDirectory).screen;
+}
+
+// Helper function to setup a folder screen before it is displayed. The filesystem argument, where the folder resides, contains the current directory.
+function setup_folder_screen (folder, filesystem) {
+	folder.screen = new Screen(0, 0, 0, new Image("image/filesystem/blank", 0, 0, 0), [new Button("filesystem_exit", 1180, 0, 1280, 100, "Exit", "24px Times", "rgba(0,0,0,1)", 1), new Button("filesystem_up", 1130, 0, 1170, 100, "Up", "24px Times", "rgba(0,0,0,1)", 1)], [], [new Text("filesystem_path_bar", 0, 0, 1120, 100, 1, "C:/" + filesystem.currentDirectory, "24px Times", "rgba(0,0,0,1)")]);
+	
+	// Add in the contents
+	for (var i = 0; i < folder.contents.length; i++) {
+		if (folder.contents[i].type == 'folder') {
+			addElementToScreen(folder.screen, new Text("name_text_" + filesystem.currentDirectory + "/" + folder.contents[i].name, 290, 140 + i*40, 1280, 180+i*40, 1, folder.contents[i].name, "24px Times", "rgba(0,0,0,1)"));
+		} else {
+			addElementToScreen(folder.screen, new Text("name_text_" + filesystem.currentDirectory + "/" + folder.contents[i], 290, 140 + i*40, 1280, 180 + i*40, 1, folder.contents, "24px Times", "rgba(0,0,0,1)"));
+		}
+	}
+}
+
 io.on('connection', function (socket) {
 	console.log('connection received');
 	
@@ -282,25 +344,29 @@ io.on('connection', function (socket) {
 	 *	screens: An object used as a map of <screen name> --> <screen object>
  	 *  browsers: An object used as a map of <browser name> --> <browser object>
 	 *  dialogs: An object used as a map of <dialog name> --> <dialog object>
+	 *  filesystems: An object used as a map of <filesystem name> --> <filesystem object>
 	 * 	phone: An object representing the state of the user's phone, which has the following fields:
 	 *		visible: A boolean, true if the phone is visible, false if it is not (not on the screen at all)
 	 *		raised: A boolean, true if the phone is in the raised position, false if it is in the lowered position
 	 *		screen_on: A boolean, true if the screen is on, false if it is off 
 	 *		screen: The name of the screen object to show
-	 *  active_browser: The name of the internet browser object that is currently active. Undefined if the browser is not active.
 	 *  main_screen: The name of the currently active main screen.
+	 *  active_browser: The name of the internet browser object that is currently active. Undefined if the browser is not active.
 	 *  active_dialog: An object with the following information. Undefined if there is no active dialog box.
 	 *		name: The name of the active dialog
 	 *		replace_phone: A boolean, true if the phone should be shown when this dialog is closed
+	 *  active_filesystem: The name of the active computer filesystem.
 	 */
 	 
-	var game = { canvas:{x:800, y:600}, screens:{}, browsers:{}, dialogs:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneBlankScreen"}, main_screen:"testMainScreen", active_dialog:"testDialog"};
+	var game = { canvas:{x:1000, y:600}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneBlankScreen"}, main_screen:"testMainScreen", active_dialog:{name:"testDialog", replace_phone:true}};
 	game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 	game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 	
 	game.browsers["testBrowser"] = new Browser();
 	
 	game.dialogs["testDialog"] = new Dialog ("Title", "Title", "Text", ["close", "browser"]);
+	
+	game.filesystems["testFilesystem"] = new FileSystem();
 	 
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
 	var init_commands = [];
@@ -328,7 +394,14 @@ io.on('connection', function (socket) {
 	}
 	
 	if (typeof game.active_dialog !== 'undefined') {
-		showDialog(game.active_dialog);
+		if (typeof game.active_browser !== 'undefined') {
+			setup_dialog_screen(game.dialogs[game.active_dialog.name], game.canvas, game.browsers[game.active_browser].screen);
+		} else {
+			setup_dialog_screen(game.dialogs[game.active_dialog.name], game.canvas, game.screens[game.main_screen]);
+		}
+
+		clearDisplayObject(game.screens[game.main_screen], init_commands);
+		drawDisplayObject(game.dialogs[game.active_dialog.name].screen, init_commands);
 	}
 	 
 	socket.emit('command', init_commands);
@@ -519,10 +592,14 @@ io.on('connection', function (socket) {
 		var commands = [];
 		if (!save_url)
 			changeBrowserWebPage(game.browsers[game.active_browser], "");
-
-		clearDisplayObject(game.browsers[game.active_browser].screen, commands);
-		showPhone();
-		drawDisplayObject(game.screens[game.main_screen], commands);
+	
+		if (typeof game.active_dialog !== 'undefined') {
+			game.active_dialog.replace_phone = true;
+		} else {
+			clearDisplayObject(game.browsers[game.active_browser].screen, commands);
+			showPhone();
+			drawDisplayObject(game.screens[game.main_screen], commands);
+		}
 
 		delete game.active_browser;
 		socket.emit('command', commands);
@@ -562,7 +639,91 @@ io.on('connection', function (socket) {
 		
 		socket.emit('command', commands);
 	}
+	
+	function displayFileSystem (name) {
+		var commands = [];
+		
+		if (typeof game.active_filesystem !== 'undefined') console.log("Warning: displayFileSystem(" + name + ") was called when there was an active filesystem, " + game.active_filesystem);
+		
+		if (typeof game.active_dialog !== 'undefined') {
+			game.active_dialog.replace_phone = false;
+		} else {
+			hidePhone();
+			clearDisplayObject(game.screens[game.main_screen], commands);
+			setup_folder_screen(get_folder(game.filesystems[name], game.filesystems[name].currentDirectory), game.filesystems[name]);
+			console.log(JSON.stringify(game));
+			drawDisplayObject(get_current_screen(game.filesystems[name]), commands);
+		}
 
+		game.active_filesystem = name;
+		
+		socket.emit('command', commands);
+	}
+	
+	function closeFileSystem () {
+		var commands = [];
+		
+		if (typeof game.active_dialog !== 'undefined') {
+			game.active_dialog.replace_phone = true;
+		} else {
+			clearDisplayObject(get_current_screen(game.filesystems[game.active_filesystem]), commands);
+			drawDisplayObject(game.screens[game.main_screen], commands);
+			showPhone();
+		}	
+		
+		delete game.active_filesystem;
+		socket.emit('command', commands);
+	}
+	
+	function changeDirectory (filesystem, newDirectory) {
+		var commands = [];
+		
+		if (filesystem == game.filesystems[game.active_filesystem]) {
+			clearDisplayObject(get_current_screen(filesystem), commands);
+			filesystem.currentDirectory = newDirectory;
+			drawDisplayObject(get_current_screen(filesystem), commands);
+		} else {
+			filesystem.currentDirectory = newDirectory;
+		}
+		
+		socket.emit('command', commands);
+	}
+	
+	// Item must be a file or folder.
+	function addToFileSystem (filesystem, path, item) {
+		var folder = get_folder(filesystem, path);
+		folder.contents.push(item);
+		
+		var y2 = 140 + folder.contents.length*40;
+		var y1 = y2 - 40;
+		var item_name = (item.type == 'folder' ? item.name : item);
+		
+		// Need to create display elements for this item and add them.
+		addElementToScreen(folder.screen, new Text("name_text_" + filesystem.currentDirectory + "/" + item_name, 290, y1, 1280, y2, 1, item_name, "24px Times", "rgba(0,0,0,1)"));
+	}
+	
+	// Item must be a file or folder.
+	function deleteFromFileSystem (filesystem, path, item) {
+		var folder = get_folder(filesystem, path);
+		var contents = folder.contents;
+		for (var i = 0; i < contents.length; i++) {
+			if (contents[i] == item) {
+				contents.splice(i, 1);
+				i--;
+			}
+		}
+		
+		// Need to clear the screen elements related to this item, and move other elements around. Easier just to clear all the elements and re-create the screen.
+		var commands = [];
+		if (folder.screen["on_screen"]) {
+			clearDisplayObject(folder.screen, commands);
+			setup_folder_screen(folder, filesystem);
+			drawDisplayObject(folder.screen, commands);
+		}
+		
+		socket.emit('command', commands);
+	}
+	
 	/* Displays the specified dialog object, clearing out all underlying buttons as necessary */
 	function showDialog(dialog_name) {
 		var commands = [];
@@ -575,6 +736,8 @@ io.on('connection', function (socket) {
 		
 		if (typeof game.active_browser !== 'undefined') {
 			setup_dialog_screen(game.dialogs[dialog_name], game.canvas, game.browsers[game.active_browser].screen);
+		} else if (typeof game.active_filesystem !== 'undefined') {
+			setup_dialog_screen(game.dialogs[dialog_name], game.canvas, get_current_screen(game.filesystems[game.active_filesystem]));
 		} else {
 			setup_dialog_screen(game.dialogs[dialog_name], game.canvas, game.screens[game.main_screen]);
 		}
@@ -596,6 +759,8 @@ io.on('connection', function (socket) {
 		
 		if (typeof game.active_browser !== 'undefined') {
 			drawDisplayObject(game.browsers[game.active_browser].screen, commands);
+		} else if (typeof game.active_filesystem !== 'undefined') {
+			drawDisplayObject(get_current_screen(game.filesystems[game.active_filesystem]), commands);
 		} else {
 			drawDisplayObject(game.screens[game.main_screen], commands);
 		}
@@ -737,7 +902,8 @@ io.on('connection', function (socket) {
 		} else if (button == 'phone-power-button') {
 			if (game.phone.screen_on) phoneScreenOff();	else phoneScreenOn();
 		} else if (button == 'testButton') {
-			showDialog("testDialog");
+			resizeCanvas(1280, 720);
+			displayFileSystem("testFilesystem");
 		} else if (button == 'browser-minimize') {
 			closeBrowser(true);
 		} else if (button == 'browser-x') {
@@ -748,6 +914,10 @@ io.on('connection', function (socket) {
 			closeDialog();
 			displayBrowser("testBrowser");
 			changeBrowserWebPage(game.browsers["testBrowser"], "http://www.gogogo.com/");
+		} else if (button == 'filesystem_exit') {
+			closeFileSystem();
+		} else if (button == 'filesystem_up') {
+			console.log('filesystem_up');
 		} else {
 			console.log('Received unhandled click event: ' + button);
 		}
