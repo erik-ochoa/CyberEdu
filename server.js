@@ -146,6 +146,27 @@ var FileSystem = function () {
 	// A file is a string. A folder is object with three elements, name: a string, the name of the folder, contents:, an array of files and folders, and screen, the screen for this folder.
 	this.files = new Folder ("", []);
 }
+
+/* A message in the player's email inbox.
+Subject, sender, and message are strings. attachments is an array of strings.
+*/
+var EmailMessage = function (subject, sender, message, attachments) {
+	this.subject = subject;
+	this.sender = sender;
+	this.message = message;
+	this.attachments = attachments;
+}
+
+/*  Name: the name of this app
+	Icon: 32x32 display element @ position (0,0) in layer 0, for use as the icon of this app.
+	Screen_name: The name of the main screen of this app (where the user goes when they start it).
+*/
+var PhoneApp = function (name, icon, screen_name) {
+	this.name = name;
+	this.icon = icon;
+	this.screen_name = screen_name;
+}
+
 // Constants
 var PHONE_X = 200;
 var PHONE_Y_RAISED = 400;
@@ -328,6 +349,16 @@ function setup_folder_screen (folder, filesystem) {
 	}
 }
 
+function email_message_screen (message, canvas) {
+	var screen = new Screen(canvas.x - PHONE_SCREEN_X, canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("Email_start_button", 0, 0, 173, 30, "Back", "24px Times", "rgba(255,255,255,1)", 1)], [], 
+	[new Text ("message_screen_sender", 0, 30, 173, 45, 1, "From: " + message.sender, "12px Arial", "rgba(255,255,255,1)"), 
+		new Text("message_screen_subject", 0, 45, 173, 60, 1, "Subject: " + message.subject, "12px Arial", "rgba(255,255,255,1)"),
+		new Text ("message_screen_body", 0, 60, 173, 291, 1, message.message, "23px Times", "rgba(255,255,255,1)")
+	]);
+	
+	return screen;
+}
+
 io.on('connection', function (socket) {
 	console.log('connection received');
 	
@@ -349,7 +380,9 @@ io.on('connection', function (socket) {
 	 *		visible: A boolean, true if the phone is visible, false if it is not (not on the screen at all)
 	 *		raised: A boolean, true if the phone is in the raised position, false if it is in the lowered position
 	 *		screen_on: A boolean, true if the screen is on, false if it is off 
-	 *		screen: The name of the screen object to show
+	 *		screen: The name of the screen object to show (The size of the phone screen is 173 x 291 pixels).
+	 *  phone_apps: An array of apps installed on the phone.
+	 *  mailbox: An array of email messages; the contents of the player's mailbox.
 	 *  main_screen: The name of the currently active main screen.
 	 *  active_browser: The name of the internet browser object that is currently active. Undefined if the browser is not active.
 	 *  active_dialog: An object with the following information. Undefined if there is no active dialog box.
@@ -358,16 +391,30 @@ io.on('connection', function (socket) {
 	 *  active_filesystem: The name of the active computer filesystem.
 	 */
 	 
-	var game = { canvas:{x:1000, y:600}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneBlankScreen"}, main_screen:"testMainScreen", active_dialog:{name:"testDialog", replace_phone:true}};
+	var game = { canvas:{x:1000, y:600}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], main_screen:"testMainScreen", active_dialog:{name:"testDialog", replace_phone:true}};
 	game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 	game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
+	game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
+	
+	// Note that all phone applications should have an exit button; however, may be placed anywhere on the screen, not necessarily at (0,0).
+	installPhoneApp(new PhoneApp ("Email", new Text("Email_app_icon", 0, 0, 32, 32, 0, "Email", "10px Georgia", "rgba(255,255,255,1)"), "phoneEmailAppScreen"));
+	game.screens["phoneEmailAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
+	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, "Exit Email", "24px Times", "rgba(255,255,255,1)", 2));
+
+	// Phone Map application -- add new locations to the game through this.
+	installPhoneApp(new PhoneApp ("Map", new Text("Map_app_icon", 0, 0, 32, 32, 0, "Map", "10px Georgia", 'rgba(255,255,255,1)'), "phoneMapAppScreen"));
+	game.screens["phoneMapAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
+	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, "Exit Map", "24px Times", "rgba(255,255,255,1)", 2));
+	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_red_screen", 0, 30, 173, 60, "Go to Red Screen", "24px Times", "rgba(255,255,255,1)", 2));
 	
 	game.browsers["testBrowser"] = new Browser();
 	
 	game.dialogs["testDialog"] = new Dialog ("Title", "Title", "Text", ["close", "browser"]);
 	
 	game.filesystems["testFilesystem"] = new FileSystem();
-	 
+	
+	addToMailbox(new EmailMessage ("Testing", "Jonathan", "Hello, this is a test of the email system", []));
+		 
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
 	var init_commands = [];
 	init_commands.push(["resizeCanvas", game.canvas.x, game.canvas.y]);
@@ -389,6 +436,8 @@ io.on('connection', function (socket) {
 	
 	if (typeof game.active_browser !== 'undefined') {
 		drawDisplayObject(game.browsers[game.active_browser].screen, init_commands);
+	} else if (typeof game.active_filesystem !== 'undefined') {
+		drawDisplayObject(get_current_screen(game.filesystems[game.active_filesystem]), init_commands);
 	} else {
 		drawDisplayObject(game.screens[game.main_screen], init_commands);
 	}
@@ -396,6 +445,8 @@ io.on('connection', function (socket) {
 	if (typeof game.active_dialog !== 'undefined') {
 		if (typeof game.active_browser !== 'undefined') {
 			setup_dialog_screen(game.dialogs[game.active_dialog.name], game.canvas, game.browsers[game.active_browser].screen);
+		} else if (typeof game.active_filesystem !== 'undefined') {
+			setup_dialog_screen(game.dialogs[game.active_dialog.name], game.canvas, get_current_screen(game.filesystems[game.active_filesystem]));
 		} else {
 			setup_dialog_screen(game.dialogs[game.active_dialog.name], game.canvas, game.screens[game.main_screen]);
 		}
@@ -724,6 +775,19 @@ io.on('connection', function (socket) {
 		socket.emit('command', commands);
 	}
 	
+	/* Adds the specified message to the player's inbox */
+	function addToMailbox (message) {
+		var email_no = game.mailbox.length;
+		var x = 0;
+		var y = 30 + email_no * 15;
+		var message_screen = new Screen (x, y, 1, new Rectangle("inbox_" + email_no + "_background", 0, 0, 173, 15, 0, "rgba(255,255,255,1)"), 
+			/*Buttons */[new Button("inbox_" + email_no + "_button", 0, 0, 173, 15)], [], 
+			/*Elements */ [new Text ("inbox_" + email_no + "_sender", 0, 0, 40, 15, 1, message.sender, "11px Arial", "rgba(0,0,0,1)"), new Text("inbox_" + email_no + "_subject", 50, 0, 173, 15, 1, message.subject, "11px Arial", "rgba(0,0,0,1)")]);
+		
+		game.mailbox.push(message);
+		addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);		
+	}
+	
 	/* Displays the specified dialog object, clearing out all underlying buttons as necessary */
 	function showDialog(dialog_name) {
 		var commands = [];
@@ -773,6 +837,9 @@ io.on('connection', function (socket) {
 	function changePhoneScreen (name) {
 		var commands = [];
 		
+		game.screens[name].x = game.canvas.x - PHONE_SCREEN_X;
+		game.screens[name].y = game.canvas.y - PHONE_SCREEN_Y;
+		
 		if (game.phone.visible && game.phone.raised && game.phone.screen_on) {
 			clearDisplayObject(game.screens[game.phone.screen], commands);
 			drawDisplayObject(game.screens[name], commands);
@@ -780,6 +847,15 @@ io.on('connection', function (socket) {
 		
 		game.phone.screen = name;
 		socket.emit('command', commands);
+	}
+	
+	function installPhoneApp (app) {
+		var app_no = game.phone_apps.length;
+		var x = 35*(app_no % 4);
+		var y = 35*Math.floor(app_no / 4);
+		
+		addElementToScreen(game.screens["phoneHomeScreen"], new Screen (x, y, 1, app.icon, [new Button (app.name + "_start_button", 0, 0, 32, 32)], [], [])); // An event to handle this button clicked is handled already.
+		game.phone_apps.push(app);
 	}
 	
 	/* Changes the main screen to the screen with the specified name */
@@ -895,6 +971,20 @@ io.on('connection', function (socket) {
 	}
 		
 	socket.on('click', function (button) {
+		for (var i = 0; i < game.phone_apps.length; i++) {
+			if (button == game.phone_apps[i].name + "_start_button") {
+				changePhoneScreen(game.phone_apps[i].screen_name);
+				return;
+			}
+		}
+		for (var i = 0; i < game.mailbox.length; i++) {
+			if (button == "inbox_" + i + "_button") {
+				// Setup phoneEmailMessageScreen
+				game.screens["phoneEmailMessageScreen"] = email_message_screen(game.mailbox[i], game.canvas);
+				changePhoneScreen("phoneEmailMessageScreen");
+				return;
+			}
+		}		
 		if (button == 'raise-phone-button') {
 			raisePhone();
 		} else if (button == 'lower-phone-button') {
@@ -918,6 +1008,10 @@ io.on('connection', function (socket) {
 			closeFileSystem();
 		} else if (button == 'filesystem_up') {
 			console.log('filesystem_up');
+		} else if (button == 'go_to_red_screen') {
+			changeMainScreen("testMainScreen");
+		} else if (button == 'phone-exit-app') {
+			changePhoneScreen("phoneHomeScreen");
 		} else {
 			console.log('Received unhandled click event: ' + button);
 		}
