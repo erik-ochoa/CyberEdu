@@ -335,20 +335,6 @@ function get_current_screen (filesystem) {
 	return get_folder(filesystem, filesystem.currentDirectory).screen;
 }
 
-// Helper function to setup a folder screen before it is displayed. The filesystem argument, where the folder resides, contains the current directory.
-function setup_folder_screen (folder, filesystem) {
-	folder.screen = new Screen(0, 0, 0, new Image("image/filesystem/blank", 0, 0, 0), [new Button("filesystem_exit", 1180, 0, 1280, 100, "Exit", "24px Times", "rgba(0,0,0,1)", 1), new Button("filesystem_up", 1130, 0, 1170, 100, "Up", "24px Times", "rgba(0,0,0,1)", 1)], [], [new Text("filesystem_path_bar", 0, 0, 1120, 100, 1, "C:/" + filesystem.currentDirectory, "24px Times", "rgba(0,0,0,1)")]);
-	
-	// Add in the contents
-	for (var i = 0; i < folder.contents.length; i++) {
-		if (folder.contents[i].type == 'folder') {
-			addElementToScreen(folder.screen, new Text("name_text_" + filesystem.currentDirectory + "/" + folder.contents[i].name, 290, 140 + i*40, 1280, 180+i*40, 1, folder.contents[i].name, "24px Times", "rgba(0,0,0,1)"));
-		} else {
-			addElementToScreen(folder.screen, new Text("name_text_" + filesystem.currentDirectory + "/" + folder.contents[i], 290, 140 + i*40, 1280, 180 + i*40, 1, folder.contents, "24px Times", "rgba(0,0,0,1)"));
-		}
-	}
-}
-
 function email_message_screen (message, canvas) {
 	var screen = new Screen(canvas.x - PHONE_SCREEN_X, canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("Email_start_button", 0, 0, 173, 30, "Back", "24px Times", "rgba(255,255,255,1)", 1)], [], 
 	[new Text ("message_screen_sender", 0, 30, 173, 45, 1, "From: " + message.sender, "12px Arial", "rgba(255,255,255,1)"), 
@@ -376,6 +362,7 @@ io.on('connection', function (socket) {
  	 *  browsers: An object used as a map of <browser name> --> <browser object>
 	 *  dialogs: An object used as a map of <dialog name> --> <dialog object>
 	 *  filesystems: An object used as a map of <filesystem name> --> <filesystem object>
+	 *  webpages: An object used as a map of <URL> --> <screen object>
 	 * 	phone: An object representing the state of the user's phone, which has the following fields:
 	 *		visible: A boolean, true if the phone is visible, false if it is not (not on the screen at all)
 	 *		raised: A boolean, true if the phone is in the raised position, false if it is in the lowered position
@@ -391,7 +378,7 @@ io.on('connection', function (socket) {
 	 *  active_filesystem: The name of the active computer filesystem.
 	 */
 	 
-	var game = { canvas:{x:1000, y:600}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], main_screen:"testMainScreen", active_dialog:{name:"testDialog", replace_phone:true}};
+	var game = { canvas:{x:1000, y:600}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneBlankScreen"}, phone_apps:[], mailbox:[], main_screen:"testMainScreen", active_dialog:{name:"testDialog", replace_phone:true}};
 	game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 	game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 	game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
@@ -412,6 +399,7 @@ io.on('connection', function (socket) {
 	game.dialogs["testDialog"] = new Dialog ("Title", "Title", "Text", ["close", "browser"]);
 	
 	game.filesystems["testFilesystem"] = new FileSystem();
+	addToFileSystem(game.filesystems["testFilesystem"], "", "test.txt");
 	
 	addToMailbox(new EmailMessage ("Testing", "Jonathan", "Hello, this is a test of the email system", []));
 		 
@@ -683,12 +671,30 @@ io.on('connection', function (socket) {
 		// Always draw web pages at (0, 70).
 		if (new_url == "") {
 			new_screen = BLANK_BROWSER_SCREEN;
+		} else if (typeof game.webpages[new_url] !== 'undefined') {
+			new_screen = game.webpages[new_url];
 		} else {
 			new_screen = /* 404 Page */ new Screen (0, 70, 1, new Image ("image/404", 0, 0, 0), [], [], []);
 		}
 		addElementToScreen(browser.screen, new_screen);
 		
 		socket.emit('command', commands);
+	}
+	
+	// Helper function to setup a folder screen before it is displayed. The filesystem argument, where the folder resides, contains the current directory.
+	function setup_folder_screen (folder, filesystem) {
+		folder.screen = new Screen(0, 0, 0, new Image("image/filesystem/blank", 0, 0, 0), [new Button("filesystem_exit", 1180, 0, 1280, 100, "Exit", "24px Times", "rgba(0,0,0,1)", 1), new Button("filesystem_up", 1130, 0, 1170, 100, "Up", "24px Times", "rgba(0,0,0,1)", 1)], [], [new Text("filesystem_path_bar", 0, 0, 1120, 100, 1, "C:/" + filesystem.currentDirectory, "24px Times", "rgba(0,0,0,1)")]);
+		
+		// Add in the contents
+		for (var i = 0; i < folder.contents.length; i++) {
+			if (folder.contents[i].type == 'folder') {
+				addElementToScreen(folder.screen, new Text("name_text_" + filesystem.currentDirectory + "/" + folder.contents[i].name, 290, 140 + i*40, 1280, 180+i*40, 1, folder.contents[i].name, "24px Times", "rgba(0,0,0,1)"));
+				addButtonToScreen(folder.screen, new Button("delete_button_" + filesystem.currentDirectory + "/" + folder.contents[i].name, 1100, 140 + i*40, 1280, 180 + i*40, "Delete?", "24px Times", "rgba(0,0,0,1)", 2));
+			} else {
+				addElementToScreen(folder.screen, new Text("name_text_" + filesystem.currentDirectory + "/" + folder.contents[i], 290, 140 + i*40, 1280, 180 + i*40, 1, folder.contents[i], "24px Times", "rgba(0,0,0,1)"));
+				addButtonToScreen(folder.screen, new Button("delete_button_" + filesystem.currentDirectory + "/" + folder.contents[i], 1100, 140 + i*40, 1280, 180 + i*40, "Delete?", "24px Times", "rgba(0,0,0,1)", 2));
+			}
+		}
 	}
 	
 	function displayFileSystem (name) {
@@ -749,8 +755,11 @@ io.on('connection', function (socket) {
 		var y1 = y2 - 40;
 		var item_name = (item.type == 'folder' ? item.name : item);
 		
-		// Need to create display elements for this item and add them.
-		addElementToScreen(folder.screen, new Text("name_text_" + filesystem.currentDirectory + "/" + item_name, 290, y1, 1280, y2, 1, item_name, "24px Times", "rgba(0,0,0,1)"));
+		// Need to create display elements for this item and add them. Only do this if the screen exists
+		if (typeof folder.screen !== 'undefined') {
+			addElementToScreen(folder.screen, new Text("name_text_" + filesystem.currentDirectory + "/" + item_name, 290, y1, 1280, y2, 1, item_name, "24px Times", "rgba(0,0,0,1)"));
+			addButtonToScreen(folder.screen, new Button("delete_button_" + filesystem.currentDirectory + "/" + item_name, 1100, y1, 1280, y2, "Delete?", "24px Times", "rgba(0,0,0,1)", 2));
+		}
 	}
 	
 	// Item must be a file or folder.
@@ -765,14 +774,16 @@ io.on('connection', function (socket) {
 		}
 		
 		// Need to clear the screen elements related to this item, and move other elements around. Easier just to clear all the elements and re-create the screen.
-		var commands = [];
-		if (folder.screen["on_screen"]) {
-			clearDisplayObject(folder.screen, commands);
-			setup_folder_screen(folder, filesystem);
-			drawDisplayObject(folder.screen, commands);
+		if (typeof folder.screen !== 'undefined') {
+			var commands = [];
+			if (folder.screen["on_screen"]) {
+				clearDisplayObject(folder.screen, commands);
+				setup_folder_screen(folder, filesystem);
+				drawDisplayObject(folder.screen, commands);
+			}
+			
+			socket.emit('command', commands);
 		}
-		
-		socket.emit('command', commands);
 	}
 	
 	/* Adds the specified message to the player's inbox */
@@ -984,7 +995,24 @@ io.on('connection', function (socket) {
 				changePhoneScreen("phoneEmailMessageScreen");
 				return;
 			}
-		}		
+		}
+		
+		if (typeof game.active_filesystem !== 'undefined') {
+			var current_folder = get_folder(game.filesystems[game.active_filesystem], game.filesystems[game.active_filesystem].currentDirectory);
+			for (var i = 0; i < current_folder.contents.length; i++) {
+				if (current_folder.contents[i].type == 'folder') {
+					if (button == "delete_button_" + game.filesystems[game.active_filesystem].currentDirectory + "/" + current_folder.contents[i].name) {
+						deleteFromFileSystem(game.filesystems[game.active_filesystem], game.filesystems[game.active_filesystem].currentDirectory, current_folder.contents[i]);
+						return;
+					}
+				} else {
+					if (button == "delete_button_" + game.filesystems[game.active_filesystem].currentDirectory + "/" + current_folder.contents[i]) {
+						deleteFromFileSystem(game.filesystems[game.active_filesystem], game.filesystems[game.active_filesystem].currentDirectory, current_folder.contents[i]);
+						return;
+					}
+				}
+			}
+		}
 		if (button == 'raise-phone-button') {
 			raisePhone();
 		} else if (button == 'lower-phone-button') {
