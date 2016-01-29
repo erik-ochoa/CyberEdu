@@ -400,6 +400,7 @@ io.on('connection', function (socket) {
 	
 	game.filesystems["testFilesystem"] = new FileSystem();
 	addToFileSystem(game.filesystems["testFilesystem"], "", "test.txt");
+	addToFileSystem(game.filesystems["testFilesystem"], "", new Folder ("test_dir", ["a.txt", "b.txt"]));
 	
 	addToMailbox(new EmailMessage ("Testing", "Jonathan", "Hello, this is a test of the email system", []));
 		 
@@ -690,6 +691,7 @@ io.on('connection', function (socket) {
 			if (folder.contents[i].type == 'folder') {
 				addElementToScreen(folder.screen, new Text("name_text_" + filesystem.currentDirectory + "/" + folder.contents[i].name, 290, 140 + i*40, 1280, 180+i*40, 1, folder.contents[i].name, "24px Times", "rgba(0,0,0,1)"));
 				addButtonToScreen(folder.screen, new Button("delete_button_" + filesystem.currentDirectory + "/" + folder.contents[i].name, 1100, 140 + i*40, 1280, 180 + i*40, "Delete?", "24px Times", "rgba(0,0,0,1)", 2));
+				addButtonToScreen(folder.screen, new Button("change_directory_button_" + filesystem.currentDirectory + "/" + folder.contents[i].name, 290, 140 + i*40, 1000, 180 + i*40));
 			} else {
 				addElementToScreen(folder.screen, new Text("name_text_" + filesystem.currentDirectory + "/" + folder.contents[i], 290, 140 + i*40, 1280, 180 + i*40, 1, folder.contents[i], "24px Times", "rgba(0,0,0,1)"));
 				addButtonToScreen(folder.screen, new Button("delete_button_" + filesystem.currentDirectory + "/" + folder.contents[i], 1100, 140 + i*40, 1280, 180 + i*40, "Delete?", "24px Times", "rgba(0,0,0,1)", 2));
@@ -738,6 +740,7 @@ io.on('connection', function (socket) {
 		if (filesystem == game.filesystems[game.active_filesystem]) {
 			clearDisplayObject(get_current_screen(filesystem), commands);
 			filesystem.currentDirectory = newDirectory;
+			setup_folder_screen(get_folder(filesystem, filesystem.currentDirectory), filesystem);
 			drawDisplayObject(get_current_screen(filesystem), commands);
 		} else {
 			filesystem.currentDirectory = newDirectory;
@@ -759,6 +762,8 @@ io.on('connection', function (socket) {
 		if (typeof folder.screen !== 'undefined') {
 			addElementToScreen(folder.screen, new Text("name_text_" + filesystem.currentDirectory + "/" + item_name, 290, y1, 1280, y2, 1, item_name, "24px Times", "rgba(0,0,0,1)"));
 			addButtonToScreen(folder.screen, new Button("delete_button_" + filesystem.currentDirectory + "/" + item_name, 1100, y1, 1280, y2, "Delete?", "24px Times", "rgba(0,0,0,1)", 2));
+			if (item.type == 'folder')
+				addButtonToScreen(folder.screen, new Button("change_directory_button_" + filesystem.currentDirectory + "/" + item_name, 290, y1, 1000, y2));
 		}
 	}
 	
@@ -1005,6 +1010,15 @@ io.on('connection', function (socket) {
 						deleteFromFileSystem(game.filesystems[game.active_filesystem], game.filesystems[game.active_filesystem].currentDirectory, current_folder.contents[i]);
 						return;
 					}
+					
+					if (button == "change_directory_button_" + game.filesystems[game.active_filesystem].currentDirectory + "/" + current_folder.contents[i].name) {
+						// To change directory, must clear the screen, then draw a new screen.
+						if (game.filesystems[game.active_filesystem].currentDirectory == "") 
+							changeDirectory(game.filesystems[game.active_filesystem], current_folder.contents[i].name);
+						else 
+							changeDirectory(game.filesystems[game.active_filesystem], game.filesystems[game.active_filesystem].currentDirectory + "/" + current_folder.contents[i].name);
+						return;
+					}
 				} else {
 					if (button == "delete_button_" + game.filesystems[game.active_filesystem].currentDirectory + "/" + current_folder.contents[i]) {
 						deleteFromFileSystem(game.filesystems[game.active_filesystem], game.filesystems[game.active_filesystem].currentDirectory, current_folder.contents[i]);
@@ -1035,7 +1049,16 @@ io.on('connection', function (socket) {
 		} else if (button == 'filesystem_exit') {
 			closeFileSystem();
 		} else if (button == 'filesystem_up') {
-			console.log('filesystem_up');
+			if (game.filesystems[game.active_filesystem].currentDirectory != "") {
+				var path = game.filesystems[game.active_filesystem].currentDirectory.split("/");
+				var newPath = "";
+				for (var i = 0; i < path.length - 1; i++) {
+					newPath += path[i];
+					if (i != path.length - 2)
+					newPath += "/";
+				}
+				changeDirectory(game.filesystems[game.active_filesystem], newPath);
+			}
 		} else if (button == 'go_to_red_screen') {
 			changeMainScreen("testMainScreen");
 		} else if (button == 'phone-exit-app') {
