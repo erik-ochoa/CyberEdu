@@ -2,6 +2,9 @@ var app = require('http').createServer(handler)
 var io = require('socket.io')(app);
 var fs = require('fs');
 
+// Include modules here.
+eval(fs.readFileSync('coffee_shop.js').toString());
+
 app.listen(8011);
 
 function handler (request, response) {
@@ -376,9 +379,10 @@ io.on('connection', function (socket) {
 	 *		name: The name of the active dialog
 	 *		replace_phone: A boolean, true if the phone should be shown when this dialog is closed
 	 *  active_filesystem: The name of the active computer filesystem.
+	 *  player_name: The name of the player.
 	 */
 	 
-	var game = { canvas:{x:1000, y:600}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneBlankScreen"}, phone_apps:[], mailbox:[], main_screen:"testMainScreen", active_dialog:{name:"testDialog", replace_phone:true}};
+	var game = { canvas:{x:1000, y:600}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], main_screen:"testMainScreen", active_dialog:{name:"testDialog", replace_phone:true}, player_name:"Bobby"};
 	game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 	game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 	game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
@@ -393,6 +397,7 @@ io.on('connection', function (socket) {
 	game.screens["phoneMapAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, "Exit Map", "24px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_red_screen", 0, 30, 173, 60, "Go to Red Screen", "24px Times", "rgba(255,255,255,1)", 2));
+	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, "Go to Coffee Shop", "18px Times", "rgba(255,255,255,1)", 2));
 	
 	game.browsers["testBrowser"] = new Browser();
 	
@@ -403,6 +408,10 @@ io.on('connection', function (socket) {
 	addToFileSystem(game.filesystems["testFilesystem"], "", new Folder ("test_dir", ["a.txt", "b.txt"]));
 	
 	addToMailbox(new EmailMessage ("Testing", "Jonathan", "Hello, this is a test of the email system", []));
+	
+	// Load the modules into the game state object.
+	load_coffee_shop (game);
+	game.main_screen = "coffee_shop";
 		 
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
 	var init_commands = [];
@@ -987,6 +996,11 @@ io.on('connection', function (socket) {
 	}
 		
 	socket.on('click', function (button) {
+		// Handle events in the modules
+		if (coffee_shop_onclick(button, showDialog, closeDialog)) {
+			return;
+		}
+	
 		for (var i = 0; i < game.phone_apps.length; i++) {
 			if (button == game.phone_apps[i].name + "_start_button") {
 				changePhoneScreen(game.phone_apps[i].screen_name);
@@ -1061,6 +1075,9 @@ io.on('connection', function (socket) {
 			}
 		} else if (button == 'go_to_red_screen') {
 			changeMainScreen("testMainScreen");
+		} else if (button == 'go_to_coffee_shop') {
+			resizeCanvas(1188, 681);
+			changeMainScreen("coffee_shop");
 		} else if (button == 'phone-exit-app') {
 			changePhoneScreen("phoneHomeScreen");
 		} else {
