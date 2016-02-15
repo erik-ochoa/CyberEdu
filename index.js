@@ -570,4 +570,5 @@ function rollover_position(event) {
 		CANVAS_ELEMENT.style.cursor = "pointer";
 	else
 		CANVAS_ELEMENT.style.cursor = "auto";
+	document.getElementById("text").innerHTML = "X: " + posx + ", Y: " + posy;
 }

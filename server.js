@@ -380,9 +380,10 @@ io.on('connection', function (socket) {
 	 *		replace_phone: A boolean, true if the phone should be shown when this dialog is closed
 	 *  active_filesystem: The name of the active computer filesystem.
 	 *  player_name: The name of the player.
+	 *  partner_name: The name of the partner.
 	 */
 	 
-	var game = { canvas:{x:1000, y:600}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], main_screen:"testMainScreen", active_dialog:{name:"testDialog", replace_phone:true}, player_name:"Bobby"};
+	var game = { canvas:{x:1000, y:600}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], main_screen:"testMainScreen", active_dialog:{name:"testDialog", replace_phone:true}, player_name:"Bobby", partner_name:"Ashley"};
 	game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 	game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 	game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
@@ -997,7 +998,7 @@ io.on('connection', function (socket) {
 		
 	socket.on('click', function (button) {
 		// Handle events in the modules
-		if (coffee_shop_onclick(button, showDialog, closeDialog)) {
+		if (coffee_shop_onclick(button, showDialog, closeDialog, game.coffee_shop_variables)) {
 			return;
 		}
 	
