@@ -412,7 +412,6 @@ io.on('connection', function (socket) {
 	
 	// Load the modules into the game state object.
 	load_coffee_shop (game);
-	game.main_screen = "coffee_shop";
 		 
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
 	var init_commands = [];
@@ -998,7 +997,7 @@ io.on('connection', function (socket) {
 		
 	socket.on('click', function (button) {
 		// Handle events in the modules
-		if (coffee_shop_onclick(button, showDialog, closeDialog, game.coffee_shop_variables)) {
+		if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, game.coffee_shop_variables)) {
 			return;
 		}
 	
@@ -1077,8 +1076,7 @@ io.on('connection', function (socket) {
 		} else if (button == 'go_to_red_screen') {
 			changeMainScreen("testMainScreen");
 		} else if (button == 'go_to_coffee_shop') {
-			resizeCanvas(1188, 681);
-			changeMainScreen("coffee_shop");
+			// Handled in coffee_shop.js file.
 		} else if (button == 'phone-exit-app') {
 			changePhoneScreen("phoneHomeScreen");
 		} else {
