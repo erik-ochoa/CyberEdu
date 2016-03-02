@@ -379,11 +379,12 @@ io.on('connection', function (socket) {
 	 *		name: The name of the active dialog
 	 *		replace_phone: A boolean, true if the phone should be shown when this dialog is closed
 	 *  active_filesystem: The name of the active computer filesystem.
+	 *  active_audio_ids: An array of the string ID's of the audio elements which are currently active.
 	 *  player_name: The name of the player.
 	 *  partner_name: The name of the partner.
 	 */
 	 
-	var game = { canvas:{x:1000, y:600}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], main_screen:"testMainScreen", active_dialog:{name:"testDialog", replace_phone:true}, player_name:"Bobby", partner_name:"Ashley"};
+	var game = { canvas:{x:1000, y:600}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], main_screen:"testMainScreen", active_dialog:{name:"testDialog", replace_phone:true}, active_audio_ids:[], player_name:"Bobby", partner_name:"Ashley"};
 	game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 	game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 	game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
@@ -887,6 +888,7 @@ io.on('connection', function (socket) {
 	function changeMainScreen (name) {
 		var commands = [];
 		
+		stopAudio();
 		if (game.screens[game.main_screen]["on_screen"]) {
 			clearDisplayObject(game.screens[game.main_screen], commands);
 			drawDisplayObject(game.screens[name], commands);
@@ -994,10 +996,54 @@ io.on('connection', function (socket) {
 		if (removeCount != 1) console.log("Warning, call to removeTextInputFieldFromScreen removed " + removeCount + " fields. Arguments were screen = " + screen + "field = " + field);
 		socket.emit('command', commands);
 	}
+	
+	/* Starts playing an audio file. The audioID is a string, which matches the ID of the audio element in the HTML code. */
+	function playAudio (audioID) {
+		var commands = [];
+		
+		commands.push(["playSound", audioID]);
+		
+		game.active_audio_ids.push(audioID);
+		
+		socket.emit('command', commands);
+	}
+	
+	/* The audio ID argument is optional. If it is provided, this method stops playing an audio file. The audioID is a string as above. 
+	 * If the argument is not provided, this method stops all active audio. */
+	function stopAudio (audioID) {
+		var commands = [];
+
+		if (typeof audioID !== 'undefined') {
+			commands.push(["stopSound", audioID]);
+			for (var i = 0; i < game.active_audio_ids.length; i++) {
+				if (game.active_audio_ids[i] == audioID) {
+					game.active_audio_ids.splice(i, 1);
+					i--;
+				}
+			}
+		} else {
+			for (var i = 0; i < game.active_audio_ids.length; i++) {
+				commands.push(["stopSound", game.active_audio_ids[i]]);
+			}
+			game.active_audio_ids = [];
+		}
+		
+		socket.emit('command', commands);
+	}
+	
+	/* Plays the specified video. 
+	 * Upon completion of playback, returns to the game automatically. */
+	function playVideo (videoID) {
+		var commands = [];
+		
+		commands.push(["playVideo", videoID]);
+		
+		socket.emit('command', commands);
+	}
 		
 	socket.on('click', function (button) {
 		// Handle events in the modules
-		if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, game.coffee_shop_variables)) {
+		if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playAudio, playVideo, game.coffee_shop_variables)) {
 			return;
 		}
 	

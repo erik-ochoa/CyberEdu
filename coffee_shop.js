@@ -14,6 +14,21 @@ function load_coffee_shop (game) {
 		new Button ("coffee_shop_culprit_3", 1049, 391, 1106, 527)
 	], [], []);
 	
+	game.screens["coffee_shop_success"] = new Screen (0, 0, 0, new Image ("image/mission/complete", 0, 0, 0), [
+		new Button ("coffee_shop_failed_quit", 404, 427, 714, 515, "Select Another Mission", "24px Arial", "rgba(255,255,255,1)", 2)
+	], [], [
+		new Text ("coffee_shop_success_score", 404, 535, 714, 600, 2, ERROR_STRING, "24px Arial", "rgba(255,255,0,1)"),
+		new Rectangle ("coffee_shop_success_quit_backing_rectangle", 404, 427, 714, 515, 1, "rgba(255,255,255,0.5)")
+	]);
+	
+	game.screens["coffee_shop_failed"] = new Screen (0, 0, 0, new Image ("image/mission/failed", 0, 0, 0), [
+		new Button ("coffee_shop_failed_restart", 224, 427, 534, 515, "Retry Mission?", "24px Arial", "rgba(255,255,255,1)", 2),
+		new Button ("coffee_shop_failed_quit", 628, 427, 938, 515, "Select Another Mission", "24px Arial", "rgba(255,255,255,1", 2)
+	], [], [
+		new Rectangle ("coffee_shop_failed_restart_backing_rectangle", 224, 427, 534, 515, 1, "rgba(255,255,255,0.5)"),
+		new Rectangle ("coffee_shop_failed_quit_backing_rectangle", 628, 427, 938, 515, 1, "rgba(255,255,0,0.5)")
+	]);
+	
 	var manager_name = "Manager";
 	var customer_1_name = "Black Jeans";
 	var customer_2_name = "Newspaper";
@@ -35,7 +50,7 @@ function load_coffee_shop (game) {
 	game.dialogs["coffee_shop_manager_dialog_7"] = new Dialog ("coffee_shop_manager_dialog_7", manager_name, "Okay, I'll contact the police.", ["Continue."]);
 	
 	game.dialogs["coffee_shop_customer_1_dialog"] = new Dialog ("coffee_shop_customer_1_dialog", game.player_name, "Hello, I'm a detective investigating the robberies here. Do you know anything about them?", ["Continue."]);
-	game.dialogs["coffee_shop_customer_1_dialog_2"] = new Dialog ("coffee_shop_customer_1_dialog_2", customer_1_name, "I have not been robbed. I've never used a computer in here before, so I think that the robberies have something to do with people's computers.", ["Okay."]);
+	game.dialogs["coffee_shop_customer_1_dialog_2"] = new Dialog ("coffee_shop_customer_1_dialog_2", customer_1_name, "I have not been robbed. I've never used the internet in here before, so I think that the robberies have something to do with people's computers.", ["Okay."]);
 	
 	game.dialogs["coffee_shop_customer_2_dialog"] = new Dialog ("coffee_shop_customer_2_dialog", game.player_name, "Good morning. I'm a detective investigating the robberies that have been occurring here. What can you tell me?", ["Continue."]);
 	game.dialogs["coffee_shop_customer_2_dialog_2"] = new Dialog ("coffee_shop_customer_2_dialog_2", customer_2_name, "I ordered Halloween decorations for my house online through amazon.com, using a credit card, last week while sitting in this cafe. The tracking on the package said that the decorations had indeed shipped, " +
@@ -77,7 +92,7 @@ function load_coffee_shop (game) {
 	game.dialogs["coffee_shop_police_dialog_3"] = new Dialog ("coffee_shop_police_dialog_3", "Police", "Man, this " + game.player_name + " is the worst detective ever!", ["Okay."]);
 	game.dialogs["coffee_shop_police_dialog_4"] = new Dialog ("coffee_shop_police_dialog_4", "Police", "Well the processes on your PC say otherwise! You're downloading all the Wi-Fi traffic onto your computer! You're under arrest for fraud and robbery. You have the right to remain silent. Anything you say can be used against you in a court of law. You have the right to an attorney. If you cannot afford one, one will be provided for you.", ["Continue."]);
 	game.dialogs["coffee_shop_police_dialog_5"] = new Dialog ("coffee_shop_police_dialog_5", manager_name, "Why'd do it ya scum?! I hope you learn your lesson in jail.", ["Continue."]);
-	game.dialogs["coffee_shop_police_dialog_6"] = new Dialog ("coffee_shop_police_dialog_6", "Police", "We've got all the evidence we need. We'll handle it from here, Detective " + game.player_name, ["Continue."]);
+	game.dialogs["coffee_shop_police_dialog_6"] = new Dialog ("coffee_shop_police_dialog_6", "Police", "We've got all the evidence we need. We'll handle it from here, Detective " + game.player_name + ".", ["Continue."]);
 	game.dialogs["coffee_shop_police_dialog_7"] = new Dialog ("coffee_shop_police_dialog_7", manager_name, "Thank you for your help, " + game.player_name + " and " + game.partner_name + ". With the robber in custody, I'll be able to resume business as usual again. I'll post a notice regarding the risk of using my public network for financial transactions.", ["Continue."]);
 	game.dialogs["coffee_shop_police_dialog_8"] = new Dialog ("coffee_shop_police_dialog_8", customer_2_name, "Yeah, thanks guys! I had no idea that wireless network connections could be easily intercepted, even if the website itself is secure. I won't buy anything on a public network again.", ["Continue."]);
 	game.dialogs["coffee_shop_police_dialog_9"] = new Dialog ("coffee_shop_police_dialog_9", game.partner_name, "No problem, we're glad to help.", ["Continue."]);
@@ -107,8 +122,31 @@ function load_coffee_shop (game) {
 		cat_shown:"sunshine",
 		cat_vote:0,
 		cat_dialog:game.dialogs["coffee_shop_culprit_2_dialog_2"],
-		cat_display_element:new Image("image/sunshine", 448, 237, 1000)
+		cat_display_element:new Image("image/sunshine", 448, 237, 1000),
+		background_music_audio_id:"audio/mall",
+		times_reset:0,
+		score:0,
+		score_display_element:game.screens["coffee_shop_success"].extras[0],
+		wifi_sniffing_video_played:false
 	};
+}
+
+function resetCoffeeShopVariables (vars) {
+	vars.spoken_to_manager = false;
+	vars.spoken_to_customer_1 = false;
+	vars.spoken_to_customer_2 = false;
+	vars.spoken_to_customer_3 = false;
+	vars.spoken_to_customer_4 = false;
+	vars.spoken_to_customer_5 = false;
+	vars.spoken_to_culprit_1 = false;
+	vars.spoken_to_culprit_2 = false;
+	vars.spoken_to_culprit_3 = false;
+	vars.entry_message_shown = false;
+	vars.partner_dialog_2_shown = false;
+	vars.partner_dialog_3_shown = false;
+	vars.picking_culprit = false;
+	vars.culprit = "coffee_shop_culprit_3";
+	vars.times_reset++;
 }
 
 function pickCulprit (accused, showDialog, closeDialog, vars) {
@@ -131,10 +169,19 @@ function showPartnerDialog (showDialog, closeDialog, vars) {
 	}
 }
 
+function enterCoffeeShop (resizeCanvas, changeMainScreen, showDialog, playAudio, vars) {
+	resizeCanvas(1188, 681);
+	changeMainScreen("coffee_shop");
+	playAudio(vars.background_music_audio_id);
+	if (!vars.entry_message_shown) {
+		showDialog("coffee_shop_partner_dialog");
+	}
+}
+
 // Returns true if the input event is consumed by this function, false if it does not.
 // Takes the name of the button and whatever other arguments it needs from the server.js in order to work.
 // Here vars is game.coffee_shop_variables as assigned above.
-function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, vars) {
+function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playAudio, playVideo, vars) {
 	if (button == "coffee_shop_manager") {
 		if (!vars.spoken_to_manager) {
 			showDialog("coffee_shop_manager_dialog");
@@ -359,8 +406,9 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		return true;
 	} else if (button == "dialog_coffee_shop_police_dialog_3_Okay.") {
 		closeDialog();
-		
-		// Mission failed, take action.
+		resizeCanvas(1152, 648);
+		resetCoffeeShopVariables(vars);
+		changeMainScreen("coffee_shop_failed");
 		return true;
 	} else if (button == "dialog_coffee_shop_police_dialog_4_Continue.") {
 		closeDialog();
@@ -388,20 +436,33 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		return true;
 	} else if (button == "dialog_coffee_shop_police_dialog_10_Okay.") {
 		closeDialog();
-		
-		// Mission success, take action
+		resizeCanvas(1152, 648);
+		var score = Math.floor(30/(vars.times_reset+1));
+		if (score <= 0) score = 1;
+		if (vars.score < score)
+			vars.score = score;
+		vars.score_display_element.text = "You Scored " + vars.score + " Points (out of 30)!";
+		resetCoffeeShopVariables(vars);
+		changeMainScreen("coffee_shop_success");
+		if (!vars.wifi_sniffing_video_played) {
+			vars.wifi_sniffing_video_played = true;
+			playVideo("video/wifiSniffing");
+		}
 		return true;
 	} else if (button == "dialog_coffee_shop_accused_dialog_Continue.") {
 		closeDialog();
 		showDialog(vars.after_accused_speaks_show);
 		return true;
 	} else if (button == "go_to_coffee_shop") { // Button on the phone's map app.
-		resizeCanvas(1188, 681);
-		changeMainScreen("coffee_shop");
-		if (!vars.entry_message_shown) {
-			showDialog("coffee_shop_partner_dialog");
-		}
+		enterCoffeeShop(resizeCanvas, changeMainScreen, showDialog, playAudio, vars);
 		return false; // Allow the main file to handle this event as well.
+	} else if (button == "coffee_shop_failed_restart") {
+		enterCoffeeShop(resizeCanvas, changeMainScreen, showDialog, playAudio, vars);
+		return true; // This may need to be modified in the future.
+	} else if (button == "coffee_shop_failed_quit") {
+		changeMainScreen("testMainScreen"); // This will definately need to be modified
+		resizeCanvas(1000, 600);
+		return true;
 	} else
 		return false;
 }
