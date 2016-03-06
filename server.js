@@ -366,6 +366,7 @@ io.on('connection', function (socket) {
 	 *  dialogs: An object used as a map of <dialog name> --> <dialog object>
 	 *  filesystems: An object used as a map of <filesystem name> --> <filesystem object>
 	 *  webpages: An object used as a map of <URL> --> <screen object>
+	 *  background_music: An object used as a map of <screen name> --> <audio id>; the screens in this map must be "Main" Screens (i.e. not browsers, phone screens, etc.)
 	 * 	phone: An object representing the state of the user's phone, which has the following fields:
 	 *		visible: A boolean, true if the phone is visible, false if it is not (not on the screen at all)
 	 *		raised: A boolean, true if the phone is in the raised position, false if it is in the lowered position
@@ -384,7 +385,7 @@ io.on('connection', function (socket) {
 	 *  partner_name: The name of the partner.
 	 */
 	 
-	var game = { canvas:{x:1000, y:600}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], main_screen:"testMainScreen", active_dialog:{name:"testDialog", replace_phone:true}, active_audio_ids:[], player_name:"Bobby", partner_name:"Ashley"};
+	var game = { canvas:{x:1000, y:600}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], main_screen:"testMainScreen", active_dialog:{name:"testDialog", replace_phone:true}, player_name:"Bobby", partner_name:"Ashley"};
 	game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 	game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 	game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
@@ -410,10 +411,11 @@ io.on('connection', function (socket) {
 	addToFileSystem(game.filesystems["testFilesystem"], "", new Folder ("test_dir", ["a.txt", "b.txt"]));
 	
 	addToMailbox(new EmailMessage ("Testing", "Jonathan", "Hello, this is a test of the email system", []));
-	
+		
 	// Load the modules into the game state object.
 	load_coffee_shop (game);
 		 
+	// TODO INITIALIZE THE MUSIC PROPERLY IF LOADED FROM A SAVE! WHATEVER AUDIO WAS ACTIVE SHOULD BE RESTARTED!
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
 	var init_commands = [];
 	init_commands.push(["resizeCanvas", game.canvas.x, game.canvas.y]);
@@ -888,7 +890,17 @@ io.on('connection', function (socket) {
 	function changeMainScreen (name) {
 		var commands = [];
 		
-		stopAudio();
+		if (typeof game.background_music[game.main_screen] === 'undefined' && typeof game.background_music[name] !== 'undefined') {
+			playAudio(game.background_music[name]);
+		} else if (typeof game.background_music[game.main_screen] !== 'undefined' && typeof game.background_music[name] === 'undefined') {
+			stopAudio(game.background_music[game.main_screen]);
+		} else if (typeof game.background_music[game.main_screen] !== 'undefined' && typeof game.background_music[name] !== 'undefined') {
+			if (game.background_music[game.main_screen] != game.background_music[name]) {
+				stopAudio(game.background_music[game.main_screen]);
+				playAudio(game.background_music[game.screen]);
+			}
+		}		
+		
 		if (game.screens[game.main_screen]["on_screen"]) {
 			clearDisplayObject(game.screens[game.main_screen], commands);
 			drawDisplayObject(game.screens[name], commands);
@@ -1002,32 +1014,16 @@ io.on('connection', function (socket) {
 		var commands = [];
 		
 		commands.push(["playSound", audioID]);
-		
-		game.active_audio_ids.push(audioID);
-		
+				
 		socket.emit('command', commands);
 	}
 	
-	/* The audio ID argument is optional. If it is provided, this method stops playing an audio file. The audioID is a string as above. 
-	 * If the argument is not provided, this method stops all active audio. */
+	/* This method stops playing an audio file. The audioID is a string as above. */
 	function stopAudio (audioID) {
 		var commands = [];
 
-		if (typeof audioID !== 'undefined') {
-			commands.push(["stopSound", audioID]);
-			for (var i = 0; i < game.active_audio_ids.length; i++) {
-				if (game.active_audio_ids[i] == audioID) {
-					game.active_audio_ids.splice(i, 1);
-					i--;
-				}
-			}
-		} else {
-			for (var i = 0; i < game.active_audio_ids.length; i++) {
-				commands.push(["stopSound", game.active_audio_ids[i]]);
-			}
-			game.active_audio_ids = [];
-		}
-		
+		commands.push(["stopSound", audioID]);
+			
 		socket.emit('command', commands);
 	}
 	
@@ -1043,7 +1039,7 @@ io.on('connection', function (socket) {
 		
 	socket.on('click', function (button) {
 		// Handle events in the modules
-		if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playAudio, playVideo, game.coffee_shop_variables)) {
+		if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.coffee_shop_variables)) {
 			return;
 		}
 	

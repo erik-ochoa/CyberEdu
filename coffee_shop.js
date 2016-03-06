@@ -29,6 +29,9 @@ function load_coffee_shop (game) {
 		new Rectangle ("coffee_shop_failed_quit_backing_rectangle", 628, 427, 938, 515, 1, "rgba(255,255,0,0.5)")
 	]);
 	
+	// Loading the music.
+	game.background_music["coffee_shop"] = "audio/mall";
+	
 	var manager_name = "Manager";
 	var customer_1_name = "Black Jeans";
 	var customer_2_name = "Newspaper";
@@ -169,10 +172,9 @@ function showPartnerDialog (showDialog, closeDialog, vars) {
 	}
 }
 
-function enterCoffeeShop (resizeCanvas, changeMainScreen, showDialog, playAudio, vars) {
+function enterCoffeeShop (resizeCanvas, changeMainScreen, showDialog, vars) {
 	resizeCanvas(1188, 681);
 	changeMainScreen("coffee_shop");
-	playAudio(vars.background_music_audio_id);
 	if (!vars.entry_message_shown) {
 		showDialog("coffee_shop_partner_dialog");
 	}
@@ -181,7 +183,7 @@ function enterCoffeeShop (resizeCanvas, changeMainScreen, showDialog, playAudio,
 // Returns true if the input event is consumed by this function, false if it does not.
 // Takes the name of the button and whatever other arguments it needs from the server.js in order to work.
 // Here vars is game.coffee_shop_variables as assigned above.
-function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playAudio, playVideo, vars) {
+function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, vars) {
 	if (button == "coffee_shop_manager") {
 		if (!vars.spoken_to_manager) {
 			showDialog("coffee_shop_manager_dialog");
@@ -454,10 +456,10 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		showDialog(vars.after_accused_speaks_show);
 		return true;
 	} else if (button == "go_to_coffee_shop") { // Button on the phone's map app.
-		enterCoffeeShop(resizeCanvas, changeMainScreen, showDialog, playAudio, vars);
+		enterCoffeeShop(resizeCanvas, changeMainScreen, showDialog, vars);
 		return false; // Allow the main file to handle this event as well.
 	} else if (button == "coffee_shop_failed_restart") {
-		enterCoffeeShop(resizeCanvas, changeMainScreen, showDialog, playAudio, vars);
+		enterCoffeeShop(resizeCanvas, changeMainScreen, showDialog, vars);
 		return true; // This may need to be modified in the future.
 	} else if (button == "coffee_shop_failed_quit") {
 		changeMainScreen("testMainScreen"); // This will definately need to be modified
