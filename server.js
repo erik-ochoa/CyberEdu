@@ -5,6 +5,7 @@ var fs = require('fs');
 // Include modules here.
 eval(fs.readFileSync('coffee_shop.js').toString());
 eval(fs.readFileSync('library.js').toString());
+eval(fs.readFileSync('apartment.js').toString());
 
 app.listen(8011);
 
@@ -342,9 +343,9 @@ function get_current_screen (filesystem) {
 
 // mailbox_index is the index of the specified message within the mailbox.
 function email_message_screen (message, mailbox_index, canvas) {
-	var screen = new Screen(canvas.x - PHONE_SCREEN_X, canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), 
+	var screen = new Screen(canvas.x - PHONE_SCREEN_X, canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0),
 	[new Button("Email_start_button", 0, 0, 173, 30, "Back", "24px Times", "rgba(255,255,255,1)", 1),
-		new Button("Email_delete_button_" + mailbox_index, 143, 31, 173, 60, "X", "19px Times", "rgba(255,255,255,1)", 1)	
+		new Button("Email_delete_button_" + mailbox_index, 143, 31, 173, 60, "X", "19px Times", "rgba(255,255,255,1)", 1)
 	], [],
 	[new Text ("message_screen_sender", 0, 30, 173, 45, 1, "From: " + message.sender, "12px Arial", "rgba(255,255,255,1)"),
 		new Text("message_screen_subject", 0, 45, 173, 60, 1, "Subject: " + message.subject, "12px Arial", "rgba(255,255,255,1)"),
@@ -407,6 +408,7 @@ io.on('connection', function (socket) {
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_red_screen", 0, 30, 173, 60, "Go to Red Screen", "24px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, "Go to Coffee Shop", "18px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, "Go to Library", "18px Times", "rgba(255,255,255,1)", 2));
+	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, "Go to Apartment", "18px Times", "rgba(255,255,255,1)", 2));
 
 	game.browsers["testBrowser"] = new Browser();
 
@@ -426,6 +428,7 @@ io.on('connection', function (socket) {
 	// Load the modules into the game state object.
 	load_coffee_shop (game);
 	load_library (game);
+	load_apartment (game);
 
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
 	var init_commands = [];
@@ -466,7 +469,7 @@ io.on('connection', function (socket) {
 		clearDisplayObject(game.screens[game.main_screen], init_commands);
 		drawDisplayObject(game.dialogs[game.active_dialog.name].screen, init_commands);
 	}
-	
+
 	if (typeof game.background_music[game.main_screen] !== 'undefined') {
 		init_commands.push(["playSound", game.background_music[game.main_screen]]);
 	}
@@ -830,7 +833,7 @@ io.on('connection', function (socket) {
 		game.mailbox.push(message);
 		addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);
 	}
-	
+
 	function removeFromMailbox (email_no) {
 		var y = yPositionOfEmailNo(email_no);
 		console.log('Calling removeFromMailbox(' + email_no + ')');
@@ -842,7 +845,7 @@ io.on('connection', function (socket) {
 				i--; // Must decrement i because something was removed!
 			}
 		}
-		
+
 		game.mailbox.splice(email_no, 1);
 		for (var i = email_no; i < game.mailbox.length; i++) {
 			var message_screen = new Screen (0, yPositionOfEmailNo(i), 1, new Rectangle("inbox_" + i + "_background", 0, 0, 173, 15, 0, "rgba(255,255,255," + (game.mailbox[i].unread ? 1 : 0.2) + ")"),
@@ -851,11 +854,11 @@ io.on('connection', function (socket) {
 			addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);
 		}
 	}
-	
+
 	function markAsRead (email_no) {
 		if (game.mailbox[email_no].unread) {
 			game.mailbox[email_no].unread = false;
-			
+
 			for (var i = 0; i < game.screens["phoneEmailAppScreen"].extras.length; i++) {
 				if (game.screens["phoneEmailAppScreen"].extras[i].type == 'screen' && game.screens["phoneEmailAppScreen"].extras[i].base.type == 'rectangle' && game.screens["phoneEmailAppScreen"].extras[i].base.name == "inbox_" + email_no + "_background") {
 					// Remove and re-add the screen with the background changed.
@@ -864,13 +867,13 @@ io.on('connection', function (socket) {
 					var message_screen = new Screen (0, yPositionOfEmailNo(email_no), 1, new Rectangle("inbox_" + email_no + "_background", 0, 0, 173, 15, 0, "rgba(255,255,255," + (message.unread ? 1 : 0.2) + ")"),
 						/*Buttons */[new Button("inbox_" + email_no + "_button", 0, 0, 173, 14)], [],
 						/*Elements */ [new Text ("inbox_" + email_no + "_sender", 0, 0, 40, 15, 1, message.sender, "11px Arial", "rgba(0,0,0,1)"), new Text("inbox_" + email_no + "_subject", 50, 0, 173, 15, 1, message.subject, "11px Arial", "rgba(0,0,0,1)")]);
-					addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);	
+					addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);
 					break;
 				}
 			}
-		} 
+		}
 	}
-	
+
 	// Helper function which returns the y-position of an email_no
 	function yPositionOfEmailNo (email_no) {
 		return 30 + email_no * 15;
@@ -1106,6 +1109,10 @@ io.on('connection', function (socket) {
 			return;
 		}
 
+		if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables)) {
+			return;
+		}
+
 		for (var i = 0; i < game.phone_apps.length; i++) {
 			if (button == game.phone_apps[i].name + "_start_button") {
 				changePhoneScreen(game.phone_apps[i].screen_name);
@@ -1193,6 +1200,8 @@ io.on('connection', function (socket) {
 			// Handled in coffee_shop.js file.
 		} else if (button == 'go_to_library') {
 			//Handled in library.js file.
+		} else if (button == 'go_to_apartment') {
+			//Handled in apartment.js file.
 		} else if (button == 'phone-exit-app') {
 			changePhoneScreen("phoneHomeScreen");
 		} else {
