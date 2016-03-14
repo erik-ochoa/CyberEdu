@@ -159,6 +159,7 @@ var EmailMessage = function (subject, sender, message, attachments) {
 	this.sender = sender;
 	this.message = message;
 	this.attachments = attachments;
+	this.unread = true;
 }
 
 /*  Name: the name of this app
@@ -339,11 +340,15 @@ function get_current_screen (filesystem) {
 	return get_folder(filesystem, filesystem.currentDirectory).screen;
 }
 
-function email_message_screen (message, canvas) {
-	var screen = new Screen(canvas.x - PHONE_SCREEN_X, canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("Email_start_button", 0, 0, 173, 30, "Back", "24px Times", "rgba(255,255,255,1)", 1)], [],
+// mailbox_index is the index of the specified message within the mailbox.
+function email_message_screen (message, mailbox_index, canvas) {
+	var screen = new Screen(canvas.x - PHONE_SCREEN_X, canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), 
+	[new Button("Email_start_button", 0, 0, 173, 30, "Back", "24px Times", "rgba(255,255,255,1)", 1),
+		new Button("Email_delete_button_" + mailbox_index, 143, 31, 173, 60, "X", "19px Times", "rgba(255,255,255,1)", 1)	
+	], [],
 	[new Text ("message_screen_sender", 0, 30, 173, 45, 1, "From: " + message.sender, "12px Arial", "rgba(255,255,255,1)"),
 		new Text("message_screen_subject", 0, 45, 173, 60, 1, "Subject: " + message.subject, "12px Arial", "rgba(255,255,255,1)"),
-		new Text ("message_screen_body", 0, 60, 173, 291, 1, message.message, "23px Times", "rgba(255,255,255,1)")
+		new Text ("message_screen_body", 0, 60, 173, 291, 1, message.message, "11px Times", "rgba(255,255,255,1)")
 	]);
 
 	return screen;
@@ -381,7 +386,6 @@ io.on('connection', function (socket) {
 	 *		name: The name of the active dialog
 	 *		replace_phone: A boolean, true if the phone should be shown when this dialog is closed
 	 *  active_filesystem: The name of the active computer filesystem.
-	 *  active_audio_ids: An array of the string ID's of the audio elements which are currently active.
 	 *  player_name: The name of the player.
 	 *  partner_name: The name of the partner.
 	 */
@@ -413,12 +417,16 @@ io.on('connection', function (socket) {
 	addToFileSystem(game.filesystems["testFilesystem"], "", new Folder ("test_dir", ["a.txt", "b.txt"]));
 
 	addToMailbox(new EmailMessage ("Testing", "Jonathan", "Hello, this is a test of the email system", []));
+	addToMailbox(new EmailMessage ("Testing 2", "Jonathan", "", []));
+	addToMailbox(new EmailMessage ("Testing 3", "Jonathan", "", []));
+	for (var i = 4; i <= 17; i++) {
+		addToMailbox(new EmailMessage("Testing " + i, "Jonathan", "", []));
+	}
 
 	// Load the modules into the game state object.
 	load_coffee_shop (game);
 	load_library (game);
 
-	// TODO INITIALIZE THE MUSIC PROPERLY IF LOADED FROM A SAVE! WHATEVER AUDIO WAS ACTIVE SHOULD BE RESTARTED!
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
 	var init_commands = [];
 	init_commands.push(["resizeCanvas", game.canvas.x, game.canvas.y]);
@@ -457,6 +465,10 @@ io.on('connection', function (socket) {
 
 		clearDisplayObject(game.screens[game.main_screen], init_commands);
 		drawDisplayObject(game.dialogs[game.active_dialog.name].screen, init_commands);
+	}
+	
+	if (typeof game.background_music[game.main_screen] !== 'undefined') {
+		init_commands.push(["playSound", game.background_music[game.main_screen]]);
 	}
 
 	socket.emit('command', init_commands);
@@ -810,13 +822,58 @@ io.on('connection', function (socket) {
 	function addToMailbox (message) {
 		var email_no = game.mailbox.length;
 		var x = 0;
-		var y = 30 + email_no * 15;
-		var message_screen = new Screen (x, y, 1, new Rectangle("inbox_" + email_no + "_background", 0, 0, 173, 15, 0, "rgba(255,255,255,1)"),
-			/*Buttons */[new Button("inbox_" + email_no + "_button", 0, 0, 173, 15)], [],
+		var y = yPositionOfEmailNo(email_no);
+		var message_screen = new Screen (x, y, 1, new Rectangle("inbox_" + email_no + "_background", 0, 0, 173, 15, 0, "rgba(255,255,255," + (message.unread ? 1 : 0.2) + ")"),
+			/*Buttons */[new Button("inbox_" + email_no + "_button", 0, 0, 173, 14)], [],
 			/*Elements */ [new Text ("inbox_" + email_no + "_sender", 0, 0, 40, 15, 1, message.sender, "11px Arial", "rgba(0,0,0,1)"), new Text("inbox_" + email_no + "_subject", 50, 0, 173, 15, 1, message.subject, "11px Arial", "rgba(0,0,0,1)")]);
 
 		game.mailbox.push(message);
 		addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);
+	}
+	
+	function removeFromMailbox (email_no) {
+		var y = yPositionOfEmailNo(email_no);
+		console.log('Calling removeFromMailbox(' + email_no + ')');
+		for (var i = 0; i < game.screens["phoneEmailAppScreen"].extras.length; i++) {
+			console.log('First loop, i = ' + i);
+			if (game.screens["phoneEmailAppScreen"].extras[i].type == 'screen' && game.screens["phoneEmailAppScreen"].extras[i].base.type == 'rectangle' && game.screens["phoneEmailAppScreen"].extras[i].base.name.match(/inbox_\d+_background/) != null && game.screens["phoneEmailAppScreen"].extras[i].y >= y) {
+				console.log('removing element' + i);
+				removeElementFromScreen(game.screens["phoneEmailAppScreen"], game.screens["phoneEmailAppScreen"].extras[i]);
+				i--; // Must decrement i because something was removed!
+			}
+		}
+		
+		game.mailbox.splice(email_no, 1);
+		for (var i = email_no; i < game.mailbox.length; i++) {
+			var message_screen = new Screen (0, yPositionOfEmailNo(i), 1, new Rectangle("inbox_" + i + "_background", 0, 0, 173, 15, 0, "rgba(255,255,255," + (game.mailbox[i].unread ? 1 : 0.2) + ")"),
+				/*Buttons*/ [new Button("inbox_" + i + "_button", 0, 0, 173, 14)], [],
+				/*Elements*/ [new Text ("inbox_" + i + "_sender", 0, 0, 40, 15, 1, game.mailbox[i].sender, "11px Arial", "rgba(0,0,0,1)"), new Text("inbox_" + i + "_subject", 50, 0, 173, 15, 1, game.mailbox[i].subject, "11px Arial", "rgba(0,0,0,1)")]);
+			addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);
+		}
+	}
+	
+	function markAsRead (email_no) {
+		if (game.mailbox[email_no].unread) {
+			game.mailbox[email_no].unread = false;
+			
+			for (var i = 0; i < game.screens["phoneEmailAppScreen"].extras.length; i++) {
+				if (game.screens["phoneEmailAppScreen"].extras[i].type == 'screen' && game.screens["phoneEmailAppScreen"].extras[i].base.type == 'rectangle' && game.screens["phoneEmailAppScreen"].extras[i].base.name == "inbox_" + email_no + "_background") {
+					// Remove and re-add the screen with the background changed.
+					removeElementFromScreen(game.screens["phoneEmailAppScreen"], game.screens["phoneEmailAppScreen"].extras[i]);
+					var message = game.mailbox[email_no];
+					var message_screen = new Screen (0, yPositionOfEmailNo(email_no), 1, new Rectangle("inbox_" + email_no + "_background", 0, 0, 173, 15, 0, "rgba(255,255,255," + (message.unread ? 1 : 0.2) + ")"),
+						/*Buttons */[new Button("inbox_" + email_no + "_button", 0, 0, 173, 14)], [],
+						/*Elements */ [new Text ("inbox_" + email_no + "_sender", 0, 0, 40, 15, 1, message.sender, "11px Arial", "rgba(0,0,0,1)"), new Text("inbox_" + email_no + "_subject", 50, 0, 173, 15, 1, message.subject, "11px Arial", "rgba(0,0,0,1)")]);
+					addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);	
+					break;
+				}
+			}
+		} 
+	}
+	
+	// Helper function which returns the y-position of an email_no
+	function yPositionOfEmailNo (email_no) {
+		return 30 + email_no * 15;
 	}
 
 	/* Displays the specified dialog object, clearing out all underlying buttons as necessary */
@@ -1058,8 +1115,17 @@ io.on('connection', function (socket) {
 		for (var i = 0; i < game.mailbox.length; i++) {
 			if (button == "inbox_" + i + "_button") {
 				// Setup phoneEmailMessageScreen
-				game.screens["phoneEmailMessageScreen"] = email_message_screen(game.mailbox[i], game.canvas);
+				markAsRead(i);
+				game.screens["phoneEmailMessageScreen"] = email_message_screen(game.mailbox[i], i, game.canvas);
 				changePhoneScreen("phoneEmailMessageScreen");
+				return;
+			}
+		}
+		for (var i = 0; i < game.mailbox.length; i++) {
+			if (button == "Email_delete_button_" + i) {
+				removeFromMailbox(i);
+				if (game.phone.screen == "phoneEmailMessageScreen")
+					changePhoneScreen("phoneEmailAppScreen");
 				return;
 			}
 		}
