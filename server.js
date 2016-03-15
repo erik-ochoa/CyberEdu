@@ -4,6 +4,7 @@ var fs = require('fs');
 
 // Include modules here.
 eval(fs.readFileSync('coffee_shop.js').toString());
+eval(fs.readFileSync('mall_scene.js').toString());
 
 app.listen(8011);
 
@@ -401,7 +402,7 @@ io.on('connection', function (socket) {
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, "Exit Map", "24px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_red_screen", 0, 30, 173, 60, "Go to Red Screen", "24px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, "Go to Coffee Shop", "18px Times", "rgba(255,255,255,1)", 2));
-	
+	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,90, 173,120, "Go to Mall", "18px Times", "rgba(255,255,255,1)", 2));
 	game.browsers["testBrowser"] = new Browser();
 	
 	game.dialogs["testDialog"] = new Dialog ("Title", "Title", "Text", ["close", "browser"]);
@@ -414,6 +415,7 @@ io.on('connection', function (socket) {
 		
 	// Load the modules into the game state object.
 	load_coffee_shop (game);
+	load_mall(game);
 		 
 	// TODO INITIALIZE THE MUSIC PROPERLY IF LOADED FROM A SAVE! WHATEVER AUDIO WAS ACTIVE SHOULD BE RESTARTED!
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
@@ -1041,6 +1043,8 @@ io.on('connection', function (socket) {
 		// Handle events in the modules
 		if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.coffee_shop_variables)) {
 			return;
+		} else if(mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.mall_scene_variables)) {
+			return;
 		}
 	
 		for (var i = 0; i < game.phone_apps.length; i++) {
@@ -1121,6 +1125,8 @@ io.on('connection', function (socket) {
 			// Handled in coffee_shop.js file.
 		} else if (button == 'phone-exit-app') {
 			changePhoneScreen("phoneHomeScreen");
+		} else if (button == 'go_to_mall') {
+			changeMainScreen("mall_scene")
 		} else {
 			console.log('Received unhandled click event: ' + button);
 		}
