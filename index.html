@@ -19,7 +19,7 @@
 			}
 		</style>
 	</head>
-	
+
 	<body>
 		<canvas id="view" width="1280" height="630" style="border:1px solid #000000; position:relative;" onclick="click_position()" onmousemove="rollover_position()"></canvas>
 		<p id="text"> </p>
@@ -28,11 +28,18 @@
 		<video id="video/mfa" width="0" height="0">
 			<source src="/video/mfa.mp4"/>
 		</video>
-		
+		<video id="video/malware" width="0" height="0">
+			<source src="/video/malware.mp4"/>
+		</video>
+
 		<video id="video/wifiSniffing" width="0" height="0">
 			<source src="/video/wifisniff.mp4"/>
 		</video>
-		
+
+		<video id="video/piracy" width="0" height="0">
+			<source src="/video/Piracy1.mp4"/>            //this video's pretty large.. 70+ mb
+		</video>
+
 		<!-- Game images. Hidden from view by declaring the size as 0 -->
 		<img id="image/404" src="/images/404.png" width="0" height="0"/>
 		<img id="image/browser/blank" src="/images/browser.jpg" width="0" height="0"/>
@@ -41,9 +48,25 @@
 		<img id="image/phone/screen/on" src="/images/phone_screen_on.gif" width="0" height="0"/>
 		<img id="image/filesystem/blank" src="/images/computer_file_system.png" width="0" height="0"/>
 		<img id="image/coffeeshop" src="/images/Cafe.jpg" width="0" height="0"/>
+
+		<img id="image/library" src="/images/Library.jpg" width="0" height="0"/>
+		<img id="image/librarian" src="/images/Librarian.jpg" width="0" height="0"/>
+		<img id="image/comp1" src="/images/Zoom1.jpg" width="0" height="0"/>
+		<img id="image/comp2" src="/images/Zoom2.jpg" width="0" height="0"/>
+		<img id="image/comp3" src="/images/Zoom3.jpg" width="0" height="0"/>
+		<img id="image/infected" src="/images/bluescreen.png" width="0" height="0"/>
+		<img id="image/infected2" src="/images/freephonesoftware.jpg" width="0" height="0"/>
 		<img id="image/sunshine" src="/images/Sunshine_the_cat.png" width="0" height="0" />
+
+		<img id="image/hallway" src="/images/Hallway.jpg" width="0" height="0"/>
+		<img id="image/billya" src="/images/BillyBedroom.jpg" width="0" height="0"/>
+		<img id="image/jacoba" src="/images/JacobBedroom.jpg" width="0" height="0"/>
+		<img id="image/emilya" src="/images/EmilyBedroom.jpg" width="0" height="0"/>
+		<img id="image/madelinea" src="/images/MadelineBedroom.jpg" width="0" height="0"/>
+
 		<img id="image/mission/complete" src="/images/mission_complete.jpg" width="0" height="0" />
 		<img id="image/mission/failed" src="/images/mission_failed.jpg" width="0" height="0" />
+
 		<img id="image/mallexterior" src="/images/Mall_exterior.jpg" width="0" height="0"/>
 		<img id="image/mallinterior" src="/images/Mall_interior.jpg" width="0" height="0"/>
 		<img id="image/productivity" src="/images/Productivity.jpg" width="0" height="0"/> 
@@ -54,7 +77,7 @@
 		<audio id="audio/mall" preload="auto" loop="loop">
 			<source src="/audio/mall_music.mp3"/>
 		</audio>
-		
+
 		<script src="/socket.io/socket.io.js"></script>
 		<script src="/index.js"></script>
 
