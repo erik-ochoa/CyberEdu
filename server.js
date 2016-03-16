@@ -4,7 +4,9 @@ var fs = require('fs');
 
 // Include modules here.
 eval(fs.readFileSync('coffee_shop.js').toString());
+eval(fs.readFileSync('mall_scene.js').toString());
 eval(fs.readFileSync('library.js').toString());
+eval(fs.readFileSync('apartment.js').toString());
 
 app.listen(8011);
 
@@ -344,9 +346,9 @@ function get_current_screen (filesystem) {
 
 // mailbox_index is the index of the specified message within the mailbox.
 function email_message_screen (message, mailbox_index, canvas) {
-	var screen = new Screen(canvas.x - PHONE_SCREEN_X, canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), 
+	var screen = new Screen(canvas.x - PHONE_SCREEN_X, canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0),
 	[new Button("Email_start_button", 0, 0, 173, 30, "Back", "24px Times", "rgba(255,255,255,1)", 1),
-		new Button("Email_delete_button_" + mailbox_index, 143, 31, 173, 60, "X", "19px Times", "rgba(255,255,255,1)", 1)	
+		new Button("Email_delete_button_" + mailbox_index, 143, 31, 173, 60, "X", "19px Times", "rgba(255,255,255,1)", 1)
 	], [],
 	[new Text ("message_screen_sender", 0, 30, 173, 45, 1, "From: " + message.sender, "12px Arial", "rgba(255,255,255,1)"),
 		new Text("message_screen_subject", 0, 45, 173, 60, 1, "Subject: " + message.subject, "12px Arial", "rgba(255,255,255,1)"),
@@ -411,7 +413,9 @@ io.on('connection', function (socket) {
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, "Exit Map", "24px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_red_screen", 0, 30, 173, 60, "Go to Red Screen", "24px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, "Go to Coffee Shop", "18px Times", "rgba(255,255,255,1)", 2));
+	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,150, 173,180, "Go to Mall", "18px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, "Go to Library", "18px Times", "rgba(255,255,255,1)", 2));
+	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, "Go to Apartment", "18px Times", "rgba(255,255,255,1)", 2));
 
 	game.browsers["testBrowser"] = new Browser();
 
@@ -430,7 +434,9 @@ io.on('connection', function (socket) {
 
 	// Load the modules into the game state object.
 	load_coffee_shop (game);
+	load_mall(game);
 	load_library (game);
+	load_apartment (game);
 
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
 	var init_commands = [];
@@ -471,13 +477,12 @@ io.on('connection', function (socket) {
 		clearDisplayObject(game.screens[game.main_screen], init_commands);
 		drawDisplayObject(game.dialogs[game.active_dialog.name].screen, init_commands);
 	}
-	
+
 	if (typeof game.background_music[game.main_screen] !== 'undefined') {
 		init_commands.push(["playSound", game.background_music[game.main_screen]]);
 	}
 
 	socket.emit('command', init_commands);
-	changeMailboxScrollPosition(12);
 
 	/* Changes the canvas size to the specified arguments */
 	function resizeCanvas (newX, newY) {
@@ -850,7 +855,7 @@ io.on('connection', function (socket) {
 				}
 			}
 		}
-		
+
 		game.mailbox.splice(email_no, 1);
 		for (var i = email_no; i < game.mailbox.length; i++) {
 			// Only add elements that shall fit on the screen.
@@ -882,7 +887,7 @@ io.on('connection', function (socket) {
 					}
 				}
 			}
-		} 
+		}
 	}
 	
 	function changeMailboxScrollPosition (newPosition) {
@@ -1196,8 +1201,14 @@ io.on('connection', function (socket) {
 		// Handle events in the modules
 		if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.coffee_shop_variables)) {
 			return;
+		} else if(mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.mall_scene_variables)) {
+			return;
 		}
 		if (library_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.library_variables)) {
+			return;
+		}
+
+		if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables)) {
 			return;
 		}
 
@@ -1288,6 +1299,8 @@ io.on('connection', function (socket) {
 			// Handled in coffee_shop.js file.
 		} else if (button == 'go_to_library') {
 			//Handled in library.js file.
+		} else if (button == 'go_to_apartment') {
+			//Handled in apartment.js file.
 		} else if (button == 'phone-exit-app') {
 			changePhoneScreen("phoneHomeScreen");
 		} else if (button == 'phone-email-scroll-up') {
@@ -1296,6 +1309,8 @@ io.on('connection', function (socket) {
 		} else if (button == 'phone-email-scroll-down') {
 			if (game.mailbox_displayed_index < game.mailbox.length - 1)
 				changeMailboxScrollPosition(game.mailbox_displayed_index + 1);
+		} else if (button == 'go_to_mall') {
+			changeMainScreen("mall_scene")
 		} else {
 			console.log('Received unhandled click event: ' + button);
 		}
