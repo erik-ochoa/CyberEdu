@@ -572,3 +572,16 @@ function rollover_position(event) {
 		CANVAS_ELEMENT.style.cursor = "auto";
 	document.getElementById("text").innerHTML = "X: " + posx + ", Y: " + posy;
 }
+
+function setVolume (newVolume) {
+	var audio_elements = document.getElementsByTagName("audio");
+	var video_elements = document.getElementsByTagName("video");
+	
+	for (var i = 0; i < audio_elements.length; i++) {
+		audio_elements[i].volume = newVolume;
+	}
+	
+	for (var i = 0; i < video_elements.length; i++) {
+		video_elements[i].volume = newVolume;
+	}
+}

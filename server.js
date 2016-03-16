@@ -191,6 +191,8 @@ var DIALOG_BORDER_SIZE = 2;
 var DIALOG_BUTTON_HEIGHT = 100;
 var DIALOG_BUTTON_PADDING = 5;
 
+var MAX_DISPLAYED_MAILBOX_ENTRIES = 17;
+
 /* Pushes the commands needed to draw the display element into the commands argument. */
 function drawDisplayObject (element, commands) {
 	if (element.type == 'image') {
@@ -380,6 +382,7 @@ io.on('connection', function (socket) {
 	 *		screen: The name of the screen object to show (The size of the phone screen is 173 x 291 pixels).
 	 *  phone_apps: An array of apps installed on the phone.
 	 *  mailbox: An array of email messages; the contents of the player's mailbox.
+	 *  mailbox_displayed_index: The index of the first email message actually being displayed on the mailbox page. (Only seventeen messages may appear at once).
 	 *  main_screen: The name of the currently active main screen.
 	 *  active_browser: The name of the internet browser object that is currently active. Undefined if the browser is not active.
 	 *  active_dialog: An object with the following information. Undefined if there is no active dialog box.
@@ -390,7 +393,7 @@ io.on('connection', function (socket) {
 	 *  partner_name: The name of the partner.
 	 */
 
-	var game = { canvas:{x:1000, y:600}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], main_screen:"testMainScreen", active_dialog:{name:"testDialog", replace_phone:true}, player_name:"Bobby", partner_name:"Ashley"};
+	var game = { canvas:{x:1000, y:600}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, main_screen:"testMainScreen", active_dialog:{name:"testDialog", replace_phone:true}, player_name:"Bobby", partner_name:"Ashley"};
 	game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 	game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 	game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
@@ -399,6 +402,8 @@ io.on('connection', function (socket) {
 	installPhoneApp(new PhoneApp ("Email", new Text("Email_app_icon", 0, 0, 32, 32, 0, "Email", "10px Georgia", "rgba(255,255,255,1)"), "phoneEmailAppScreen"));
 	game.screens["phoneEmailAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, "Exit Email", "24px Times", "rgba(255,255,255,1)", 2));
+	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-up", 145, 115, 170, 140, "/\\", "24px Times", "rgba(255,255,255,1)", 2));
+	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-down", 145, 150, 170, 175, "\\/", "24px Times", "rgba(255,255,255,1)", 2));
 
 	// Phone Map application -- add new locations to the game through this.
 	installPhoneApp(new PhoneApp ("Map", new Text("Map_app_icon", 0, 0, 32, 32, 0, "Map", "10px Georgia", 'rgba(255,255,255,1)'), "phoneMapAppScreen"));
@@ -419,7 +424,7 @@ io.on('connection', function (socket) {
 	addToMailbox(new EmailMessage ("Testing", "Jonathan", "Hello, this is a test of the email system", []));
 	addToMailbox(new EmailMessage ("Testing 2", "Jonathan", "", []));
 	addToMailbox(new EmailMessage ("Testing 3", "Jonathan", "", []));
-	for (var i = 4; i <= 17; i++) {
+	for (var i = 4; i <= 27; i++) {
 		addToMailbox(new EmailMessage("Testing " + i, "Jonathan", "", []));
 	}
 
@@ -472,6 +477,7 @@ io.on('connection', function (socket) {
 	}
 
 	socket.emit('command', init_commands);
+	changeMailboxScrollPosition(12);
 
 	/* Changes the canvas size to the specified arguments */
 	function resizeCanvas (newX, newY) {
@@ -821,59 +827,94 @@ io.on('connection', function (socket) {
 	/* Adds the specified message to the player's inbox */
 	function addToMailbox (message) {
 		var email_no = game.mailbox.length;
-		var x = 0;
-		var y = yPositionOfEmailNo(email_no);
-		var message_screen = new Screen (x, y, 1, new Rectangle("inbox_" + email_no + "_background", 0, 0, 173, 15, 0, "rgba(255,255,255," + (message.unread ? 1 : 0.2) + ")"),
-			/*Buttons */[new Button("inbox_" + email_no + "_button", 0, 0, 173, 14)], [],
-			/*Elements */ [new Text ("inbox_" + email_no + "_sender", 0, 0, 40, 15, 1, message.sender, "11px Arial", "rgba(0,0,0,1)"), new Text("inbox_" + email_no + "_subject", 50, 0, 173, 15, 1, message.subject, "11px Arial", "rgba(0,0,0,1)")]);
-
 		game.mailbox.push(message);
-		addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);
+		if (0 <= email_no - game.mailbox_displayed_index && email_no - game.mailbox_displayed_index < MAX_DISPLAYED_MAILBOX_ENTRIES) {
+			var x = 0;
+			var y = yPositionOfEmailNo(email_no);
+			var message_screen = createMessageScreen(email_no);
+			addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);
+		}
+		
 	}
 	
+	/* Deletes the item in the player's mailbox at the specified index */
 	function removeFromMailbox (email_no) {
 		var y = yPositionOfEmailNo(email_no);
-		console.log('Calling removeFromMailbox(' + email_no + ')');
-		for (var i = 0; i < game.screens["phoneEmailAppScreen"].extras.length; i++) {
-			console.log('First loop, i = ' + i);
-			if (game.screens["phoneEmailAppScreen"].extras[i].type == 'screen' && game.screens["phoneEmailAppScreen"].extras[i].base.type == 'rectangle' && game.screens["phoneEmailAppScreen"].extras[i].base.name.match(/inbox_\d+_background/) != null && game.screens["phoneEmailAppScreen"].extras[i].y >= y) {
-				console.log('removing element' + i);
-				removeElementFromScreen(game.screens["phoneEmailAppScreen"], game.screens["phoneEmailAppScreen"].extras[i]);
-				i--; // Must decrement i because something was removed!
+		
+		// Removal of the display elements is not necessary if the email being deleted is below the screen, but it is necessary if the item being deleted is above the screen.
+		if (email_no - game.mailbox_displayed_index < MAX_DISPLAYED_MAILBOX_ENTRIES) {
+			for (var i = 0; i < game.screens["phoneEmailAppScreen"].extras.length; i++) {
+				if (game.screens["phoneEmailAppScreen"].extras[i].type == 'screen' && game.screens["phoneEmailAppScreen"].extras[i].base.type == 'rectangle' && game.screens["phoneEmailAppScreen"].extras[i].base.name.match(/inbox_\d+_background/) != null && game.screens["phoneEmailAppScreen"].extras[i].y >= y) {
+					removeElementFromScreen(game.screens["phoneEmailAppScreen"], game.screens["phoneEmailAppScreen"].extras[i]);
+					i--; // Must decrement i because something was removed!
+				}
 			}
 		}
 		
 		game.mailbox.splice(email_no, 1);
 		for (var i = email_no; i < game.mailbox.length; i++) {
-			var message_screen = new Screen (0, yPositionOfEmailNo(i), 1, new Rectangle("inbox_" + i + "_background", 0, 0, 173, 15, 0, "rgba(255,255,255," + (game.mailbox[i].unread ? 1 : 0.2) + ")"),
-				/*Buttons*/ [new Button("inbox_" + i + "_button", 0, 0, 173, 14)], [],
-				/*Elements*/ [new Text ("inbox_" + i + "_sender", 0, 0, 40, 15, 1, game.mailbox[i].sender, "11px Arial", "rgba(0,0,0,1)"), new Text("inbox_" + i + "_subject", 50, 0, 173, 15, 1, game.mailbox[i].subject, "11px Arial", "rgba(0,0,0,1)")]);
-			addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);
+			// Only add elements that shall fit on the screen.
+			if (0 <= i - game.mailbox_displayed_index && i - game.mailbox_displayed_index < MAX_DISPLAYED_MAILBOX_ENTRIES) {
+				var message_screen = createMessageScreen(i);
+				addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);
+			}
 		}
+		
+		// Scroll up one if all the messages on the screen were deleted.
+		if (game.mailbox_displayed_index >= game.mailbox.length && game.mailbox_displayed_index > 0) 
+			changeMailboxScrollPosition(game.mailbox_displayed_index - 1);
 	}
 	
+	/* Marks the item in the player's mailbox at the specified index as read */
 	function markAsRead (email_no) {
 		if (game.mailbox[email_no].unread) {
 			game.mailbox[email_no].unread = false;
 			
-			for (var i = 0; i < game.screens["phoneEmailAppScreen"].extras.length; i++) {
-				if (game.screens["phoneEmailAppScreen"].extras[i].type == 'screen' && game.screens["phoneEmailAppScreen"].extras[i].base.type == 'rectangle' && game.screens["phoneEmailAppScreen"].extras[i].base.name == "inbox_" + email_no + "_background") {
-					// Remove and re-add the screen with the background changed.
-					removeElementFromScreen(game.screens["phoneEmailAppScreen"], game.screens["phoneEmailAppScreen"].extras[i]);
-					var message = game.mailbox[email_no];
-					var message_screen = new Screen (0, yPositionOfEmailNo(email_no), 1, new Rectangle("inbox_" + email_no + "_background", 0, 0, 173, 15, 0, "rgba(255,255,255," + (message.unread ? 1 : 0.2) + ")"),
-						/*Buttons */[new Button("inbox_" + email_no + "_button", 0, 0, 173, 14)], [],
-						/*Elements */ [new Text ("inbox_" + email_no + "_sender", 0, 0, 40, 15, 1, message.sender, "11px Arial", "rgba(0,0,0,1)"), new Text("inbox_" + email_no + "_subject", 50, 0, 173, 15, 1, message.subject, "11px Arial", "rgba(0,0,0,1)")]);
-					addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);	
-					break;
+			// Check if the message being marked is actually on the screen
+			if (0 <= email_no - game.mailbox_displayed_index && email_no - game.mailbox_displayed_index < MAX_DISPLAYED_MAILBOX_ENTRIES) {
+				for (var i = 0; i < game.screens["phoneEmailAppScreen"].extras.length; i++) {
+					if (game.screens["phoneEmailAppScreen"].extras[i].type == 'screen' && game.screens["phoneEmailAppScreen"].extras[i].base.type == 'rectangle' && game.screens["phoneEmailAppScreen"].extras[i].base.name == "inbox_" + email_no + "_background") {
+						// Remove and re-add the screen with the background changed.
+						removeElementFromScreen(game.screens["phoneEmailAppScreen"], game.screens["phoneEmailAppScreen"].extras[i]);
+						var message_screen = createMessageScreen(email_no);
+						addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);	
+						break;
+					}
 				}
 			}
 		} 
 	}
 	
+	function changeMailboxScrollPosition (newPosition) {
+		// Need to remove all email inbox items from the screen
+		for (var i = 0; i < game.screens["phoneEmailAppScreen"].extras.length; i++) {
+			if (game.screens["phoneEmailAppScreen"].extras[i].type == 'screen' && game.screens["phoneEmailAppScreen"].extras[i].base.type == 'rectangle' && game.screens["phoneEmailAppScreen"].extras[i].base.name.match(/inbox_\d+_background/) != null) {
+				removeElementFromScreen(game.screens["phoneEmailAppScreen"], game.screens["phoneEmailAppScreen"].extras[i]);
+				i--; 
+			}
+		}
+		
+		game.mailbox_displayed_index = newPosition;
+		// Now add back the email inbox items that are actually on the screen.
+		for (var i = newPosition; i < newPosition + MAX_DISPLAYED_MAILBOX_ENTRIES && i < game.mailbox.length; i++) {
+			var message_screen = createMessageScreen(i);
+			addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);
+		}
+	}
+	
 	// Helper function which returns the y-position of an email_no
 	function yPositionOfEmailNo (email_no) {
-		return 30 + email_no * 15;
+		return 30 + (email_no - game.mailbox_displayed_index) * 15;
+	}
+	
+	// Helper function which creates a message screen for a given message
+	function createMessageScreen (email_no) {
+		var message = game.mailbox[email_no];
+		var message_screen = new Screen (0, yPositionOfEmailNo(email_no), 1, new Rectangle("inbox_" + email_no + "_background", 0, 0, 143, 15, 0, "rgba(255,255,255," + (message.unread ? 1 : 0.2) + ")"),
+			/*Buttons */[new Button("inbox_" + email_no + "_button", 0, 0, 143, 14)], [],
+			/*Elements */ [new Text ("inbox_" + email_no + "_sender", 0, 0, 40, 15, 1, message.sender, "11px Arial", "rgba(0,0,0,1)"), new Text("inbox_" + email_no + "_subject", 50, 0, 143, 15, 1, message.subject, "11px Arial", "rgba(0,0,0,1)")]
+		);
+		return message_screen;
 	}
 
 	/* Displays the specified dialog object, clearing out all underlying buttons as necessary */
@@ -1096,8 +1137,62 @@ io.on('connection', function (socket) {
 
 		socket.emit('command', commands);
 	}
-
+	
+	// Helper function to verify that a button is on a screen. Takes the screen object and a button name
+	// Returns true if the screen does indeed contain the button.
+	function verifyScreen(screen, button_name) {
+		for (var i = 0; i < screen.buttons.length; i++) {
+			if (screen.buttons[i].name == button_name)
+				return true;
+		}
+		
+		for (var i = 0; i < screen.extras.length; i++) {
+			if (screen.extras[i].type == 'screen' && verifyScreen(screen.extras[i], button_name))
+				return true;
+		}
+		
+		return false;
+	}
+	
 	socket.on('click', function (button) {
+		// Verify that the clicked button is actually on the screen.
+		if (typeof button === 'undefined') {
+			console.log ("Received invalid click event -- no button argument");
+			return;
+		} else {
+			var valid = false;
+			if (typeof game.active_dialog !== 'undefined') {
+				valid = verifyScreen(game.dialogs[game.active_dialog.name].screen, button);
+			} else if (typeof game.active_browser !== 'undefined') {
+				valid = verifyScreen(game.browsers[game.active_browser].screen, button);
+			} else if (typeof game.active_filesystem !== 'undefined') {
+				valid = verifyScreen(get_current_screen(game.filesystems[game.active_filesystem]), button);
+			} else {
+				valid = verifyScreen(game.screens[game.main_screen], button);
+			}
+			
+			// If the event is already valid, don't mess with the valid status.
+			if (!valid) {
+				if (game.phone.visible) {
+					if (game.phone.raised) {
+						if (button == 'lower-phone-button' || button == 'phone-power-button')
+							valid = true;
+						if (game.phone.screen_on && verifyScreen(game.screens[game.phone.screen], button))
+							valid = true;
+					} else {
+						if (button == 'raise-phone-button')
+							valid = true;
+					}
+				}
+			}
+			
+			if (!valid) {
+				console.log("Received invalid click event -- the button \"" + button + "\" could not be found.");
+				return;
+			}
+		}
+		
+		
 		// Handle events in the modules
 		if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.coffee_shop_variables)) {
 			return;
@@ -1115,9 +1210,9 @@ io.on('connection', function (socket) {
 		for (var i = 0; i < game.mailbox.length; i++) {
 			if (button == "inbox_" + i + "_button") {
 				// Setup phoneEmailMessageScreen
-				markAsRead(i);
 				game.screens["phoneEmailMessageScreen"] = email_message_screen(game.mailbox[i], i, game.canvas);
 				changePhoneScreen("phoneEmailMessageScreen");
+				markAsRead(i);
 				return;
 			}
 		}
@@ -1195,6 +1290,12 @@ io.on('connection', function (socket) {
 			//Handled in library.js file.
 		} else if (button == 'phone-exit-app') {
 			changePhoneScreen("phoneHomeScreen");
+		} else if (button == 'phone-email-scroll-up') {
+			if (game.mailbox_displayed_index > 0)
+				changeMailboxScrollPosition(game.mailbox_displayed_index - 1);
+		} else if (button == 'phone-email-scroll-down') {
+			if (game.mailbox_displayed_index < game.mailbox.length - 1)
+				changeMailboxScrollPosition(game.mailbox_displayed_index + 1);
 		} else {
 			console.log('Received unhandled click event: ' + button);
 		}
