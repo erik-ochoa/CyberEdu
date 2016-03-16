@@ -458,6 +458,7 @@ io.on('connection', function (socket) {
 	}
 
 	if (typeof game.active_browser !== 'undefined') {
+		init_commands.push(["resizeCanvas", 800, 600]);
 		drawDisplayObject(game.browsers[game.active_browser].screen, init_commands);
 	} else if (typeof game.active_filesystem !== 'undefined') {
 		drawDisplayObject(get_current_screen(game.filesystems[game.active_filesystem]), init_commands);
@@ -656,7 +657,8 @@ io.on('connection', function (socket) {
 			clearDisplayObject(game.screens[game.main_screen], commands);
 			drawDisplayObject(game.browsers[name].screen, commands);
 		}
-
+		commands.push(["resizeCanvas", 800, 600]);
+		
 		game.active_browser = name;
 		socket.emit('command', commands);
 	}
@@ -678,7 +680,8 @@ io.on('connection', function (socket) {
 			showPhone();
 			drawDisplayObject(game.screens[game.main_screen], commands);
 		}
-
+		commands.push(["resizeCanvas", game.canvas.x, game.canvas.y]);
+	
 		delete game.active_browser;
 		socket.emit('command', commands);
 	}
