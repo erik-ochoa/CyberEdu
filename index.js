@@ -128,6 +128,8 @@ var activeTextInputField = null;
 	stopSound: (id) - stops the specified sound
 	playVideo: (id) - plays the specified video through, then returns to the game
 	resizeCanvas: (x, y) - resizes the canvas to the specified width and height
+	speakText: (text) - speaks the specified text using the Text-to-Speech engine's default voice
+	speakText: (text, voice) - speaks the text using the Text-to-Speech engine with the specified voice
  */
 socket.on('command', function (array) {
 	for (var i = 0; i < array.length; i++) {
@@ -438,6 +440,17 @@ socket.on('command', function (array) {
 			g.fillRect(0, 0, MAX_X, MAX_Y);
 			for (var j = 0; j < display.length; j++) {
 				drawDisplayElement(display[j]);
+			}
+		} else if (command_name == 'speakText') {
+			if (array[i].length == 2) {
+				var text = array[i][1];
+				
+				responsiveVoice.speak(text);
+			} else {
+				var text = array[i][1];
+				var voice = array[i][2];
+				
+				responsiveVoice.speak(text, voice);
 			}
 		} else {
 			console.log("Received unknown command: " + command_name);

@@ -127,13 +127,15 @@ var Browser = function () {
  * The title is the text appearing at the top of the dialog box.
  * The text is the text appearing within the dialog box.
  * The array of options is the replies available to the user. The click event received when an option is click is dialog_<title>_<option text>
+ * The voice argument has type String, and is optional. If specified, the text will be spoken using the Text-to-Speech engine and the specified voice.
  * The usage convention of this object is not to display its screen directly, because the main screen's buttons will still be present under it.
  * It should be displayed via the showDialog() function, which will handle clearing out the underlying buttons, and cleared with the closeDialog() function, which will restore them. */
-var Dialog = function (name, title, text, options) {
+var Dialog = function (name, title, text, options, voice) {
 	this.name = name;
 	this.title = title;
 	this.text = text;
 	this.options = options;
+	this.voice = voice;
 };
 
 /* A folder within a computer file system. */
@@ -945,6 +947,10 @@ io.on('connection', function (socket) {
 
 		clearDisplayObject(game.screens[game.main_screen], commands);
 		drawDisplayObject(game.dialogs[dialog_name].screen, commands);
+		
+		if (typeof game.dialogs[dialog_name].voice !== 'undefined') {
+			commands.push(['speakText', game.dialogs[dialog_name].text, game.dialogs[dialog_name].voice]);
+		}
 		socket.emit('command', commands);
 	}
 

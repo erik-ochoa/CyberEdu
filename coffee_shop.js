@@ -42,15 +42,17 @@ function load_coffee_shop (game) {
 	var culprit_2_name = "Black Suit";
 	var culprit_3_name = "Plaid shirt";
 	
+	var manager_voice = "US English Female";
+	
 	var ERROR_STRING = "If you see this message, Jonathan Hansford wrote code that didn't work and should be ashamed of it.";
 	
 	game.dialogs["coffee_shop_manager_dialog"] = new Dialog ("coffee_shop_manager_dialog", game.player_name, "Hello ma'am. We're the detectives you called for. Do you have any leads?", ["Continue."]);
-	game.dialogs["coffee_shop_manager_dialog_2"] = new Dialog ("coffee_shop_manager_dialog_2", manager_name, "The guy in the top hat, the woman in the red shirt, and the woman in a gray shirt reading the newspaper all told me that they got robbed sometime after they left here.", ["Continue."]);
+	game.dialogs["coffee_shop_manager_dialog_2"] = new Dialog ("coffee_shop_manager_dialog_2", manager_name, "The guy in the top hat, the woman in the red shirt, and the woman in a gray shirt reading the newspaper all told me that they got robbed sometime after they left here.", ["Continue."], manager_voice);
 	game.dialogs["coffee_shop_manager_dialog_3"] = new Dialog ("coffee_shop_manager_dialog_3", game.partner_name, "Let's go talk to the victims, " + game.player_name, ["Okay."]);
-	game.dialogs["coffee_shop_manager_dialog_4"] = new Dialog ("coffee_shop_manager_dialog_4", manager_name, "Do you know who did it?", ["Yes.", "Not yet."]);
+	game.dialogs["coffee_shop_manager_dialog_4"] = new Dialog ("coffee_shop_manager_dialog_4", manager_name, "Do you know who did it?", ["Yes.", "Not yet."], manager_voice);
 	game.dialogs["coffee_shop_manager_dialog_5"] = new Dialog ("coffee_shop_manager_dialog_5", "", "Click on the person responsible for these crimes!", ["Okay."]);
-	game.dialogs["coffee_shop_manager_dialog_6"] = new Dialog ("coffee_shop_manager_dialog_6", manager_name, "You said you knew who did it. Who was it?", ["Yes, I know, it was...", "It was YOU!", "I'm not so sure anymore."]);
-	game.dialogs["coffee_shop_manager_dialog_7"] = new Dialog ("coffee_shop_manager_dialog_7", manager_name, "Okay, I'll contact the police.", ["Continue."]);
+	game.dialogs["coffee_shop_manager_dialog_6"] = new Dialog ("coffee_shop_manager_dialog_6", manager_name, "You said you knew who did it. Who was it?", ["Yes, I know, it was...", "It was YOU!", "I'm not so sure anymore."], manager_voice);
+	game.dialogs["coffee_shop_manager_dialog_7"] = new Dialog ("coffee_shop_manager_dialog_7", manager_name, "Okay, I'll contact the police.", ["Continue."], manager_voice);
 	
 	game.dialogs["coffee_shop_customer_1_dialog"] = new Dialog ("coffee_shop_customer_1_dialog", game.player_name, "Hello, I'm a detective investigating the robberies here. Do you know anything about them?", ["Continue."]);
 	game.dialogs["coffee_shop_customer_1_dialog_2"] = new Dialog ("coffee_shop_customer_1_dialog_2", customer_1_name, "I have not been robbed. I've never used the internet in here before, so I think that the robberies have something to do with people's computers.", ["Okay."]);
@@ -94,12 +96,12 @@ function load_coffee_shop (game) {
 	game.dialogs["coffee_shop_police_dialog_2"] = new Dialog ("coffee_shop_police_dialog_2", "Police", "Hmm. I don't see anything malicious. Looks like you got the wrong guy.", ["Continue."]);
 	game.dialogs["coffee_shop_police_dialog_3"] = new Dialog ("coffee_shop_police_dialog_3", "Police", "Man, this " + game.player_name + " is the worst detective ever!", ["Okay."]);
 	game.dialogs["coffee_shop_police_dialog_4"] = new Dialog ("coffee_shop_police_dialog_4", "Police", "Well the processes on your PC say otherwise! You're downloading all the Wi-Fi traffic onto your computer! You're under arrest for fraud and robbery. You have the right to remain silent. Anything you say can be used against you in a court of law. You have the right to an attorney. If you cannot afford one, one will be provided for you.", ["Continue."]);
-	game.dialogs["coffee_shop_police_dialog_5"] = new Dialog ("coffee_shop_police_dialog_5", manager_name, "Why'd do it ya scum?! I hope you learn your lesson in jail.", ["Continue."]);
+	game.dialogs["coffee_shop_police_dialog_5"] = new Dialog ("coffee_shop_police_dialog_5", manager_name, "Why'd do it ya scum?! I hope you learn your lesson in jail.", ["Continue."], manager_voice);
 	game.dialogs["coffee_shop_police_dialog_6"] = new Dialog ("coffee_shop_police_dialog_6", "Police", "We've got all the evidence we need. We'll handle it from here, Detective " + game.player_name + ".", ["Continue."]);
-	game.dialogs["coffee_shop_police_dialog_7"] = new Dialog ("coffee_shop_police_dialog_7", manager_name, "Thank you for your help, " + game.player_name + " and " + game.partner_name + ". With the robber in custody, I'll be able to resume business as usual again. I'll post a notice regarding the risk of using my public network for financial transactions.", ["Continue."]);
+	game.dialogs["coffee_shop_police_dialog_7"] = new Dialog ("coffee_shop_police_dialog_7", manager_name, "Thank you for your help, " + game.player_name + " and " + game.partner_name + ". With the robber in custody, I'll be able to resume business as usual again. I'll post a notice regarding the risk of using my public network for financial transactions.", ["Continue."], manager_voice);
 	game.dialogs["coffee_shop_police_dialog_8"] = new Dialog ("coffee_shop_police_dialog_8", customer_2_name, "Yeah, thanks guys! I had no idea that wireless network connections could be easily intercepted, even if the website itself is secure. I won't buy anything on a public network again.", ["Continue."]);
 	game.dialogs["coffee_shop_police_dialog_9"] = new Dialog ("coffee_shop_police_dialog_9", game.partner_name, "No problem, we're glad to help.", ["Continue."]);
-	game.dialogs["coffee_shop_police_dialog_10"] = new Dialog ("coffee_shop_police_dialog_10", manager_name, "Well I owe you one. Stop by another time and I'll give you some free coffee.", ["Okay."]);
+	game.dialogs["coffee_shop_police_dialog_10"] = new Dialog ("coffee_shop_police_dialog_10", manager_name, "Well I owe you one. Stop by another time and I'll give you some free coffee.", ["Okay."], manager_voice);
 	
 	game.dialogs["coffee_shop_accused_dialog"] = new Dialog ("coffee_shop_accused_dialog", ERROR_STRING, "I swear I'm innocent!", ["Continue."]);
 	
