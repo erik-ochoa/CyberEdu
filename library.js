@@ -1,4 +1,4 @@
-function load_library (game) {
+function load_library (game, addToFileSystem) {
   game.screens["library"] = new Screen (0, 0, 0, new Image ("image/library", 0, 0, 0), [
     new Button ("librarian", 1007, 220, 1062, 308)
   ], [], []);
@@ -35,10 +35,12 @@ function load_library (game) {
     new Button ("screen", 0, 0, 1151, 647)
   ], [], []);
 
-  game.dialogs["start_dialog"] = new Dialog ("start_dialog", "Ashley", "Let's go talk to the librarian about the issues the library computers have been having.", ["Continue."]);
+  game.dialogs["start_dialog"] = new Dialog ("start_dialog", game.partner_name, "Let's go talk to the librarian about the issues the library computers have been having.", ["Continue."]);
   game.dialogs["librarian_start_dialog"] = new Dialog ("librarian_start_dialog", "Librarian", "Thanks for coming. About a day ago, one of the computers in the computer lab stopped working normally, and instead, it got stuck on some strange website. Since then, it seems like every few hours, another computer is lost to this virus, and I don't know what is causing it or how to remove it. I need you to find the cause, and if you can, show me how to fix one of the computers, if you can find a solution.", ["Continue."]);
-  game.dialogs["ashley_dialog"] = new Dialog ("ashley_dialog", "Ashley", "We'll do our best ma'am.", ["Continue."]);
+  game.dialogs["ashley_dialog"] = new Dialog ("ashley_dialog", game.partner_name, "We'll do our best ma'am.", ["Continue."]);
 
+  
+  
   game.dialogs["yellow1_dialog"] = new Dialog ("yellow1_dialog", game.player_name, "Do you know if there is anything wrong with this computer?", ["Continue."]);
   game.dialogs["yellow2_dialog"] = new Dialog ("yellow2_dialog", "Pale Yellow Shirt", "I'm pretty sure it's working fine. I haven't had any problems with it yet. I just got here though. I have a paper due tonight and I haven't started yet. But if something strange happens while you are here, I'll let you know", ["Continue."]);
 
@@ -50,7 +52,7 @@ function load_library (game) {
   game.dialogs["glasses6_dialog"] = new Dialog ("glasses6_dialog", "Glasses", "All I've done is login and plugin a flashdrive. Someone else must have messed with it.", ["Continue."]);
   game.dialogs["glasses7_dialog"] = new Dialog ("glasses7_dialog", game.player_name, "Is the USB yours?", ["Continue."]);
   game.dialogs["glasses8_dialog"] = new Dialog ("glasses8_dialog", "Glasses", "No I just found it here lying around. Figured I check what was on it to see whose it was.", ["Continue."]);
-  game.dialogs["glasses9_dialog"] = new Dialog ("glasses9_dialog", "Ashley", "Can I have that? It might have caused the virus that just infected the computer. The autorun could be setup to automatically execute malware files.", ["Continue."]);
+  game.dialogs["glasses9_dialog"] = new Dialog ("glasses9_dialog", game.partner_name, "Can I have that? It might have caused the virus that just infected the computer. The autorun could be setup to automatically execute malware files.", ["Continue."]);
   game.dialogs["glasses10_dialog"] = new Dialog ("glasses10_dialog", "Glasses", "Sure, take it. I don't need it.", ["Continue."]);
 
   game.dialogs["red1_dialog"] = new Dialog ("red1_dialog", game.player_name, "Have you been experiencing any difficulty with these computers?", ["Continue."]);
@@ -61,43 +63,59 @@ function load_library (game) {
   game.dialogs["stripe_dialog"] = new Dialog ("stripe_dialog", "Striped Shirt", "What's the integral of sin^2(x)?", ["Continue."]);
 
   game.dialogs["files1_dialog"] = new Dialog ("files1_dialog", "", "It's a red flash drive", ["Take it", "Plug it in the computer"]);
-  game.dialogs["files2_dialog"] = new Dialog ("files2_dialog", "Ashley", "We shouldn't leave suspicious flash drives lying around", ["Continue."]);
-  game.dialogs["files3_dialog"] = new Dialog ("files3_dialog", "Ashley", "I don't think that was good. Take a look at the web browser. It's on some sketchy looking website.", ["Continue."]);
+  game.dialogs["files2_dialog"] = new Dialog ("files2_dialog", game.partner_name, "We shouldn't leave suspicious flash drives lying around", ["Continue."]);
+  game.dialogs["files3_dialog"] = new Dialog ("files3_dialog", game.partner_name, "I don't think that was good. Take a look at the web browser. It's on some sketchy looking website.", ["Continue."]);
   game.dialogs["files4_dialog"] = new Dialog ("files4_dialog", game.player_name, "(I don't think that worked... that probably isn't good.) ", ["Continue."]);
   game.dialogs["files5_dialog"] = new Dialog ("files5_dialog", "", "You take the red flash drive", ["Continue."]);
 
   game.dialogs["finish1_dialog"] = new Dialog ("finish1_dialog", "Librarian", "Do you know what's causing the problem?", ["These two flashdrives we found"]);
   game.dialogs["finish2_dialog"] = new Dialog ("finish2_dialog", game.player_name, "These two flashdrives seem to be infected with some kind of virus that is infecting the computer.", ["Continue."]);
-  game.dialogs["finish3_dialog"] = new Dialog ("finish3_dialog", "Librarian", "Can you fix the computers?", ["No you should call the Division of IT to fix it."]);
+  game.dialogs["finish3_dialog"] = new Dialog ("finish3_dialog", "Librarian", "Can you fix the computers?", ["No you should call the Division of IT to fix it.", "I'll take a shot at it."]);
+  
+  game.dialogs["librarian_dialog_2"] = new Dialog ("librarian_dialog_2", "Librarian", "Do you know what's causing the problem?", ["No, not yet."]);
 
+  game.filesystems["library_computer_filesystem"] = new FileSystem();
+  addToFileSystem(game.filesystems["library_computer_filesystem"], "", new Folder ("Desktop", []));
+  
   game.library_variables = {
     usb1:false,
-    usb2:false
+    usb2:false,
+	entry_dialog_shown:false,
+	librarian_start_dialog_shown:false
   };
 }
 
 function enterLibrary (resizeCanvas, changeMainScreen, showDialog, vars) {
   resizeCanvas(1152,648);
   changeMainScreen("library");
-  showDialog("start_dialog");
+  if (!vars.entry_dialog_shown) {
+	showDialog("start_dialog");  
+  }
 }
 
-function library_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, vars) {
+function library_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, vars) {
   if (button == "librarian") {
     changeMainScreen("librarian");
-    showDialog("librarian_start_dialog");
+	if (!vars.librarian_start_dialog_shown) {
+      showDialog("librarian_start_dialog");
+	}
+	else {
+	  showDialog("librarian_dialog_2");
+	}
     return true;
   }
   else if (button == "dialog_start_dialog_Continue.") {
+	vars.entry_dialog_shown = true;
     closeDialog();
-    return true
+    return true;
   }
   else if (button == "dialog_librarian_start_dialog_Continue.") {
-    closeDialog();
+	closeDialog();
     showDialog("ashley_dialog");
     return true;
   }
   else if (button == "dialog_ashley_dialog_Continue.") {
+	vars.librarian_start_dialog_shown = true;
     closeDialog();
     changeMainScreen("library2");
     return true;
@@ -292,6 +310,14 @@ function library_onclick (button, showDialog, closeDialog, changeMainScreen, res
     closeDialog();
     playVideo("video/malware");
     return true;
+  } else if (button == "dialog_librarian_dialog_2_No, not yet.") {
+    closeDialog();
+	changeMainScreen("library2");
+	return true;
+  } else if (button == "dialog_finish3_dialog_I'll take a shot at it.") {
+	closeDialog();
+	displayFileSystem("library_computer_filesystem");
+	return true;
   }
 
   else if (button == "go_to_library") { // Button on the phone's map app.

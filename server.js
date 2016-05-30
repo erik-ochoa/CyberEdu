@@ -7,6 +7,7 @@ eval(fs.readFileSync('coffee_shop.js').toString());
 eval(fs.readFileSync('mall_scene.js').toString());
 eval(fs.readFileSync('library.js').toString());
 eval(fs.readFileSync('apartment.js').toString());
+eval(fs.readFileSync('introduction.js').toString());
 
 app.listen(8011);
 
@@ -397,7 +398,7 @@ io.on('connection', function (socket) {
 	 *  partner_name: The name of the partner.
 	 */
 
-	var game = { canvas:{x:1000, y:600}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, main_screen:"testMainScreen", active_dialog:{name:"testDialog", replace_phone:true}, player_name:"Bobby", partner_name:"Ashley"};
+	var game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley"};
 	game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 	game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 	game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
@@ -437,8 +438,9 @@ io.on('connection', function (socket) {
 	// Load the modules into the game state object.
 	load_coffee_shop (game);
 	load_mall(game);
-	load_library (game);
+	load_library (game, addToFileSystem);
 	load_apartment (game);
+	load_introduction (game);
 
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
 	var init_commands = [];
@@ -744,7 +746,6 @@ io.on('connection', function (socket) {
 
 	function displayFileSystem (name) {
 		var commands = [];
-
 		if (typeof game.active_filesystem !== 'undefined') console.log("Warning: displayFileSystem(" + name + ") was called when there was an active filesystem, " + game.active_filesystem);
 
 		if (typeof game.active_dialog !== 'undefined') {
@@ -759,6 +760,7 @@ io.on('connection', function (socket) {
 
 		game.active_filesystem = name;
 
+		resizeCanvas(1280, 720);
 		socket.emit('command', commands);
 	}
 
@@ -1213,11 +1215,15 @@ io.on('connection', function (socket) {
 		} else if(mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.mall_scene_variables)) {
 			return;
 		}
-		if (library_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.library_variables)) {
+		if (library_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, game.library_variables)) {
 			return;
 		}
 
 		if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables)) {
+			return;
+		}
+		
+		if (introduction_onclick(button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, game.browsers["introduction_computer_browser"])) {
 			return;
 		}
 
@@ -1326,7 +1332,9 @@ io.on('connection', function (socket) {
 	});
 
 	socket.on('text-field-edit', function(name, value) {
-		if (name == 'browser-bar' && typeof game.active_browser !== 'undefined') {
+		if (introduction_text_field_edit (name, value, game)) {
+			return;
+		} else if (name == 'browser-bar' && typeof game.active_browser !== 'undefined') {
 			for (var i = 0; i < game.browsers[game.active_browser].screen.textFields.length; i++) {
 				if (game.browsers[game.active_browser].screen.textFields[i].name == name)
 					game.browsers[game.active_browser].screen.textFields[i].text = value;
