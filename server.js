@@ -398,20 +398,20 @@ io.on('connection', function (socket) {
 	 *  partner_name: The name of the partner.
 	 */
 
-	var game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:false, raised:false, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley"};
+	var game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:false, screen:"phoneNotYetActivatedScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley"};
 	game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 	game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 	game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 
 	// Note that all phone applications should have an exit button; however, may be placed anywhere on the screen, not necessarily at (0,0).
-	installPhoneApp(new PhoneApp ("Email", new Text("Email_app_icon", 0, 0, 32, 32, 0, "Email", "10px Georgia", "rgba(255,255,255,1)"), "phoneEmailAppScreen"));
+	// installPhoneApp(new PhoneApp ("Email", new Text("Email_app_icon", 0, 0, 32, 32, 0, "Email", "10px Georgia", "rgba(255,255,255,1)"), "phoneEmailAppScreen"));
 	game.screens["phoneEmailAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, "Exit Email", "24px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-up", 145, 115, 170, 140, "/\\", "24px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-down", 145, 150, 170, 175, "\\/", "24px Times", "rgba(255,255,255,1)", 2));
 
 	// Phone Map application -- add new locations to the game through this.
-	installPhoneApp(new PhoneApp ("Map", new Text("Map_app_icon", 0, 0, 32, 32, 0, "Map", "10px Georgia", 'rgba(255,255,255,1)'), "phoneMapAppScreen"));
+	// installPhoneApp(new PhoneApp ("Map", new Text("Map_app_icon", 0, 0, 32, 32, 0, "Map", "10px Georgia", 'rgba(255,255,255,1)'), "phoneMapAppScreen"));
 	game.screens["phoneMapAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, "Exit Map", "24px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_red_screen", 0, 30, 173, 60, "Go to Red Screen", "24px Times", "rgba(255,255,255,1)", 2));
@@ -435,12 +435,8 @@ io.on('connection', function (socket) {
 		addToMailbox(new EmailMessage("Testing " + i, "Jonathan", "", []));
 	}
 
-	// Load the modules into the game state object.
-	load_coffee_shop (game);
-	load_mall(game);
-	load_library (game, addToFileSystem);
-	load_apartment (game);
-	load_introduction (game);
+	// Load the introduction scene into the game state object.
+	load_introduction (game, PHONE_SCREEN_LAYER);
 
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
 	var init_commands = [];
@@ -488,6 +484,15 @@ io.on('connection', function (socket) {
 	}
 
 	socket.emit('command', init_commands);
+	
+	/* Loads all the additional scenes into the game object. */
+	function loadScenes () {
+		load_coffee_shop (game);
+		load_mall(game);
+		load_library (game, addToFileSystem);
+		load_apartment (game);
+		load_introduction_part2(game);
+	}
 
 	/* Changes the canvas size to the specified arguments */
 	function resizeCanvas (newX, newY) {
@@ -1223,7 +1228,7 @@ io.on('connection', function (socket) {
 			return;
 		}
 		
-		if (introduction_onclick(button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, game.browsers["introduction_computer_browser"])) {
+		if (introduction_onclick(button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, game.browsers["introduction_computer_browser"], game.introduction_variables)) {
 			return;
 		}
 
