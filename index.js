@@ -111,6 +111,15 @@ var textInputFields = [];
 // The currently active text input field, or null if no field is active.
 var activeTextInputField = null;
 
+// True if the user is currently holding down the shift key.
+var shiftHeld = false;
+
+// Volume (ranging from 0.0 to 1.0) of the text-to-speech elements
+var textToSpeechVolume = 1.0;
+
+// A structure (containing the elements x and y) which is the last known position of the mouse.
+var lastKnownMousePosition = {x:0.0, y:0.0}
+
 /* Groups of commands arrive as an array, to be executed in sequence. 
  * An individual command is an array: the first element is the name, following elements (if any) are the arguments. 
    The following commands are valid:
@@ -445,23 +454,29 @@ socket.on('command', function (array) {
 			if (array[i].length == 2) {
 				var text = array[i][1];
 				
-				responsiveVoice.speak(text);
+				responsiveVoice.speak(text, "UK English Female", {volume:textToSpeechVolume});
 			} else {
 				var text = array[i][1];
 				var voice = array[i][2];
 				
-				responsiveVoice.speak(text, voice);
+				responsiveVoice.speak(text, voice, {volume:textToSpeechVolume});
 			}
 		} else {
 			console.log("Received unknown command: " + command_name);
 		}
-	}
+	} // End command processing loop.
 	
+	// Update the mouse pointer.
+	setMousePointer();
 });
 
  
 document.onkeydown = function (e) {
 	var key = e.keycode ? e.keycode : e.which;
+	
+	if (key == 16) { // Shift key
+		shiftHeld = true;
+	}
 	
 	if (activeTextInputField != null) {
 		// Update the active text field and then redraw all display elements on top of it.
@@ -470,7 +485,15 @@ document.onkeydown = function (e) {
 			if (!found && display[i].type == 'button_text' && display[i].button_name == activeTextInputField.name) {
 				found = true;
 				if (65 <= key && key <= 90) { // A through Z keys.
-					display[i].text += 'abcdefghijklmnopqrstuvwxyz'.charAt(key-65);
+					if (shiftHeld) 
+						display[i].text += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.charAt(key-65);
+					else 
+						display[i].text += 'abcdefghijklmnopqrstuvwxyz'.charAt(key-65);
+				} else if (48 <= key && key <= 57) { // 0 through 9 keys.
+					if (shiftHeld)
+						display[i].text += ')!@#$%^&*('.charAt(key-48);
+					else
+						display[i].text += '0123456789'.charAt(key-48);
 				} else if (key == 8) { // Backspace key.
 					e.preventDefault();
 					display[i].text = display[i].text.substring(0, display[i].text.length - 1);
@@ -488,6 +511,14 @@ document.onkeydown = function (e) {
 				drawDisplayElement(display[i]);
 			}
 		}
+	}
+}
+
+document.onkeyup = function (e) {
+	var key = e.keycode ? e.keycode : e.which
+	
+	if (key == 16) { // Shift key
+		shiftHeld = false;
 	}
 }
 
@@ -565,6 +596,41 @@ function rollover_position(event) {
 	posx -= CANVAS_X;
 	posy -= CANVAS_Y;
 	// End compatibility code, posx & posy contain the clicked position
+	setMousePointer(posx, posy);
+	
+	document.getElementById("text").innerHTML = "X: " + posx + ", Y: " + posy;
+	
+	// Update last known mouse position.
+	lastKnownMousePosition.x = posx;
+	lastKnownMousePosition.y = posy;
+}
+
+function setVideoVolume (newVolume) {
+	var video_elements = document.getElementsByTagName("video");
+	
+	for (var i = 0; i < video_elements.length; i++) {
+		video_elements[i].volume = newVolume;
+	}
+}
+
+function setMusicVolume (newVolume) { 
+	var audio_elements = document.getElementsByTagName("audio");
+
+	for (var i = 0; i < audio_elements.length; i++) {
+		audio_elements[i].volume = newVolume;
+	}
+}
+
+function setSpeechVolume (newVolume) {
+	textToSpeechVolume = newVolume;
+}
+/* Sets the mouse to be either the regular pointer or the hand based on the current mouse position,
+ * which is given by (posx, posy), or the last known mouse position if the mouse position is not specified. */
+function setMousePointer (posx, posy) {
+	if (typeof posx === 'undefined' && typeof posy === 'undefined') {
+		posx = lastKnownMousePosition.x;
+		posy = lastKnownMousePosition.y;
+	}
 
 	var found = false;
 	for (var i = 0; i < buttons.length; i++) {
@@ -583,18 +649,4 @@ function rollover_position(event) {
 		CANVAS_ELEMENT.style.cursor = "pointer";
 	else
 		CANVAS_ELEMENT.style.cursor = "auto";
-	document.getElementById("text").innerHTML = "X: " + posx + ", Y: " + posy;
-}
-
-function setVolume (newVolume) {
-	var audio_elements = document.getElementsByTagName("audio");
-	var video_elements = document.getElementsByTagName("video");
-	
-	for (var i = 0; i < audio_elements.length; i++) {
-		audio_elements[i].volume = newVolume;
-	}
-	
-	for (var i = 0; i < video_elements.length; i++) {
-		video_elements[i].volume = newVolume;
-	}
 }

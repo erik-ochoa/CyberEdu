@@ -945,7 +945,7 @@ io.on('connection', function (socket) {
 		}
 
 		if (typeof game.active_browser !== 'undefined') {
-			setup_dialog_screen(game.dialogs[dialog_name], game.canvas, game.browsers[game.active_browser].screen);
+			setup_dialog_screen(game.dialogs[dialog_name], {x:800, y:600 /* Canvas size when the browser is enabled */}, game.browsers[game.active_browser].screen);
 		} else if (typeof game.active_filesystem !== 'undefined') {
 			setup_dialog_screen(game.dialogs[dialog_name], game.canvas, get_current_screen(game.filesystems[game.active_filesystem]));
 		} else {
