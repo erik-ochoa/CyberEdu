@@ -73,15 +73,52 @@ function load_library (game, addToFileSystem) {
   game.dialogs["finish3_dialog"] = new Dialog ("finish3_dialog", "Librarian", "Can you fix the computers?", ["No you should call the Division of IT to fix it.", "I'll take a shot at it."]);
   
   game.dialogs["librarian_dialog_2"] = new Dialog ("librarian_dialog_2", "Librarian", "Do you know what's causing the problem?", ["No, not yet."]);
+  game.dialogs["librarian_dialog_3"] = new Dialog ("librarian_dialog_3", "Librarian", "Do you know what's causing the problem?", ["No, not yet.", "It's this flash drive we found."]);
+  game.dialogs["finish_dialog_2b"] = new Dialog ("finish_dialog_2b", game.player_name, "This flash drive seems to be infected with some kind of virus that is infecting the computer.", ["Continue."]);
 
+  
+  var library_computer_virus_path = "Computer/Internet Explorer/Plugins";
+  var library_computer_virus_file = "trojan.horse";
+  
+  var ERROR_STRING = "If you see this message, Jonathan Hansford messed up the code and should be ashamed of it.";
+
+  
   game.filesystems["library_computer_filesystem"] = new FileSystem();
   addToFileSystem(game.filesystems["library_computer_filesystem"], "", new Folder ("Desktop", []));
+  addToFileSystem(game.filesystems["library_computer_filesystem"], "", new Folder ("Documents", ["HIST201 Paper.docx"]));
+  addToFileSystem(game.filesystems["library_computer_filesystem"], "", new Folder ("Downloads", ["vietnam_war_protest_poster.pdf", "lyndon_b_johnson_1964_campaign_speech.pdf"]));
+  addToFileSystem(game.filesystems["library_computer_filesystem"], "", new Folder ("Music", [new Folder ("Sample Music", ["Themes from the Unfinished Symphony.wav"])]));
+  addToFileSystem(game.filesystems["library_computer_filesystem"], "", new Folder ("Pictures", [new Folder ("Sample Pictures", ["horses.jpg", "lighthouse.jpg", "penguins.jpg", "tulips.jpg"]), "neon-cat.gif"]));
+  addToFileSystem(game.filesystems["library_computer_filesystem"], "", new Folder ("Videos", [new Folder ("Sample Videos", ["wildlife.mpg"])]));
+  addToFileSystem(game.filesystems["library_computer_filesystem"], "", new Folder ("Computer", [
+	new Folder ("Microsoft Office", ["Word 2013.exe", "Excel 2013.exe", "Power Point 2013.exe", "One Note 2013.exe"]),
+	new Folder ("Java", [new Folder ("jre7", ["COPYRIGHT", "LICENSE", "readme.txt", "javawr.jar", "tools.jar", "charsets.jar"])]),
+	new Folder ("Internet Explorer", [new Folder ("Plugins", ["bingsearchbar.dll", "adobePDFLinkHelper.dll", "Java Plug-in SSV Helper.dll"]), "ie10.exe"])
+  ]));
   
+  addToFileSystem(game.filesystems["library_computer_filesystem"], library_computer_virus_path, library_computer_virus_file);
+  
+  game.dialogs["library_fixed_computer"] = new Dialog ("library_fixed_computer", "Librarian", "Great job, you fixed it. Looks like it was that " + library_computer_virus_file + ".", ["Continue."]);
+  game.dialogs["library_still_fixing_computer"] = new Dialog ("library_still_fixing_computer", "Librarian", "Should I call in tech support or are you still working on it.", ["I can't figure it out. Call in the IT guys.", "I'm still working on it."]);
+  
+  game.screens["library_success"] = new Screen (0, 0, 0, new Image ("image/mission/complete", 0, 0, 0), [
+	  new Button ("library_quit", 404, 427, 714, 515, "Select Another Mission", "24px Arial", "rgba(255,255,255,1)", 2)
+	], [], [
+	  new Rectangle ("library_success_quit_backing_rectangle", 404, 427, 714, 515, 1, "rgba(255,255,255,0.5)"),
+	  new Text ("library_score",  404, 535, 714, 600, 2, ERROR_STRING, "24px Arial", "rgba(255,255,0,1)")
+	]
+  );
+ 
   game.library_variables = {
     usb1:false,
     usb2:false,
 	entry_dialog_shown:false,
-	librarian_start_dialog_shown:false
+	librarian_start_dialog_shown:false,
+	virus_path:library_computer_virus_path,
+	virus_file:library_computer_virus_file,
+	fixed_virus:false,
+	score:0,
+	video_shown:false
   };
 }
 
@@ -93,14 +130,31 @@ function enterLibrary (resizeCanvas, changeMainScreen, showDialog, vars) {
   }
 }
 
-function library_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, vars) {
+function finishLibrary (vars, score_text_element, resizeCanvas, changeMainScreen, playVideo) {
+	var score = (vars.usb1 ? 10 : 0) + (vars.usb2 ? 10 : 0) + (vars.fixed_virus ? 10 : 0);
+	if (score > vars.score)
+	  vars.score = score;
+	score_text_element.text = "You Scored " + vars.score + " Points (out of 30)!";
+	resizeCanvas(1152, 648);
+	changeMainScreen("library_success");
+	if (!vars.video_shown) {
+	  playVideo("video/malware");
+	  vars.video_shown = true;
+	}
+}
+
+function library_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFilesystem, existsInFileSystem, vars, score_text_element) {
   if (button == "librarian") {
     changeMainScreen("librarian");
 	if (!vars.librarian_start_dialog_shown) {
       showDialog("librarian_start_dialog");
 	}
 	else {
-	  showDialog("librarian_dialog_2");
+	  if (vars.usb1 || vars.usb2) {
+		showDialog("librarian_dialog_3");
+	  } else {
+		showDialog("librarian_dialog_2");
+	  }
 	}
     return true;
   }
@@ -301,22 +355,55 @@ function library_onclick (button, showDialog, closeDialog, changeMainScreen, res
     showDialog("finish2_dialog");
     return true;
   }
-  else if (button == "dialog_finish2_dialog_Continue.") {
+  else if (button == "dialog_finish2_dialog_Continue." || button == "dialog_finish_dialog_2b_Continue.") {
     closeDialog();
     showDialog("finish3_dialog");
     return true;
   }
   else if (button == "dialog_finish3_dialog_No you should call the Division of IT to fix it.") {
     closeDialog();
-    playVideo("video/malware");
+   
+	finishLibrary(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo);
     return true;
-  } else if (button == "dialog_librarian_dialog_2_No, not yet.") {
+  } else if (button == "dialog_librarian_dialog_2_No, not yet." || button == "dialog_librarian_dialog_3_No, not yet.") {
     closeDialog();
 	changeMainScreen("library2");
 	return true;
   } else if (button == "dialog_finish3_dialog_I'll take a shot at it.") {
 	closeDialog();
 	displayFileSystem("library_computer_filesystem");
+	return true;
+  } else if (button == "dialog_librarian_dialog_3_It's this flash drive we found.") {
+	closeDialog();
+	showDialog("finish_dialog_2b");
+	return true;
+  } else if (button == "filesystem_exit") {
+	if (existsInFileSystem("library_computer_filesystem", vars.virus_path, vars.virus_file)) {
+		showDialog("library_still_fixing_computer");
+	} else {
+		showDialog("library_fixed_computer");
+	}
+	return true;
+  } else if (button == "dialog_library_fixed_computer_Continue.") {
+	vars.fixed_virus = true;
+	closeDialog();
+	closeFilesystem();
+	
+	finishLibrary(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo);
+	
+	return true;
+  } else if (button == "dialog_library_still_fixing_computer_I'm still working on it.") {
+	closeDialog();
+	return true;
+  } else if (button == "dialog_library_still_fixing_computer_I can't figure it out. Call in the IT guys.") {
+    closeDialog();
+	closeFilesystem();
+	
+	finishLibrary(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo);
+
+	return true;
+  } else if (button == "library_quit") {
+	changeMainScreen("testMainScreen");
 	return true;
   }
 
@@ -325,6 +412,6 @@ function library_onclick (button, showDialog, closeDialog, changeMainScreen, res
 		return false; // Allow the main file to handle this event as well.
   } else {
     return false;
-  }
+  } 
 
 }

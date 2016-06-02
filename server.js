@@ -404,14 +404,14 @@ io.on('connection', function (socket) {
 	game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 
 	// Note that all phone applications should have an exit button; however, may be placed anywhere on the screen, not necessarily at (0,0).
-	// installPhoneApp(new PhoneApp ("Email", new Text("Email_app_icon", 0, 0, 32, 32, 0, "Email", "10px Georgia", "rgba(255,255,255,1)"), "phoneEmailAppScreen"));
+	installPhoneApp(new PhoneApp ("Email", new Text("Email_app_icon", 0, 0, 32, 32, 0, "Email", "10px Georgia", "rgba(255,255,255,1)"), "phoneEmailAppScreen"));
 	game.screens["phoneEmailAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, "Exit Email", "24px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-up", 145, 115, 170, 140, "/\\", "24px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-down", 145, 150, 170, 175, "\\/", "24px Times", "rgba(255,255,255,1)", 2));
 
 	// Phone Map application -- add new locations to the game through this.
-	// installPhoneApp(new PhoneApp ("Map", new Text("Map_app_icon", 0, 0, 32, 32, 0, "Map", "10px Georgia", 'rgba(255,255,255,1)'), "phoneMapAppScreen"));
+	installPhoneApp(new PhoneApp ("Map", new Text("Map_app_icon", 0, 0, 32, 32, 0, "Map", "10px Georgia", 'rgba(255,255,255,1)'), "phoneMapAppScreen"));
 	game.screens["phoneMapAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, "Exit Map", "24px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_red_screen", 0, 30, 173, 60, "Go to Red Screen", "24px Times", "rgba(255,255,255,1)", 2));
@@ -437,7 +437,13 @@ io.on('connection', function (socket) {
 
 	// Load the introduction scene into the game state object.
 	load_introduction (game, PHONE_SCREEN_LAYER);
-
+	
+	// For Testing Purposes {
+	loadScenes();
+	changeMainScreen("testMainScreen");
+	changePhoneScreen("phoneHomeScreen");
+	// }
+	
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
 	var init_commands = [];
 	init_commands.push(["resizeCanvas", game.canvas.x, game.canvas.y]);
@@ -764,6 +770,7 @@ io.on('connection', function (socket) {
 		}
 
 		game.active_filesystem = name;
+		game.filesystems[game.active_filesystem].previous_canvas = game.canvas;
 
 		resizeCanvas(1280, 720);
 		socket.emit('command', commands);
@@ -771,7 +778,9 @@ io.on('connection', function (socket) {
 
 	function closeFileSystem () {
 		var commands = [];
-
+		resizeCanvas (game.filesystems[game.active_filesystem].previous_canvas.x, game.filesystems[game.active_filesystem].previous_canvas.y);
+		
+		// Possible issue: dialog ends up off the screen if this resize gets called with a dialog open.
 		if (typeof game.active_dialog !== 'undefined') {
 			game.active_dialog.replace_phone = true;
 		} else {
@@ -838,6 +847,22 @@ io.on('connection', function (socket) {
 			}
 
 			socket.emit('command', commands);
+		}
+	}
+	
+	// Tests whether an item exists.
+	function existsInFileSystem (filesystem_name, path, item) {
+		var filesystem = game.filesystems[filesystem_name];
+		var folder = get_folder(filesystem, path);
+		if (folder == null) 
+			return false;
+		else {
+			var contents = folder.contents
+			for (var i = 0; i < contents.length; i++) {
+				if (contents[i] == item)
+					return true;
+			}
+			return false;
 		}
 	}
 
@@ -1220,7 +1245,7 @@ io.on('connection', function (socket) {
 		} else if(mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.mall_scene_variables)) {
 			return;
 		}
-		if (library_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, game.library_variables)) {
+		if (library_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFileSystem, existsInFileSystem, game.library_variables, game.screens["library_success"].extras[1])) {
 			return;
 		}
 

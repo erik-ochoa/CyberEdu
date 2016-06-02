@@ -141,7 +141,7 @@ function load_coffee_shop (game) {
 		background_music_audio_id:"audio/mall",
 		times_reset:0,
 		score:0,
-		score_display_element:game.screens["coffee_shop_success"].extras[0],
+		score_display_element:game.screens["coffee_shop_success"].extras[0], // WARNING: Potential Bug (Aliasing problem) regarding saved games.
 		wifi_sniffing_video_played:false
 	};
 }
@@ -164,7 +164,7 @@ function resetCoffeeShopVariables (vars) {
 	vars.times_reset++;
 }
 
-function pickCulprit (accused, showDialog, closeDialog, vars) {
+function coffeeShopPickCulprt (accused, showDialog, closeDialog, vars) {
 	vars.accusation_dialog.text = vars.names_of_people[accused] + " is the one responsible.";
 	vars.accused_dialog.title = vars.names_of_people[accused];
 	if (accused == vars.culprit) {
@@ -175,7 +175,7 @@ function pickCulprit (accused, showDialog, closeDialog, vars) {
 	showDialog("coffee_shop_player_dialog");
 }
 
-function showPartnerDialog (showDialog, closeDialog, vars) {
+function coffeeShopShowPartnerDialog (showDialog, closeDialog, vars) {
 	if (!vars.partner_dialog_3_shown && vars.spoken_to_manager && vars.spoken_to_customer_1 && vars.spoken_to_customer_2 && vars.spoken_to_customer_3 && vars.spoken_to_customer_4 && vars.spoken_to_customer_5 && vars.spoken_to_culprit_1 && vars.spoken_to_culprit_2 && vars.spoken_to_culprit_3) {
 		vars_partner_dialog_2_shown = true;	
 		showDialog("coffee_shop_partner_dialog_3");
@@ -216,7 +216,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 	} else if (button =="dialog_coffee_shop_manager_dialog_3_Okay." ) {
 		closeDialog();
 		vars.spoken_to_manager = true;
-		showPartnerDialog(showDialog, closeDialog, vars);
+		coffeeShopShowPartnerDialog(showDialog, closeDialog, vars);
 		return true;
 	} else if (button == "dialog_coffee_shop_manager_dialog_4_Yes.") {
 		closeDialog();
@@ -235,7 +235,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		return true;
 	} else if (button == "dialog_coffee_shop_manager_dialog_6_It was YOU!") {
 		closeDialog();
-		pickCulprit("coffee_shop_manager", showDialog, closeDialog, vars);
+		coffeeShopPickCulprt("coffee_shop_manager", showDialog, closeDialog, vars);
 		return true;
 	} else if (button == "dialog_coffee_shop_manager_dialog_6_I'm not so sure anymore.") {
 		vars.picking_culprit = false;
@@ -247,7 +247,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		return true;
 	} else if (button == "coffee_shop_customer_1") {
 		if (vars.picking_culprit) {
-			pickCulprit(button, showDialog, closeDialog, vars);
+			coffeeShopPickCulprt(button, showDialog, closeDialog, vars);
 		} else {
 			showDialog("coffee_shop_customer_1_dialog");
 		}
@@ -259,11 +259,11 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 	} else if (button == "dialog_coffee_shop_customer_1_dialog_2_Okay.") {
 		vars.spoken_to_customer_1 = true;
 		closeDialog();
-		showPartnerDialog(showDialog, closeDialog, vars);
+		coffeeShopShowPartnerDialog(showDialog, closeDialog, vars);
 		return true;
 	} else if (button == "coffee_shop_customer_2") {
 		if (vars.picking_culprit) {
-			pickCulprit(button, showDialog, closeDialog, vars);
+			coffeeShopPickCulprt(button, showDialog, closeDialog, vars);
 		} else {
 			showDialog("coffee_shop_customer_2_dialog");
 		}
@@ -275,11 +275,11 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 	} else if (button == "dialog_coffee_shop_customer_2_dialog_2_Okay.") {
 		closeDialog();
 		vars.spoken_to_customer_2 = true;
-		showPartnerDialog(showDialog, closeDialog, vars);
+		coffeeShopShowPartnerDialog(showDialog, closeDialog, vars);
 		return true;
 	} else if (button == "coffee_shop_customer_3") {
 		if (vars.picking_culprit) {
-			pickCulprit(button, showDialog, closeDialog, vars);
+			coffeeShopPickCulprt(button, showDialog, closeDialog, vars);
 		} else {
 			showDialog("coffee_shop_customer_3_dialog");
 		}
@@ -291,11 +291,11 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 	} else if (button == "dialog_coffee_shop_customer_3_dialog_2_Okay.") {
 		closeDialog();
 		vars.spoken_to_customer_3 = true;
-		showPartnerDialog(showDialog, closeDialog, vars);
+		coffeeShopShowPartnerDialog(showDialog, closeDialog, vars);
 		return true;
 	} else if (button == "coffee_shop_customer_4") {
 		if (vars.picking_culprit) {
-			pickCulprit(button, showDialog, closeDialog, vars);
+			coffeeShopPickCulprt(button, showDialog, closeDialog, vars);
 		} else {
 			showDialog("coffee_shop_customer_4_dialog");
 		}
@@ -307,11 +307,11 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 	} else if (button == "dialog_coffee_shop_customer_4_dialog_2_Okay.") {
 		closeDialog();
 		vars.spoken_to_customer_4 = true;
-		showPartnerDialog(showDialog, closeDialog, vars);
+		coffeeShopShowPartnerDialog(showDialog, closeDialog, vars);
 		return true;
 	} else if (button == "coffee_shop_customer_5") {
 		if (vars.picking_culprit) {
-			pickCulprit(button, showDialog, closeDialog, vars);
+			coffeeShopPickCulprt(button, showDialog, closeDialog, vars);
 		} else {
 			showDialog("coffee_shop_customer_5_dialog");
 		}
@@ -323,11 +323,11 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 	} else if (button == "dialog_coffee_shop_customer_5_dialog_2_Okay.") {
 		closeDialog();
 		vars.spoken_to_customer_5 = true;
-		showPartnerDialog(showDialog, closeDialog, vars);
+		coffeeShopShowPartnerDialog(showDialog, closeDialog, vars);
 		return true;
 	} else if (button == "coffee_shop_culprit_1") {
 		if (vars.picking_culprit) {
-			pickCulprit(button, showDialog, closeDialog, vars);
+			coffeeShopPickCulprt(button, showDialog, closeDialog, vars);
 		} else {
 			showDialog("coffee_shop_culprit_1_dialog");
 		}
@@ -339,11 +339,11 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 	} else if (button == "dialog_coffee_shop_culprit_1_dialog_2_Okay.") { 
 		closeDialog();
 		vars.spoken_to_culprit_1 = true;
-		showPartnerDialog(showDialog, closeDialog, vars);
+		coffeeShopShowPartnerDialog(showDialog, closeDialog, vars);
 		return true;
 	} else if (button == "coffee_shop_culprit_2") {
 		if (vars.picking_culprit) {
-			pickCulprit(button, showDialog, closeDialog, vars);
+			coffeeShopPickCulprt(button, showDialog, closeDialog, vars);
 		} else {
 			showDialog("coffee_shop_culprit_2_dialog");
 		}
@@ -371,16 +371,16 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 	} else if (button == "dialog_coffee_shop_culprit_2_dialog_3_Okay.") {
 		vars.spoken_to_culprit_2 = true;
 		closeDialog();
-		showPartnerDialog(showDialog, closeDialog, vars);
+		coffeeShopShowPartnerDialog(showDialog, closeDialog, vars);
 		return true;
 	} else if (button == "dialog_coffee_shop_culprit_2_dialog_4_Okay.") {
 		vars.spoken_to_culprit_2 = true;
 		closeDialog();
-		showPartnerDialog(showDialog, closeDialog, vars);
+		coffeeShopShowPartnerDialog(showDialog, closeDialog, vars);
 		return true;
 	} else if (button == "coffee_shop_culprit_3") {
 		if (vars.picking_culprit) {
-			pickCulprit(button, showDialog, closeDialog, vars);
+			coffeeShopPickCulprt(button, showDialog, closeDialog, vars);
 		} else {
 			showDialog("coffee_shop_culprit_3_dialog");
 		}
@@ -392,7 +392,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 	} else if (button == "dialog_coffee_shop_culprit_3_dialog_2_Okay.") {
 		closeDialog();
 		vars.spoken_to_culprit_3 = true;
-		showPartnerDialog(showDialog, closeDialog, vars);
+		coffeeShopShowPartnerDialog(showDialog, closeDialog, vars);
 		return true;
 	} else if (button == "dialog_coffee_shop_partner_dialog_Okay.") {
 		closeDialog();
@@ -474,7 +474,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		enterCoffeeShop(resizeCanvas, changeMainScreen, showDialog, vars);
 		return true; // This may need to be modified in the future.
 	} else if (button == "coffee_shop_failed_quit") {
-		changeMainScreen("testMainScreen"); // This will definately need to be modified
+		changeMainScreen("testMainScreen"); // This will definitely need to be modified
 		resizeCanvas(1000, 600);
 		return true;
 	} else
