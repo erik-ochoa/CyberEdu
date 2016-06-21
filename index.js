@@ -8,8 +8,14 @@ var CANVAS_Y = CANVAS_ELEMENT.getBoundingClientRect().top;
 
 var socket = io(SERVER_HOSTNAME);
 
+/* Map of HTML id -> GIF object.
+ * Contains all GIFs that will be used by the game.
+ */
+var animatedGIFs = {};
+animatedGIFs["animation/dorm_room/transition"] = load_gif_from_url(SERVER_HOSTNAME + "/images/transition_to_cyberworld.gif");
+
 /* The objects currently being displayed. Contains objects with the following fields:
-	type: Either 'image', 'text', 'rectangle', or 'button_text'
+	type: Either 'image', 'text', 'rectangle', 'animation', or 'button_text'
 	x: The x-value of the top left corner
 	y: The y-value of the top left corner
 	layer: The layer this image should be drawn in. Images with higher layers are drawn ontop of the lower layers.
@@ -18,6 +24,13 @@ var socket = io(SERVER_HOSTNAME);
 	id: The ID of the image in the HTML document
 	image: The actual image element.
 	
+   Animations have the following additional fields
+    id: The ID of the animated GIF in the HTML document
+	gif: The GIF object associated with this animation
+	frame_no: The index of the current frame being displayed
+	loops_remaining: The # of loops of the animation left to run, or -1 if the animation should run forever.
+	timer_id: The id of the timer that is responsible for advancing this animation to the next frame.
+  	
    Text objects have the following additional fields:
 	text: the text to draw
 	x2: Right
@@ -60,6 +73,9 @@ function drawDisplayElement (element) {
 	} else if (element.type == 'rectangle') {
 		g.fillStyle = element.font_color;
 		g.fillRect(element.x, element.y, element.x2 - element.x, element.y2 - element.y);
+	} else if (element.type == 'animation') {
+		// Draw the current frame
+		g.drawImage(animatedGIFs[element.id].frames[element.frame_no], element.x, element.y);
 	} else {
 		console.log("Bad display element: " + element);
 	}
@@ -139,6 +155,8 @@ var lastKnownMousePosition = {x:0.0, y:0.0}
 	resizeCanvas: (x, y) - resizes the canvas to the specified width and height
 	speakText: (text) - speaks the specified text using the Text-to-Speech engine's default voice
 	speakText: (text, voice) - speaks the text using the Text-to-Speech engine with the specified voice
+	drawAnimatedGif: (id, x1, y1, layer, request_end_notification) - draws the animated GIF at the position (x1, y1) in the specified layer.
+	clearAnimatedGif: (id) - clears a specific animated GIF from the display.
  */
 socket.on('command', function (array) {
 	for (var i = 0; i < array.length; i++) {
@@ -176,8 +194,12 @@ socket.on('command', function (array) {
 						j--;
 					}
 				}
+				g.putImageData(g.createImageData(), MAX_X, MAX_Y);
+				
 				g.fillStyle = 'rgba(255,255,255,1)'
 				g.fillRect(0, 0, MAX_X, MAX_Y);
+				
+				
 				for (var j = 0; j < display.length; j++) {
 					drawDisplayElement(display[j]);
 				}
@@ -461,6 +483,92 @@ socket.on('command', function (array) {
 				
 				responsiveVoice.speak(text, voice, {volume:textToSpeechVolume});
 			}
+		} else if (command_name == 'drawAnimation') {
+			var id = array[i][1];
+			var x1 = array[i][2];
+			var y1 = array[i][3];
+			var layer = array[i][4];
+			var request_end_notification = array[i][5];
+			
+			var animation = {frame_no:0,
+				loops_remaining:animatedGIFs[id].loops - 1, // Because the 1st loop has started, there is one fewer loop remaining than the total amount of loops
+				id:id, 
+				x:x1, 
+				y:y1, 
+				layer:layer, 
+				type:'animation',
+				request_end_notification:request_end_notification
+			};
+			
+			var j = 0;
+			// Scan to where this element belongs and insert it.
+			while (display[j].layer <= layer) {
+				j++;
+			}
+			
+			display.splice(j, 0, animation);
+			
+			// Draw the 1st frame of the animation, as well as any display elements above it.
+			while (j < display.length) {
+				drawDisplayElement(display[j]);
+				j++;
+			}
+			
+			/* Nested helper function that advances the animation by one frame. */
+			function advanceAnimation () {
+				var n_frames = animatedGIFs[animation.id].frames.length;
+				
+				if (animation.frame_no != n_frames - 1) {
+					animation.frame_no++;
+				} else {
+					if (animation.loops_remaining == -1) {
+						animation.frame_no = 0;
+					} else if (animation.loops_remaining > 0) {
+						animation.frame_no = 0;
+						animation.loops_remaining--;
+					} else {
+						if (animation.request_end_notification)
+							socket.emit('animation-ended', animation.id);
+						return;
+					}
+				}
+				
+				for (var j = 0; j < display.length; j++) {
+					if (display[j].layer >= animation.layer)
+						drawDisplayElement(display[j]); // This will draw the next animation frame along with anything overtop of it.
+				}
+				
+				// Setup the next timer.
+				animation.timer_id = setTimeout(advanceAnimation, animatedGIFs[animation.id].delays[animation.frame_no] * 10);
+			}
+			
+			// Start animation.
+			animation.timer_id = setTimeout(advanceAnimation, animatedGIFs[animation.id].delays[animation.frame_no] * 10); /* The *10 converts from 1/100ths of a second to milliseconds. */
+			
+		} else if (command_name == 'clearAnimation') {
+			var id = array[i][1];
+			
+			for (var j = 0; j < display.length; j++) {
+				if (display[j].type == 'animation' && display[j].id == id) {
+					// Stop the animation
+					if (typeof display[j].timer_id !== 'undefined') 
+						clearTimeout(display[j].timer_id);
+					else
+						console.log("Warning: clearAnimatedGIF tried to delete a GIF with no timer. Unless the GIF had already stopped, expect trouble.");
+					
+					// Delete the GIF.
+					splice(j, 1);
+					j--;
+				}
+			}
+			
+			/* Redraw the display */
+			g.fillStyle = 'rgba(255,255,255,1)'
+			g.fillRect(0, 0, MAX_X, MAX_Y);
+			
+			for (var j = 0; j < display.length; j++) {
+				drawDisplayElement(display[j]);
+			} 
 		} else {
 			console.log("Received unknown command: " + command_name);
 		}

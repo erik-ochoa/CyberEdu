@@ -6,6 +6,8 @@ function load_introduction (game, PHONE_SCREEN_LAYER) {
 		new Button ("introduction_computer_monitor", 682, 228, 829, 460)
 	], [], []);
 	
+	game.screens["introduction_transition"] = new Screen (0, 0, 0, new Animation ("animation/dorm_room/transition", 0, 0, 0, true), [], [], []);
+	
 	game.screens["introduction_outside_mall"] = new Screen (0, 0, 0, new Image ("image/mallexterior", 0, 0, 0), [], [] ,[]);
 	
 	game.dialogs["introduction_dialog"] = new Dialog ("introduction_dialog", "", "I just got this new phone, I need to get on my computer and activate it so I can use it.", ["Begin."]);
@@ -19,8 +21,8 @@ function load_introduction (game, PHONE_SCREEN_LAYER) {
 	game.webpages["3"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_3_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"), [], [], [new Text ("introduction_done_registration", 30, 50, 200, 500, 1, "Finished registration! You may now exit the browser.", "18px Arial", "rgba(0,0,0,1)")]);
 	
 	// Phone screens.
-	game.screens["phoneAppStoreButtonScreen"] = new Screen (0, 0, PHONE_SCREEN_LAYER, new Rectangle("phoneAppStoreButtonScreenBackground", 0, 0, 173, 291, 0, "rgba(0,64,255,1)"), [new Button ("introduction_app_store_button", 10, 10, 163, 281, "Visit the APP Store", "18px Georgia", "rgba(255,255,255,1)", 2)], [], []);
-	game.screens["phoneNotYetActivatedScreen"] = new Screen (0, 0, PHONE_SCREEN_LAYER, new Rectangle("phoneNotYetActivatedScreenBackground", 0, 0, 173, 291, 0, "rgba(0,64,255,1)"), [], [], [new Text ("phone_not_yet_activated_message", 10, 10, 173, 291, 1, "Not yet activated. To place phone calls, send messages, or install apps, please register your phone online", "10px Georgia", "rgba(255,255,255,1)")]);
+	game.screens["phoneAppStoreButtonScreen"] = new Screen (0, 0, PHONE_SCREEN_LAYER, new Rectangle("phoneAppStoreButtonScreenBackground", 0, 0, 173, 291, 0, "rgba(0,64,255,1)"), [new Button ("introduction_app_store_button", 10, 10, 163, 281, "Visit the APP Store!", "18px Georgia", "rgba(255,255,255,1)", 2)], [], []);
+	game.screens["phoneNotYetActivatedScreen"] = new Screen (0, 0, PHONE_SCREEN_LAYER, new Rectangle("phoneNotYetActivatedScreenBackground", 0, 0, 173, 291, 0, "rgba(0,64,255,1)"), [], [], [new Text ("phone_not_yet_activated_message", 10, 10, 173, 291, 1, "Not yet activated. To place phone calls, send messages, or install apps, please register your phone online.", "10px Georgia", "rgba(255,255,255,1)")]);
 	
 	game.introduction_variables = {  
 		finished_registration:false
@@ -75,9 +77,7 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 		closeDialog();
 		loadScenes();
 		resizeCanvas(1152, 648);
-		changeMainScreen("introduction_outside_mall");
-		changePhoneScreen("phoneHomeScreen");
-		showDialog("introduction_phone_dialog_2");
+		changeMainScreen("introduction_transition"); // This will play the transition animated gif, dialog will begin once it terminates.
 		return true;
 	} else if (button == "dialog_introduction_phone_dialog_2_Next.") {
 		closeDialog();
@@ -109,6 +109,7 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 		return true;
 	} else if (button == "dialog_introduction_phone_dialog_9_Continue.") {
 		closeDialog();
+		changePhoneScreen("phoneHomeScreen");
 		changeMainScreen("mall_scene");
 		return true;
 	}
@@ -129,3 +130,13 @@ function introduction_text_field_edit (name, value, game) {
 		return false;
 	}
 }
+
+function introduction_on_gif_ended (name, showDialog, changeMainScreen) {
+	if (name == "animation/dorm_room/transition") {
+		changeMainScreen("introduction_outside_mall");
+		showDialog("introduction_phone_dialog_2");
+		return true;
+	} else {
+		return false;
+	}
+} 
