@@ -483,6 +483,8 @@ socket.on('command', function (array) {
 				
 				responsiveVoice.speak(text, voice, {volume:textToSpeechVolume});
 			}
+		} else if (command_name == 'stopSpeakingText') {
+			responsiveVoice.cancel();
 		} else if (command_name == 'drawAnimation') {
 			var id = array[i][1];
 			var x1 = array[i][2];

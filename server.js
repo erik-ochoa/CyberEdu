@@ -1014,7 +1014,7 @@ io.on('connection', function (socket) {
 		var commands = [];
 
 		clearDisplayObject(game.dialogs[game.active_dialog.name].screen, commands);
-
+		commands.push(["stopSpeakingText"]);
 		if (game.active_dialog.replace_phone) {
 			showPhone();
 		}
@@ -1026,7 +1026,7 @@ io.on('connection', function (socket) {
 		} else {
 			drawDisplayObject(game.screens[game.main_screen], commands);
 		}
-
+		
 		delete game.active_dialog;
 		socket.emit('command', commands);
 	}
