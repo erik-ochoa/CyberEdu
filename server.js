@@ -2,14 +2,17 @@ var app = require('http').createServer(handler)
 var io = require('socket.io')(app);
 var fs = require('fs');
 
-// Include modules here.
-eval(fs.readFileSync('coffee_shop.js').toString());
-eval(fs.readFileSync('mall_scene.js').toString());
-eval(fs.readFileSync('library.js').toString());
-eval(fs.readFileSync('apartment.js').toString());
-eval(fs.readFileSync('introduction.js').toString());
+var SERVER_PORT = 8011;
 
-app.listen(8011);
+// Include modules here.
+eval(fs.readFileSync(__dirname + '/coffee_shop.js').toString());
+eval(fs.readFileSync(__dirname + '/mall_scene.js').toString());
+eval(fs.readFileSync(__dirname + '/library.js').toString());
+eval(fs.readFileSync(__dirname + '/apartment.js').toString());
+eval(fs.readFileSync(__dirname + '/introduction.js').toString());
+
+app.listen(SERVER_PORT);
+console.log("CyberEDU server firing up on port " + SERVER_PORT);
 
 function handler (request, response) {
 	console.log("HTTP request received for " + request.url);
@@ -73,6 +76,16 @@ var Image = function(id, x, y, layer) {
 	this.y = y;
 	this.layer = layer;
 };
+
+// An animated GIF image, drawn at the specified position
+var Animation = function (id, x, y, layer, callbackRequested) {
+	this.type = 'animation'
+	this.id = id;
+	this.x = x;
+	this.y = y;
+	this.layer = layer;
+	this.callbackRequested = callbackRequested;
+}
 
 // Text drawn at the specified position.
 var Text = function (name, x1, y1, x2, y2, layer, text, font, font_color) {
@@ -202,6 +215,8 @@ var MAX_DISPLAYED_MAILBOX_ENTRIES = 17;
 function drawDisplayObject (element, commands) {
 	if (element.type == 'image') {
 		commands.push(["drawImage", element.id, element.x, element.y, element.layer]);
+	} else if (element.type == 'animation') {
+		commands.push(["drawAnimation", element.id, element.x, element.y, element.layer, element.callbackRequested]);
 	} else if (element.type == 'text') {
 		commands.push(["drawText", element.name, element.x, element.y, element.x2, element.y2, element.layer, element.text, element.font, element.font_color]);
 	} else if (element.type == 'rectangle') {
@@ -235,6 +250,8 @@ function drawDisplayObject (element, commands) {
 function clearDisplayObject (element, commands) {
 	if (element.type == 'image') {
 		commands.push(["clearImage", element.id, element.x, element.y, element.layer]);
+	} else if (element.type == 'animation') {
+		commands.push(["clearAnimation", element.id]);
 	} else if (element.type == 'text') {
 		commands.push(["clearText", element.name]);
 	} else if (element.type == 'rectangle') {
@@ -308,7 +325,7 @@ function setup_dialog_screen(dialog, canvas, previous_screen) {
 	previous_screen = JSON.parse(JSON.stringify(previous_screen)); // I need to modify the object, so I must deep copy it first
 	previous_screen.buttons = [];
 	previous_screen.textFields = [];
-
+	
 	delete previous_screen.on_screen; // This copy isn't actually on the screen. Causes false alarms for repeated draw calls.
 
 	// A possible future upgrade: add whatever text was in the buttons/textFields into the display as standalone text objects.
@@ -398,18 +415,26 @@ io.on('connection', function (socket) {
 	 *  partner_name: The name of the partner.
 	 */
 
-	var game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:false, screen:"phoneNotYetActivatedScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley"};
+	var game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneNotYetActivatedScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false};
 	game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 	game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 	game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 	
 	// Note that all phone applications should have an exit button; however, may be placed anywhere on the screen, not necessarily at (0,0).
+<<<<<<< HEAD
+=======
+	installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0), "phoneEmailAppScreen"));
+>>>>>>> origin/master
 	game.screens["phoneEmailAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, "Exit Email", "24px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-up", 145, 115, 170, 140, "/\\", "24px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-down", 145, 150, 170, 175, "\\/", "24px Times", "rgba(255,255,255,1)", 2));
 
 	// Phone Map application -- add new locations to the game through this.
+<<<<<<< HEAD
+=======
+	installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0), "phoneMapAppScreen"));
+>>>>>>> origin/master
 	game.screens["phoneMapAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, "Exit Map", "24px Times", "rgba(255,255,255,1)", 2));
 	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_red_screen", 0, 30, 173, 60, "Go to Red Screen", "24px Times", "rgba(255,255,255,1)", 2));
@@ -435,13 +460,13 @@ io.on('connection', function (socket) {
 
 	// Load the introduction scene into the game state object.
 	load_introduction (game, PHONE_SCREEN_LAYER);
-	
+
 	// For Testing Purposes {
-	loadScenes();
-	changeMainScreen("testMainScreen");
-	changePhoneScreen("phoneHomeScreen");
+	// loadScenes();
+	// changeMainScreen("testMainScreen");
+	// changePhoneScreen("phoneHomeScreen");
 	// }
-	
+
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
 	var init_commands = [];
 	init_commands.push(["resizeCanvas", game.canvas.x, game.canvas.y]);
@@ -451,6 +476,10 @@ io.on('connection', function (socket) {
 			init_commands.push(["addButton", "lower-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, game.canvas.x, game.canvas.y - PHONE_Y_RAISED + PHONE_Y_LOWERED]);
 			init_commands.push(["addButton", "phone-power-button", game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[0], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[1], game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[2], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[3]]);
 			if (game.phone.screen_on) {
+				// Move the screen to the correct position before drawing it.
+				game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
+				game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
+
 				drawDisplayObject(game.screens[game.phone.screen], init_commands);
 			} else {
 				init_commands.push(["drawImage", "image/phone/screen/off", game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER]);
@@ -486,9 +515,9 @@ io.on('connection', function (socket) {
 	if (typeof game.background_music[game.main_screen] !== 'undefined') {
 		init_commands.push(["playSound", game.background_music[game.main_screen]]);
 	}
-
-	socket.emit('command', init_commands);
 	
+	socket.emit('command', init_commands);
+
 	/* Loads all the additional scenes into the game object. */
 	function loadScenes () {
 		load_coffee_shop (game);
@@ -496,6 +525,7 @@ io.on('connection', function (socket) {
 		load_library (game, addToFileSystem);
 		load_apartment (game);
 		load_introduction_part2(game);
+		game.scenes_loaded = true;
 	}
 
 	/* Changes the canvas size to the specified arguments */
@@ -671,7 +701,7 @@ io.on('connection', function (socket) {
 			drawDisplayObject(game.browsers[name].screen, commands);
 		}
 		commands.push(["resizeCanvas", 800, 600]);
-		
+
 		game.active_browser = name;
 		socket.emit('command', commands);
 	}
@@ -694,7 +724,7 @@ io.on('connection', function (socket) {
 			drawDisplayObject(game.screens[game.main_screen], commands);
 		}
 		commands.push(["resizeCanvas", game.canvas.x, game.canvas.y]);
-	
+
 		delete game.active_browser;
 		socket.emit('command', commands);
 	}
@@ -777,7 +807,7 @@ io.on('connection', function (socket) {
 	function closeFileSystem () {
 		var commands = [];
 		resizeCanvas (game.filesystems[game.active_filesystem].previous_canvas.x, game.filesystems[game.active_filesystem].previous_canvas.y);
-		
+
 		// Possible issue: dialog ends up off the screen if this resize gets called with a dialog open.
 		if (typeof game.active_dialog !== 'undefined') {
 			game.active_dialog.replace_phone = true;
@@ -847,12 +877,12 @@ io.on('connection', function (socket) {
 			socket.emit('command', commands);
 		}
 	}
-	
+
 	// Tests whether an item exists.
 	function existsInFileSystem (filesystem_name, path, item) {
 		var filesystem = game.filesystems[filesystem_name];
 		var folder = get_folder(filesystem, path);
-		if (folder == null) 
+		if (folder == null)
 			return false;
 		else {
 			var contents = folder.contents
@@ -874,13 +904,13 @@ io.on('connection', function (socket) {
 			var message_screen = createMessageScreen(email_no);
 			addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);
 		}
-		
+
 	}
-	
+
 	/* Deletes the item in the player's mailbox at the specified index */
 	function removeFromMailbox (email_no) {
 		var y = yPositionOfEmailNo(email_no);
-		
+
 		// Removal of the display elements is not necessary if the email being deleted is below the screen, but it is necessary if the item being deleted is above the screen.
 		if (email_no - game.mailbox_displayed_index < MAX_DISPLAYED_MAILBOX_ENTRIES) {
 			for (var i = 0; i < game.screens["phoneEmailAppScreen"].extras.length; i++) {
@@ -899,17 +929,17 @@ io.on('connection', function (socket) {
 				addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);
 			}
 		}
-		
+
 		// Scroll up one if all the messages on the screen were deleted.
-		if (game.mailbox_displayed_index >= game.mailbox.length && game.mailbox_displayed_index > 0) 
+		if (game.mailbox_displayed_index >= game.mailbox.length && game.mailbox_displayed_index > 0)
 			changeMailboxScrollPosition(game.mailbox_displayed_index - 1);
 	}
-	
+
 	/* Marks the item in the player's mailbox at the specified index as read */
 	function markAsRead (email_no) {
 		if (game.mailbox[email_no].unread) {
 			game.mailbox[email_no].unread = false;
-			
+
 			// Check if the message being marked is actually on the screen
 			if (0 <= email_no - game.mailbox_displayed_index && email_no - game.mailbox_displayed_index < MAX_DISPLAYED_MAILBOX_ENTRIES) {
 				for (var i = 0; i < game.screens["phoneEmailAppScreen"].extras.length; i++) {
@@ -917,23 +947,23 @@ io.on('connection', function (socket) {
 						// Remove and re-add the screen with the background changed.
 						removeElementFromScreen(game.screens["phoneEmailAppScreen"], game.screens["phoneEmailAppScreen"].extras[i]);
 						var message_screen = createMessageScreen(email_no);
-						addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);	
+						addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);
 						break;
 					}
 				}
 			}
 		}
 	}
-	
+
 	function changeMailboxScrollPosition (newPosition) {
 		// Need to remove all email inbox items from the screen
 		for (var i = 0; i < game.screens["phoneEmailAppScreen"].extras.length; i++) {
 			if (game.screens["phoneEmailAppScreen"].extras[i].type == 'screen' && game.screens["phoneEmailAppScreen"].extras[i].base.type == 'rectangle' && game.screens["phoneEmailAppScreen"].extras[i].base.name.match(/inbox_\d+_background/) != null) {
 				removeElementFromScreen(game.screens["phoneEmailAppScreen"], game.screens["phoneEmailAppScreen"].extras[i]);
-				i--; 
+				i--;
 			}
 		}
-		
+
 		game.mailbox_displayed_index = newPosition;
 		// Now add back the email inbox items that are actually on the screen.
 		for (var i = newPosition; i < newPosition + MAX_DISPLAYED_MAILBOX_ENTRIES && i < game.mailbox.length; i++) {
@@ -941,12 +971,12 @@ io.on('connection', function (socket) {
 			addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);
 		}
 	}
-	
+
 	// Helper function which returns the y-position of an email_no
 	function yPositionOfEmailNo (email_no) {
 		return 30 + (email_no - game.mailbox_displayed_index) * 15;
 	}
-	
+
 	// Helper function which creates a message screen for a given message
 	function createMessageScreen (email_no) {
 		var message = game.mailbox[email_no];
@@ -975,9 +1005,10 @@ io.on('connection', function (socket) {
 			setup_dialog_screen(game.dialogs[dialog_name], game.canvas, game.screens[game.main_screen]);
 		}
 
+		// Known issue: if an animated GIF is on the screen, it will be cleared, redrawn, and re-loaded, causing the dialog to disappear.
 		clearDisplayObject(game.screens[game.main_screen], commands);
 		drawDisplayObject(game.dialogs[dialog_name].screen, commands);
-		
+
 		if (typeof game.dialogs[dialog_name].voice !== 'undefined') {
 			commands.push(['speakText', game.dialogs[dialog_name].text, game.dialogs[dialog_name].voice]);
 		}
@@ -989,7 +1020,7 @@ io.on('connection', function (socket) {
 		var commands = [];
 
 		clearDisplayObject(game.dialogs[game.active_dialog.name].screen, commands);
-
+		commands.push(["stopSpeakingText"]);
 		if (game.active_dialog.replace_phone) {
 			showPhone();
 		}
@@ -1001,7 +1032,7 @@ io.on('connection', function (socket) {
 		} else {
 			drawDisplayObject(game.screens[game.main_screen], commands);
 		}
-
+		
 		delete game.active_dialog;
 		socket.emit('command', commands);
 	}
@@ -1181,7 +1212,7 @@ io.on('connection', function (socket) {
 
 		socket.emit('command', commands);
 	}
-	
+
 	// Helper function to verify that a button is on a screen. Takes the screen object and a button name
 	// Returns true if the screen does indeed contain the button.
 	function verifyScreen(screen, button_name) {
@@ -1189,15 +1220,15 @@ io.on('connection', function (socket) {
 			if (screen.buttons[i].name == button_name)
 				return true;
 		}
-		
+
 		for (var i = 0; i < screen.extras.length; i++) {
 			if (screen.extras[i].type == 'screen' && verifyScreen(screen.extras[i], button_name))
 				return true;
 		}
-		
+
 		return false;
 	}
-	
+
 	socket.on('click', function (button) {
 		// Verify that the clicked button is actually on the screen.
 		if (typeof button === 'undefined') {
@@ -1214,7 +1245,7 @@ io.on('connection', function (socket) {
 			} else {
 				valid = verifyScreen(game.screens[game.main_screen], button);
 			}
-			
+
 			// If the event is already valid, don't mess with the valid status.
 			if (!valid) {
 				if (game.phone.visible) {
@@ -1229,14 +1260,14 @@ io.on('connection', function (socket) {
 					}
 				}
 			}
-			
+
 			if (!valid) {
 				console.log("Received invalid click event -- the button \"" + button + "\" could not be found.");
 				return;
 			}
-		}
+		}		
 		
-		
+<<<<<<< HEAD
 		// Handle events in the modules
 		if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.coffee_shop_variables)) {
 			return;
@@ -1246,11 +1277,25 @@ io.on('connection', function (socket) {
 		if (library_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFileSystem, existsInFileSystem, game.library_variables, game.screens["library_success"].extras[1])) {
 			return;
 		}
+=======
+		// Handle events in the modules, but only if they are loaded
+		if (game.scenes_loaded) {
+			if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.coffee_shop_variables)) {
+				return;
+			} else if(mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.mall_scene_variables)) {
+				return;
+			}
+			if (library_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFileSystem, existsInFileSystem, game.library_variables, game.screens["library_success"].extras[1])) {
+				return;
+			}
 
-		if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables)) {
-			return;
+			if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables, game.browsers["rout"], displayBrowser, closeBrowser, changeBrowserWebPage, game.screens["apartment_success"].extras[1])) {
+				return;
+			}
+>>>>>>> origin/master
+
 		}
-		
+
 		if (introduction_onclick(button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, game.browsers["introduction_computer_browser"], game.introduction_variables)) {
 			return;
 		}
@@ -1378,6 +1423,14 @@ io.on('connection', function (socket) {
 			changeBrowserWebPage(game.browsers[game.active_browser], value);
 		} else {
 			console.log("Received unhandled text-field-enter event with name, value = " + name + ", " + value);
+		}
+	});
+	
+	socket.on('animation-ended', function (name) {		
+		if (introduction_on_gif_ended(name, showDialog, changeMainScreen)) {
+			return;
+		} else {
+			console.log("Received unhandled animated-GIF-ended event with name = " + name);
 		}
 	});
 });
