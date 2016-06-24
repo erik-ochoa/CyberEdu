@@ -6,6 +6,9 @@ var MAX_Y = 630;
 var CANVAS_X = CANVAS_ELEMENT.getBoundingClientRect().left;
 var CANVAS_Y = CANVAS_ELEMENT.getBoundingClientRect().top;
 
+// Draw CyberEdu logo while the game is loading
+g.drawImage(document.getElementById("logo"), 45, 138);
+
 var socket = io(SERVER_HOSTNAME);
 
 /* Map of HTML id -> GIF object.

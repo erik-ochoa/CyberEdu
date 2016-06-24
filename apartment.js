@@ -24,6 +24,7 @@ function load_apartment (game) {
 		newPassowrd:false,
 		firstTry:true,
 		matchedPassword:false,
+		wifi_config_video_played:false,
 		piracy_video_played:false,
 		background_music_audio_id:"audio/mall",
 		names_of_people:{billy:resident_1_name, jacob:resident_2_name, emily:resident_3_name, madeline:resident_4_name}
@@ -109,7 +110,7 @@ function load_apartment (game) {
 	game.dialogs["apartment_partner_dialog_5"] = new Dialog ("apartment_partner_dialog_5", game.partner_name, "Madeline, have you changed any of these settings in the past?", ["Continue."]);
 	game.dialogs["apartment_partner_dialog_6"] = new Dialog ("apartment_partner_dialog_6", game.partner_name, "Let's see if we can get anymore information from the router history and then do some investigating.", ["Okay."]);
 	game.dialogs["apartment_partner_dialog_7"] = new Dialog ("apartment_partner_dialog_7", game.partner_name, "We've talked to all possible suspects. Let's check in on Madeline.", ["Okay."]);
-	game.dialogs["apartment_partner_dialog_8"] = new Dialog ("apartment_partner_dialog_8", game.partner_name, "Broadcasting the SSID isn't a good idea since it forces the connected laptops to transmit the SSID wherever they go, meaning complete strangers could end up seeing it.", ["Okay."]);
+	game.dialogs["apartment_partner_dialog_8"] = new Dialog ("apartment_partner_dialog_8", game.partner_name, "Not broadcasting the SSID is a bad idea since it forces the laptops remembering the router to transmit the SSID wherever they go, meaning snoopers could end up seeing it.", ["Okay."]);
 	game.dialogs["apartment_partner_dialog_9"] = new Dialog ("apartment_partner_dialog_9", game.partner_name, "Her SSID is currently 'Madeline's Wi-Fi' - there isn't any reason to change it.", ["Okay."]);
 	game.dialogs["apartment_partner_dialog_10"] = new Dialog ("apartment_partner_dialog_10", game.partner_name, "There isn't any reason to change these, but you could block certain websites and put on time of day restrictions.", ["Okay."]);
 	game.dialogs["apartment_partner_dialog_11"] = new Dialog ("apartment_partner_dialog_11", game.partner_name, "We need a password so neighbors can't easily connect to your network. What would you like to be set as your password, Madeline?", ["Okay."]);
@@ -120,7 +121,7 @@ function load_apartment (game) {
 	game.dialogs["madeline_dialog_2"] = new Dialog ("madeline_dialog_2", resident_4_name, "Thank you so much for coming. Like I said, the Music Protection Association is claiming I illegally downloaded a thousand dollars worth of songs. I'm incredibly stressed right now, since I know they've got this all wrong. You could even look" +
 	" at my computer and see that there aren't any downloaded music files on it. Please help!", ["Okay."]);
 	game.dialogs["madeline_dialog_3"] = new Dialog ("madeline_dialog_3", resident_4_name, "I definitely haven't. I don't even know how to get to this screen", ["Okay."]);
-	game.dialogs["madeline_dialog_4"] = new Dialog ("madeline_dialog_4", game.player_name, "It looks like Jacob and Emily have used your Wi-Fi network in the past 48 hours.", ["Continue."]);
+	game.dialogs["madeline_dialog_4"] = new Dialog ("madeline_dialog_4", game.player_name, "It looks like Jacob, Billy, and Emily have used your Wi-Fi network in the past 48 hours.", ["Continue."]);
 	game.dialogs["madeline_dialog_5"] = new Dialog ("madeline_dialog_5", resident_4_name, "Wow, I would have never known that. Could you help me ask some of the people who live here? I know Jacob lives to my left, Emily lives down the hall, and" +
 	" my friend Billy lives across from me.", ["Okay."]);
 
@@ -130,12 +131,12 @@ function load_apartment (game) {
 	game.dialogs["madeline_dialog_7"] = new Dialog ("madeline_dialog_7", resident_4_name, "Perfect timing! The Music Protection Association just emailed me saying all the illegally downloaded files were songs by country artists.", ["Continue."]);
 	game.dialogs["madeline_dialog_8"] = new Dialog ("madeline_dialog_8", game.player_name, "Thanks Madeline. With that, I believe our investigation lets us conclude that our culprit is ", ["Emily.", "Jacob.", "Billy."]);
 	game.dialogs["madeline_dialog_9"] = new Dialog ("madeline_dialog_9", game.player_name, "Actually, the culprit is ", ["Emily.", "Jacob.", "Billy."]);
-	game.dialogs["madeline_dialog_10"] = new Dialog ("madeline_dialog_10", resident_4_name, "I'll let them know immediately about this situation and talk to Jacob about what he almost caused. I'm just glad I can avoid a random lawsuit - student loans are already tough enough." +
-	" By the way, they also told me to secure my network since I'm responsible for the traffic on it. Could you help me with that?", ["Okay."]);
-	game.dialogs["madeline_dialog_11"] = new Dialog ("madeline_dialog_11", resident_4_name, "Please help me secure my network!", ["Okay."]);
-	game.dialogs["madeline_dialog_12"] = new Dialog ("madeline_dialog_12", resident_4_name, "I want it set as 'theSpotofdot20'", ["Okay."]);
-	game.dialogs["madeline_dialog_13"] = new Dialog ("madeline_dialog_13", game.player_name, "Well, Madeline, that's everything.", ["Continue."]);
-	game.dialogs["madeline_dialog_14"] = new Dialog ("madeline_dialog_14", resident_4_name, "I am so glad you guys were able to solve my problem. Please accept my collection of baseball cards as a gift! Some of the players in it include Adam Jones, Chris Davis, Bryce Harper, and Ryan Zimmerman.", ["Okay."]);
+	game.dialogs["madeline_dialog_10"] = new Dialog ("madeline_dialog_10", resident_4_name, "I'll let them know immediately about this situation and talk to Jacob about what he almost caused. I'm just glad I can avoid a random lawsuit - student loans are already tough enough.", ["Continue."]); 
+	game.dialogs["madeline_dialog_11"] = new Dialog ("madeline_dialog_11", resident_4_name, "By the way, they also told me to secure my network since I'm responsible for the traffic on it. Could you help me with that?", ["Okay."]);
+	game.dialogs["madeline_dialog_12"] = new Dialog ("madeline_dialog_12", resident_4_name, "Please help me secure my network!", ["Okay."]);
+	game.dialogs["madeline_dialog_13"] = new Dialog ("madeline_dialog_13", resident_4_name, "I want it set as 'theSpotofdot20'", ["Okay."]);
+	game.dialogs["madeline_dialog_14"] = new Dialog ("madeline_dialog_14", game.player_name, "Well, Madeline, that's everything.", ["Continue."]);
+	game.dialogs["madeline_dialog_15"] = new Dialog ("madeline_dialog_15", resident_4_name, "I am so glad you guys were able to solve my problem. Please accept my collection of baseball cards as a gift! Some of the players in it include Adam Jones, Chris Davis, Bryce Harper, and Ryan Zimmerman.", ["Okay."]);
 
 
 
@@ -312,9 +313,9 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		}
 	} else if (button == "dialog_apartment_partner_dialog_11_Okay.") {
 		closeDialog();
-		showDialog("madeline_dialog_12");
+		showDialog("madeline_dialog_13");
 		return true;
-	} else if (button == "dialog_madeline_dialog_12_Okay.") {
+	} else if (button == "dialog_madeline_dialog_13_Okay.") {
 		closeDialog();
 		return true;
 	} else if (button == "dialog_apartment_partner_dialog_12_Okay.") {
@@ -366,10 +367,10 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		if (!vars.accusedJacob) {
 			showDialog("madeline_dialog_6");
 		} else {
-			showDialog("madeline_dialog_11");
+			showDialog("madeline_dialog_12");
 		}
 		return true;
-	} else if (button == "dialog_madeline_dialog_11_Okay.") {
+	} else if (button == "dialog_madeline_dialog_12_Okay.") {
 		closeDialog();
 		return true;
 	} else if (button == "mad" && !vars.metMadeline) {
@@ -570,7 +571,15 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		closeDialog();
 		showDialog("madeline_dialog_10");
 		return true;
-	} else if (button == "dialog_madeline_dialog_10_Okay.") {
+	} else if (button == "dialog_madeline_dialog_10_Continue.") {
+		closeDialog();
+		showDialog("madeline_dialog_11");
+		if (!vars.piracy_video_played) {
+			playVideo("video/piracy");
+			vars.piracy_video_played = true;
+		}
+		return true;
+	} else if (button == "dialog_madeline_dialog_11_Okay.") {
 		closeDialog();
 		return true;
 	} else if (button == "router_password_finish_button") {
@@ -584,20 +593,27 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		} else {
 			closeBrowser();
 			changeMainScreen("madeline_room");
-			showDialog("madeline_dialog_13");
+			showDialog("madeline_dialog_14");
 			return true;
 		}
-	} else if (button == "dialog_madeline_dialog_13_Continue.") {
+	} else if (button == "dialog_madeline_dialog_14_Continue.") {
 		closeDialog();
-		showDialog("madeline_dialog_14");
+		showDialog("madeline_dialog_15");
 		return true;
-	} else if (button == "dialog_madeline_dialog_14_Okay.") {
+	} else if (button == "dialog_madeline_dialog_15_Okay.") {
 		closeDialog();
 		resizeCanvas(1188, 681);
 		changeMainScreen("apartment_success");
 		var score = (vars.firstTry ? 10 : 0) + (vars.helpBilly ? -5 : 0) + (vars.ratBilly ? 5 : 0) + (vars.matchedPassword ? 10 : 0);
 		vars.score = score;
 		vars.score = 50;
+		
+		// Jonathan Hansford put this code here to show the video. Be careful when making future modifications not to show it twice.
+		if (!vars.wifi_config_video_played) {
+			playVideo("video/wifiConfig");
+			vars.wifi_config_video_played = true;
+		}
+		
 		//if (score != vars.score)
 		//  vars.score = score;
 		//score_text_element.text = "You Scored " + vars.score + " Points (out of 30)!";
@@ -618,8 +634,8 @@ function finishApartment (vars, score_text_element, resizeCanvas, changeMainScre
 	score_text_element.text = "You Scored " + vars.score + " Points (out of 30)!";
 	resizeCanvas(1152, 648);
 	changeMainScreen("apartment_success");
-	/*if (!vars.video_shown) {
-	  playVideo("video/piracy");
-	  vars.video_shown = true;
-	}*/
+	if (!vars.wifi_config_video_played) {
+	  playVideo("video/wifiConfig");
+	  vars.wifi_config_video_played = true;
+	}
 }
