@@ -177,7 +177,7 @@ function pickCulprit (accused, showDialog, closeDialog, vars) {
 // Here vars is game.apartment_variables as assigned above.
 function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, vars, browser, displayBrowser, closeBrowser, changeBrowserWebPage, score_text_element) {
 	if (button == "go_to_apartment") { // Button on the phone's map app.
-		resizeCanvas(1188, 681);
+		resizeCanvas(1153, 648.5);
 		changeMainScreen("apartment");
 		if (!vars.entry_message_shown) {
 			showDialog("apartment_partner_dialog");
@@ -242,7 +242,7 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		} else {
 			vars.routerChecked = true;
 			closeBrowser(false);
-			resizeCanvas(1188, 681);
+			resizeCanvas(1153, 648.5);
 			if (vars.inHerRoom) {
 				changeMainScreen("madeline_room");
 				if (vars.sawHistory && !vars.accusedJacob) {
@@ -602,7 +602,7 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "dialog_madeline_dialog_15_Okay.") {
 		closeDialog();
-		resizeCanvas(1188, 681);
+		resizeCanvas(1153, 648.5);
 		changeMainScreen("apartment_success");
 		var score = (vars.firstTry ? 10 : 0) + (vars.helpBilly ? -5 : 0) + (vars.ratBilly ? 5 : 0) + (vars.matchedPassword ? 10 : 0);
 		vars.score = score;
@@ -632,7 +632,7 @@ function finishApartment (vars, score_text_element, resizeCanvas, changeMainScre
 	if (score > vars.score)
 	  vars.score = score;
 	score_text_element.text = "You Scored " + vars.score + " Points (out of 30)!";
-	resizeCanvas(1152, 648);
+	resizeCanvas(1153, 648.5);
 	changeMainScreen("apartment_success");
 	if (!vars.wifi_config_video_played) {
 	  playVideo("video/wifiConfig");
