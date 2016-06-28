@@ -992,17 +992,18 @@ io.on('connection', function (socket) {
 		if (game.phone.visible) {
 			hidePhone();
 		}
-
+		
 		if (typeof game.active_browser !== 'undefined') {
 			setup_dialog_screen(game.dialogs[dialog_name], {x:800, y:600 /* Canvas size when the browser is enabled */}, game.browsers[game.active_browser].screen);
+			clearDisplayObject(game.browsers[game.active_browser].screen, commands);
 		} else if (typeof game.active_filesystem !== 'undefined') {
 			setup_dialog_screen(game.dialogs[dialog_name], game.canvas, get_current_screen(game.filesystems[game.active_filesystem]));
+			clearDisplayObject(get_current_screen(game.filesystems[game.active_filesystem]), commands);
 		} else {
 			setup_dialog_screen(game.dialogs[dialog_name], game.canvas, game.screens[game.main_screen]);
+			clearDisplayObject(game.screens[game.main_screen], commands);
 		}
 
-		// Known issue: if an animated GIF is on the screen, it will be cleared, redrawn, and re-loaded, causing the dialog to disappear.
-		clearDisplayObject(game.screens[game.main_screen], commands);
 		drawDisplayObject(game.dialogs[dialog_name].screen, commands);
 
 		if (typeof game.dialogs[dialog_name].voice !== 'undefined') {
@@ -1016,7 +1017,9 @@ io.on('connection', function (socket) {
 		var commands = [];
 
 		clearDisplayObject(game.dialogs[game.active_dialog.name].screen, commands);
-		commands.push(["stopSpeakingText"]);
+		if (typeof game.dialogs[game.active_dialog.name].voice !== 'undefined') {
+			commands.push(["stopSpeakingText"]);
+		}
 		if (game.active_dialog.replace_phone) {
 			showPhone();
 		}

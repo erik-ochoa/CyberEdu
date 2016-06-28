@@ -28,7 +28,6 @@ Stream.prototype.readByte = function () {
 		console.log("Error: read past end of stream");
 		throw new Error();
 	}
-	// console.log("Reading byte: " + this.data[this.position] + "\tHex: " + this.data[this.position].toString('16'));
 	
 	if (this.data instanceof Uint8Array)
 		return this.data[this.position++];
@@ -158,7 +157,6 @@ var ImageDescriptor = function (stream) {
 	}
 	
 	if (this.local_color_table_flag) {
-		console.log("attempting to read local color table");
 		this.local_color_table = ColorTable(stream, this.local_color_table_size);
 	}
 }
@@ -219,18 +217,14 @@ function parseGIF (stream) {
 	if (stream.read(6) != "GIF89a") {
 		console.log("Warning: file is not a GIF version 89a. Parser is going to fail.");
 	}	
-	console.log("read header");
 	
 	// Read Logical Screen Descriptor
 	var width = stream.readUnsigned();
 	var height = stream.readUnsigned();
-	console.log("Width: " + width + ", Height: " + height);
 	
 	// Note: need the ">>>" instead of ">>" operator for an unsigned right shift!
 	b = stream.readByte();
 	var global_color_table_flag = (b & 0x80) == (1 << 7); // if true, a global color table follows
-	console.log("b & 0x80 = " + (b & 0x80) + "\t Hex: " + (b & 0x80).toString(16));
-	console.log("Color table flag: " + (b & 0x80 >>> 7));
 	var bits_per_primary_color = (b & 0x70 >>> 4) + 1;
 	var sort_flag = (b & 0x08 >>> 3) == 1;
 	var global_color_table_size = Math.pow(2, (b & 0x07) + 1);
@@ -241,15 +235,12 @@ function parseGIF (stream) {
 	var global_color_table;
 	if (global_color_table_flag) {
 		global_color_table = new ColorTable (stream, global_color_table_size);
-		console.log("Read global color table");
 	}
 	
 	var indicator = stream.readByte();
-	console.log("read indicator");
 	while (indicator != 0x3B) { // 0x3B is the end of file marker.
 		if (indicator == 0x2C) {
 			var imageDescriptor = new ImageDescriptor(stream);
-			console.log("read image descriptor");
 			// Next step is to read a bunch of pixel information.
 			var minimum_code_size = stream.readByte();
 			var indicies = lzwDecode(minimum_code_size, readSubBlocks(stream));
@@ -283,7 +274,7 @@ function parseGIF (stream) {
 					imageData.data[i+3] = global_color_table.alpha[background_color_index];
 				}	
 			} else {
-				console.log("Disposal method not supported: " + disposal_of_previous_frame);
+				console.log("(GIF Parser) Disposal method not supported: " + disposal_of_previous_frame);
 			}
 			
 			for (var i = imageDescriptor.top; i < imageDescriptor.top + imageDescriptor.height; i++) {
@@ -305,16 +296,12 @@ function parseGIF (stream) {
 			
 			g.putImageData(imageData, 0, 0);
 			frames.push(canvas);
-			console.log("Pushed frame. # of frames is now: " + frames.length);
 			
 		} else if (indicator == 0x21) {
 			var extension_type = stream.readByte();
 			if (extension_type == 0xF9) {
 				var graphicsControl = new GraphicsControlExtension(stream);
-				console.log("read graphics control block");
-				console.log("disposal method = " + graphicsControl.disposal_method);
 				delays.push(graphicsControl.delay_time);
-				console.log("Pushed delay (" + graphicsControl.delay_time + "cs). # of delays is now: " + delays.length);
 				if (graphicsControl.transparent_color_flag)
 					transparent_color_index = graphicsControl.transparent_color_index;
 				else 
@@ -330,7 +317,6 @@ function parseGIF (stream) {
 				var application_extension_name = stream.read(extension_header_length);
 				if (application_extension_name == "NETSCAPE2.0") {
 					var netscape2 = new Netscape2Extension(stream);
-					console.log("read NETSCAPE2.0 extension");
 					loops = netscape2.n_loops;
 				} else {
 					// Some other application extension. I'm not dealing with it. 
@@ -342,7 +328,6 @@ function parseGIF (stream) {
 			}
 		}
 		indicator = stream.readByte();
-		console.log("read indicator");
 	}
 	
 	return new GIF (frames, delays, loops);
@@ -366,9 +351,7 @@ function load_gif_from_url (url) {
 	}
 	
 	request.send();
-	
-	console.log(request.response);
-	
+		
 	// Handling response.
 	if (request.status != 200) 
 		console.log("XMLHttpRequest error. Status code: " + this.statusText);

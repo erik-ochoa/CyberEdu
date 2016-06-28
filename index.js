@@ -107,6 +107,16 @@ function drawText(text, x1, y1, x2, y2) {
 	}
 }
 
+/* Helper function to redraw the entire display. 
+ */
+ function redrawAll () {
+	g.fillStyle = 'rgba(255,255,255,1)'
+	g.fillRect(0, 0, MAX_X, MAX_Y);
+	
+	for (var j = 0; j < display.length; j++)
+		drawDisplayElement(display[j]);
+ }
+
 /* The buttons that are currently active. Buttons are objects with the following fields:
 	name: A unique name for this button (provided by the server, must be unique among buttons and text input fields)
 	x1: Left edge
@@ -172,21 +182,15 @@ socket.on('command', function (array) {
 			var layer = array[i][4];
 			
 			var image = document.getElementById(id);
-			/* Draw the image */
-			g.drawImage(image, x1, y1);
-			/* Re-draw images which should be drawn over this one */
-			for (var j = 0; j < display.length; j++) {
-				if (display[j].layer > layer) {
-					drawDisplayElement(display[j]);
-				}				
-			}
-			
+
 			var j = 0;
 			while (j < display.length && display[j].layer <= layer) {
 				j++;
 			}
 			// This call to splice inserts the element into the array, sliding elements behind it down one.
 			display.splice(j, 0, {type:'image', id: id, x:x1, y:y1, layer:layer, image:image});
+			
+			redrawAll();
 			
 		} else if (command_name == 'clearImage') {
 			if (array[i].length == 1) {
@@ -199,13 +203,7 @@ socket.on('command', function (array) {
 				}
 				g.putImageData(g.createImageData(), MAX_X, MAX_Y);
 				
-				g.fillStyle = 'rgba(255,255,255,1)'
-				g.fillRect(0, 0, MAX_X, MAX_Y);
-				
-				
-				for (var j = 0; j < display.length; j++) {
-					drawDisplayElement(display[j]);
-				}
+				redrawAll();
 			} else {
 			// Arguments present, clear a specific image.
 				var id = array[i][1];
@@ -221,13 +219,7 @@ socket.on('command', function (array) {
 					}
 				}
 				
-				/* Redraws all other images. Relies on the fact that images are stored in increasing order with respect to layer */
-				g.fillStyle = 'rgba(255,255,255,1)'
-				g.fillRect(0, 0, MAX_X, MAX_Y);
-				for (var j = 0; j < display.length; j++) {
-					drawDisplayElement(display[j]);
-				}
-				
+				redrawAll();
 			}
 			
 		} else if (command_name == 'addButton') {
@@ -259,12 +251,7 @@ socket.on('command', function (array) {
 				}
 				display.splice(j, 0, {type:'button_text', x:x1, y:y1, x2:x2, y2:y2, layer:layer, text:text, font:font, font_color:font_color, button_name:name});
 				
-				// Draw the new display element, and re-draw anything above it.
-				while (j < display.length) {
-					drawDisplayElement(display[j]);
-					j++;
-				}
-				
+				redrawAll();
 			}
 		} else if (command_name == 'deleteButton') {
 			var name = array[i][1];
@@ -280,12 +267,7 @@ socket.on('command', function (array) {
 							}							
 						}
 						
-						/* Redraw the display */
-						g.fillStyle = 'rgba(255,255,255,1)'
-						g.fillRect(0, 0, MAX_X, MAX_Y);
-						for (var k = 0; k < display.length; k++) {
-							drawDisplayElement(display[k]);
-						}
+						redrawAll();
 					}
 					buttons.splice(j, 1);
 					j--;
@@ -307,20 +289,13 @@ socket.on('command', function (array) {
 			var layer = array[i][6];
 			var style = array[i][7];
 			
-			g.fillStyle = style;
-			g.fillRect(x1, y1, x2 - x1, y2 - y1);
-			
-			for (var j = 0; j < display.length; j++) {
-				if (display[j].layer > layer) {
-					drawDisplayElement(display[j]);
-				}
-			}
-			
 			var j = 0;
 			while (j < display.length && display[j].layer <= layer) {
 				j++;
 			}
 			display.splice(j, 0, {type:'rectangle', name:name, x:x1, y:y1, x2:x2, y2:y2, layer:layer, font_color:style});
+			
+			redrawAll();
 		} else if (command_name == 'clearRectangle') {
 			var name = array[i][1];
 			
@@ -331,13 +306,7 @@ socket.on('command', function (array) {
 				}
 			}
 			
-			/* Redraw the display */
-			g.fillStyle = 'rgba(255,255,255,1)'
-			g.fillRect(0, 0, MAX_X, MAX_Y);
-			
-			for (var j = 0; j < display.length; j++) {
-				drawDisplayElement(display[j]);
-			}
+			redrawAll();
 		} else if (command_name == 'drawText') {
 			var name = array[i][1];
 			var x1 = array[i][2];
@@ -349,22 +318,13 @@ socket.on('command', function (array) {
 			var font = array[i][8];
 			var font_color = array[i][9];
 			
-			g.font = font;
-			g.fillStyle = font_color;
-			drawText(text, x1, y1, x2, y2);
-
-			for (var j = 0; j < display.length; j++) {
-				if (display[j].layer > layer) {
-					drawDisplayElement(display[j]);
-				}
-			}
-			
 			var j = 0;
 			while (j < display.length && display[j].layer <= layer) {
 				j++;
 			}
 			display.splice(j, 0, {type:'text', name:name, x:x1, y:y1, x2:x2, y2:y2, layer:layer, text:text, font:font, font_color:font_color});
 		
+			redrawAll();
 		} else if (command_name == 'clearText') {
 			var name = array[i][1];
 			
@@ -376,12 +336,7 @@ socket.on('command', function (array) {
 			}
 			
 			/* Redraw the display */
-			g.fillStyle = 'rgba(255,255,255,1)'
-			g.fillRect(0, 0, MAX_X, MAX_Y);
-			
-			for (var j = 0; j < display.length; j++) {
-				drawDisplayElement(display[j]);
-			}
+			redrawAll();
 		} else if (command_name == 'playVideo') {
 			var id = array[i][1];
 			
@@ -447,11 +402,7 @@ socket.on('command', function (array) {
 			}
 			display.splice(j, 0, {type:'button_text', x:x1, y:y1, x2:x2, y2:y2, layer:layer, text:text, font:font, font_color:font_color, button_name:name});
 			
-			while (j < display.length) {
-				drawDisplayElement(display[j]);
-				j++;
-			}
-			
+			redrawAll();
 		} else if (command_name == 'deleteTextInputField') {
 			var name = array[i][1];
 			
@@ -470,11 +421,7 @@ socket.on('command', function (array) {
 			}
 			
 			// must redraw entire display
-			g.fillStyle = 'rgba(255,255,255,1)';
-			g.fillRect(0, 0, MAX_X, MAX_Y);
-			for (var j = 0; j < display.length; j++) {
-				drawDisplayElement(display[j]);
-			}
+			redrawAll();
 		} else if (command_name == 'speakText') {
 			if (array[i].length == 2) {
 				var text = array[i][1];
@@ -513,11 +460,8 @@ socket.on('command', function (array) {
 			
 			display.splice(j, 0, animation);
 			
-			// Draw the 1st frame of the animation, as well as any display elements above it.
-			while (j < display.length) {
-				drawDisplayElement(display[j]);
-				j++;
-			}
+			// Draw the 1st frame of the animation, along with the other display elements.
+			redrawAll();
 			
 			/* Nested helper function that advances the animation by one frame. */
 			function advanceAnimation () {
@@ -538,10 +482,8 @@ socket.on('command', function (array) {
 					}
 				}
 				
-				for (var j = 0; j < display.length; j++) {
-					if (display[j].layer >= animation.layer)
-						drawDisplayElement(display[j]); // This will draw the next animation frame along with anything overtop of it.
-				}
+				// Draw the next frame along with the rest of the display elements
+				redrawAll();
 				
 				// Setup the next timer.
 				animation.timer_id = setTimeout(advanceAnimation, animatedGIFs[animation.id].delays[animation.frame_no] * 10);
@@ -567,13 +509,7 @@ socket.on('command', function (array) {
 				}
 			}
 			
-			/* Redraw the display */
-			g.fillStyle = 'rgba(255,255,255,1)'
-			g.fillRect(0, 0, MAX_X, MAX_Y);
-			
-			for (var j = 0; j < display.length; j++) {
-				drawDisplayElement(display[j]);
-			} 
+			redrawAll();
 		} else {
 			console.log("Received unknown command: " + command_name);
 		}
@@ -620,9 +556,7 @@ document.onkeydown = function (e) {
 		}
 		
 		if (found) {
-			for (var i = 0; i < display.length; i++) {
-				drawDisplayElement(display[i]);
-			}
+			redrawall();
 		}
 	}
 }
@@ -670,18 +604,14 @@ function click_position(event) {
 		for (var i = 0; i < display.length; i++) {
 			if (display[i].type == 'button_text' && display[i].button_name == previousActiveField.name) {
 				// Necessary to redraw everything to get rid of the | character (the cursor), and add the new pipe character.
-				for (var j = 0; j < display.length; j++) {
-					drawDisplayElement(display[j]);
-				}
+				redrawAll();
 				socket.emit('text-field-edit', previousActiveField.name, display[i].text);
 			}
 		}
 	}
 	else if (previousActiveField == null && activeTextInputField != null) {
 		// Need to draw the new pipe character.
-		for (var j = 0; j < display.length; j++) {
-			drawDisplayElement(display[j]);
-		}
+		redrawAll();
 	}
 	
 	for (var i = 0; i < buttons.length; i++) {

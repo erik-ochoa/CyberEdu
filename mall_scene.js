@@ -134,7 +134,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "dialog_inside_female_dialog_5_Continue.") {
 		closeDialog();
-		installPhoneApp(new PhoneApp ("Map", new Text("Map_app_icon", 0, 0, 32, 32, 0, "Map", "10px Georgia", 'rgba(255,255,255,1)'), "phoneMapAppScreen"));
+		installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0), "phoneMapAppScreen"));
 		vars.spoken_to_April = true;
 		return true;
 	} else if (button == "discover_poster") {
@@ -182,7 +182,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "dialog_productivity_manager_dialog_2_continue.") {
 		closeDialog();
-		installPhoneApp(new PhoneApp ("Email", new Text("Email_app_icon", 0, 0, 32, 32, 0, "Email", "10px Georgia", "rgba(255,255,255,1)"), "phoneEmailAppScreen"));
+		installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0), "phoneEmailAppScreen"));
 		return true;
 	} else if (button == "countdown_poster") {
 		showDialog("final_countdown_poster_content");
