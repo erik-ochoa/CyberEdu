@@ -110,13 +110,29 @@ function drawText(text, x1, y1, x2, y2) {
 /* Helper function to redraw the entire display. 
  */
  function redrawAll () {
-	g.fillStyle = 'rgba(255,255,255,1)'
-	g.fillRect(0, 0, MAX_X, MAX_Y);
+	//g.fillStyle = 'rgba(255,255,255,1)'
+	//g.fillRect(0, 0, MAX_X, MAX_Y);
+	g.clearRect(0, 0, MAX_X, MAX_Y);
 	
 	for (var j = 0; j < display.length; j++)
 		drawDisplayElement(display[j]);
  }
-
+ 
+ /* Helper function to redraw all display elements at or above a certain layer.
+  * Relies on the fact that the display array is sorted by layer.
+  */  
+function redrawAtOrAboveLayer (layer) {
+	var j = 0;
+	
+	while (j < display.length && display[j].layer < layer)
+		j++;
+	
+	while (j < display.length) {
+		drawDisplayElement(display[j])
+		j++;
+	}
+}
+ 
 /* The buttons that are currently active. Buttons are objects with the following fields:
 	name: A unique name for this button (provided by the server, must be unique among buttons and text input fields)
 	x1: Left edge
@@ -187,7 +203,6 @@ socket.on('command', function (array) {
 			while (j < display.length && display[j].layer <= layer) {
 				j++;
 			}
-			// This call to splice inserts the element into the array, sliding elements behind it down one.
 			display.splice(j, 0, {type:'image', id: id, x:x1, y:y1, layer:layer, image:image});
 			
 			redrawAll();
@@ -460,8 +475,9 @@ socket.on('command', function (array) {
 			
 			display.splice(j, 0, animation);
 			
-			// Draw the 1st frame of the animation, along with the other display elements.
-			redrawAll();
+			// Draw the 1st frame of the animation, along anything above it.
+			// This is permissible because a GIF image can never be partially transparent.
+			redrawAtOrAboveLayer(animation.layer);
 			
 			/* Nested helper function that advances the animation by one frame. */
 			function advanceAnimation () {
@@ -482,8 +498,8 @@ socket.on('command', function (array) {
 					}
 				}
 				
-				// Draw the next frame along with the rest of the display elements
-				redrawAll();
+				// Draw the next frame along with anything above it.
+				redrawAtOrAboveLayer(animation.layer);
 				
 				// Setup the next timer.
 				animation.timer_id = setTimeout(advanceAnimation, animatedGIFs[animation.id].delays[animation.frame_no] * 10);
@@ -556,7 +572,7 @@ document.onkeydown = function (e) {
 		}
 		
 		if (found) {
-			redrawall();
+			redrawAll();
 		}
 	}
 }

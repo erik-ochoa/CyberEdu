@@ -11,6 +11,12 @@ eval(fs.readFileSync(__dirname + '/library.js').toString());
 eval(fs.readFileSync(__dirname + '/apartment.js').toString());
 eval(fs.readFileSync(__dirname + '/introduction.js').toString());
 
+// Prevent entire server from crashing in the event a single user causes an error.
+process.on('uncaughtException', function (err) {
+	console.log("Error: An exception has been caught at the top level. The server will continue to run.");
+	console.log(err.stack);
+});
+
 app.listen(SERVER_PORT);
 console.log("CyberEDU server firing up on port " + SERVER_PORT);
 
