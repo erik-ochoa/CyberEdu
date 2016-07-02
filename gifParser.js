@@ -244,7 +244,6 @@ function parseGIF (stream) {
 			// Next step is to read a bunch of pixel information.
 			var minimum_code_size = stream.readByte();
 			var indicies = lzwDecode(minimum_code_size, readSubBlocks(stream));
-			console.log("read image data blocks");
 			var x = 0; // index into the indicies array
 			
 			// Actually create the frame.

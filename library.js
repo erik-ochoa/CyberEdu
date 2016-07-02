@@ -1,38 +1,38 @@
 function load_library (game, addToFileSystem) {
   game.screens["library"] = new Screen (0, 0, 0, new Image ("image/library", 0, 0, 0), [
-    new Button ("librarian", 1007, 220, 1062, 308)
+    new Button ("librarian", 1007, 220, 1062, 308, 0)
   ], [], []);
   game.screens["library2"] = new Screen (0, 0, 0, new Image ("image/library", 0, 0, 0), [
-    new Button ("librarian", 1007, 220, 1062, 308),
-    new Button ("yellow_shirt", 768, 280, 807, 323),
-    new Button ("glasses", 689, 293, 767, 398),
-    new Button ("files", 502, 306, 639, 426),
-    new Button ("red", 378, 263, 458, 366),
-    new Button ("stripes", 10, 201, 101, 331),
+    new Button ("librarian", 1007, 220, 1062, 308, 0),
+    new Button ("yellow_shirt", 768, 280, 807, 323, 0),
+    new Button ("glasses", 689, 293, 767, 398, 0),
+    new Button ("files", 502, 306, 639, 426, 0),
+    new Button ("red", 378, 263, 458, 366, 0),
+    new Button ("stripes", 10, 201, 101, 331, 0),
   ], [], []);
   game.screens["finish"] = new Screen (0, 0, 0, new Image ("image/library", 0, 0, 0), [
-    new Button ("librarian2", 1007, 220, 1062, 308),
-    new Button ("yellow_shirt", 768, 280, 807, 323),
-    new Button ("glasses", 689, 293, 767, 398),
-    new Button ("files", 502, 306, 639, 426),
-    new Button ("red", 378, 263, 458, 366),
-    new Button ("stripes", 10, 201, 101, 331),
+    new Button ("librarian2", 1007, 220, 1062, 308, 0),
+    new Button ("yellow_shirt", 768, 280, 807, 323, 0),
+    new Button ("glasses", 689, 293, 767, 398, 0),
+    new Button ("files", 502, 306, 639, 426, 0),
+    new Button ("red", 378, 263, 458, 366, 0),
+    new Button ("stripes", 10, 201, 101, 331, 0),
   ], [], []);
   game.screens["librarian"] = new Screen (0, 0, 0, new Image ("image/librarian", 0, 0, 0), [
-    new Button ("librarian", 1007, 220, 1062, 308)
+    new Button ("librarian", 1007, 220, 1062, 308, 0)
   ], [], []);
   game.screens["yellow_gamescreen"] = new Screen (0, 0, 0, new Image ("image/comp3", 0, 0, 0), [], [], []);
   game.screens["glasses_gamescreen"] = new Screen (0, 0, 0, new Image ("image/comp2", 0, 0, 0), [], [], []);
   game.screens["glasses2_gamescreen"] = new Screen (0, 0, 0, new Image ("image/infected", 0, 0, 0), [], [], []);
   game.screens["red_gamescreen"] = new Screen (0, 0, 0, new Image ("image/comp3", 0, 0, 0), [], [], []);
   game.screens["files_gamescreen"] = new Screen (0, 0, 0, new Image ("image/comp1", 0, 0, 0), [
-    new Button ("usb", 227, 459, 302, 513),
+    new Button ("usb", 227, 459, 302, 513, 0),
   ], [], []);
   game.screens["files3_gamescreen"] = new Screen (0, 0, 0, new Image ("image/comp1", 0, 0, 0), [
-    new Button ("web", 477, 54, 600, 150)
+    new Button ("web", 477, 54, 600, 150, 0)
   ], [], []);
   game.screens["files2_gamescreen"] = new Screen (0, 0, 0, new Image ("image/infected2", 0, 0, 0), [
-    new Button ("screen", 0, 0, 1151, 647)
+    new Button ("screen", 0, 0, 1151, 647, 0)
   ], [], []);
 
   game.dialogs["start_dialog"] = new Dialog ("start_dialog", game.partner_name, "Let's go talk to the librarian about the issues the library computers have been having.", ["Continue."]);
@@ -102,7 +102,7 @@ function load_library (game, addToFileSystem) {
   game.dialogs["library_still_fixing_computer"] = new Dialog ("library_still_fixing_computer", "Librarian", "Should I call in tech support or are you still working on it.", ["I can't figure it out. Call in the IT guys.", "I'm still working on it."]);
   
   game.screens["library_success"] = new Screen (0, 0, 0, new Image ("image/mission/complete", 0, 0, 0), [
-	  new Button ("library_quit", 404, 427, 714, 515, "Select Another Mission", "24px Arial", "rgba(255,255,255,1)", 2)
+	  new Button ("library_quit", 404, 427, 714, 515, 2, "Select Another Mission", "24px Arial", "rgba(255,255,255,1)")
 	], [], [
 	  new Rectangle ("library_success_quit_backing_rectangle", 404, 427, 714, 515, 1, "rgba(255,255,255,0.5)"),
 	  new Text ("library_score",  404, 535, 714, 600, 2, ERROR_STRING, "24px Arial", "rgba(255,255,0,1)")

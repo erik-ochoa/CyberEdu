@@ -9,13 +9,13 @@ var CANVAS_Y = CANVAS_ELEMENT.getBoundingClientRect().top;
 // Draw CyberEdu logo while the game is loading
 g.drawImage(document.getElementById("logo"), 45, 138);
 
-var socket = io(SERVER_HOSTNAME);
-
 /* Map of HTML id -> GIF object.
  * Contains all GIFs that will be used by the game.
  */
 var animatedGIFs = {};
 animatedGIFs["animation/dorm_room/transition"] = load_gif_from_url(SERVER_HOSTNAME + "/images/transition_to_cyberworld.gif");
+
+var socket = io(SERVER_HOSTNAME);
 
 /* The objects currently being displayed. Contains objects with the following fields:
 	type: Either 'image', 'text', 'rectangle', 'animation', or 'button_text'
@@ -139,6 +139,7 @@ function redrawAtOrAboveLayer (layer) {
 	y1: Top edge
 	x2: Right edge
 	y2: Bottom edge
+	layer: The layer the button is in.
 	hasText: boolean, true if this button has an associated text element.
 */
 var buttons = [];
@@ -149,6 +150,7 @@ var buttons = [];
 	y1: top edge
 	x2: right edge
 	y2: bottom edge
+	layer: The layer the text input field is in
 	The text in these fields is maintained in their associated button_text display objects.
 */
 var textInputFields = [];
@@ -175,8 +177,8 @@ var lastKnownMousePosition = {x:0.0, y:0.0}
 	clearImage: (id, x1, y1, layer) - clears a specific image from the display.
 	clearRectangle: (name) - clears a rectangle.
 	clearText: (name) - clears text.
-	addButton: (name, x1, y1, x2, y2) - adds an invisible rectangular button
-	addButton: (name, x1, y1, x2, y2, text, font, font_color, layer) - adds a button with the specified text.
+	addButton: (name, x1, y1, x2, y2, layer) - adds an invisible rectangular button
+	addButton: (name, x1, y1, x2, y2, layer, text, font, font_color) - adds a button with the specified text.
 	deleteButton: (name) - deletes the button with the specified name, and its associated text (if any) in the display
 	playSound: (id) - plays the specified sound
 	stopSound: (id) - stops the specified sound
@@ -238,15 +240,19 @@ socket.on('command', function (array) {
 			}
 			
 		} else if (command_name == 'addButton') {
-			if (array[i].length == 6) {
+			if (array[i].length == 7) {
 			// Invisible button (with no text)
 				var name = array[i][1];
 				var x1 = array[i][2];
 				var y1 = array[i][3];
 				var x2 = array[i][4];
 				var y2 = array[i][5];
+				var layer = array[i][6];		
+				if (typeof layer === 'undefined') {
+					console.log('Warning: Button ' + name + ' has no layer!');
+				}
 				
-				buttons[buttons.length] = {name: name, x1:x1, y1:y1, x2:x2, y2:y2, hasText:false};
+				buttons[buttons.length] = {name:name, x1:x1, y1:y1, x2:x2, y2:y2, layer:layer, hasText:false};
 			} else if (array[i].length == 10) {
 			// Button with text
 				var name = array[i][1];
@@ -254,12 +260,15 @@ socket.on('command', function (array) {
 				var y1 = array[i][3];
 				var x2 = array[i][4];
 				var y2 = array[i][5];
-				var text = array[i][6];
-				var font = array[i][7];
-				var font_color = array[i][8];
-				var layer = array[i][9];
-				
-				buttons[buttons.length] = {name:name, x1:x1, y1:y1, x2:x2, y2:y2, hasText:true};
+				var layer = array[i][6];
+				var text = array[i][7];
+				var font = array[i][8];
+				var font_color = array[i][9];
+				if (typeof layer === 'undefined') {
+					console.log('Warning: Button ' + name + ' has no layer!');
+				}
+
+				buttons[buttons.length] = {name:name, x1:x1, y1:y1, x2:x2, y2:y2, layer:layer, hasText:true};
 				var j = 0;
 				while (j < display.length && display[j].layer <= layer) {
 					j++;
@@ -403,13 +412,13 @@ socket.on('command', function (array) {
 			var y1 = array[i][3];
 			var x2 = array[i][4];
 			var y2 = array[i][5];
-			var text = array[i][6];
-			var font = array[i][7];
-			var font_color = array[i][8];
-			var layer = array[i][9];
+			var layer = array[i][6];
+			var text = array[i][7];
+			var font = array[i][8];
+			var font_color = array[i][9];
 
 			// Add to the text input fields list.
-			textInputFields.push({name:name, x1:x1, y1:y1, x2:x2, y2:y2});
+			textInputFields.push({name:name, x1:x1, y1:y1, x2:x2, y2:y2, layer:layer});
 		
 			var j = 0;
 			while (j < display.length && display[j].layer <= layer) {
@@ -544,7 +553,7 @@ document.onkeydown = function (e) {
 	}
 	
 	if (activeTextInputField != null) {
-		// Update the active text field and then redraw all display elements on top of it.
+		// Update the active text field and then redraw all the display elements.
 		var found = false;
 		for (var i = 0; i < display.length; i++) {
 			if (!found && display[i].type == 'button_text' && display[i].button_name == activeTextInputField.name) {
@@ -567,6 +576,21 @@ document.onkeydown = function (e) {
 				} else if (key == 32) { // Space bar.
 					e.preventDefault();
 					display[i].text += ' ';
+				} else if (96 <= key && key <= 107) { // Numpad keys
+					display[i].text += '0123456789*+'.charAt(key-96);
+				} else if (109 <= key && key <= 111) { // More numpad keys
+					display[i].text += '-./'.charAt(key-109);
+				} else if (186 <= key && key <= 192) {
+					if (shiftHeld)
+						display[i].text += ':+<_>?~'.charAt(key-186);
+					else
+						display[i].text += ';=,-./`'.charAt(key-186);
+				} else if (219 <= key && key <= 222) {
+					if (shiftHeld)
+						display[i].text += '{|}"'.charAt(key-219);
+					else	
+						display[i].text += "[\\]'".charAt(key-219);
+					
 				}
 			}
 		}
@@ -630,11 +654,26 @@ function click_position(event) {
 		redrawAll();
 	}
 	
+	// Click the button that is in the highest layer.
+	var highest_layer = -999;
+	var button_to_click = [];
+	console.log(JSON.stringify(buttons));
 	for (var i = 0; i < buttons.length; i++) {
 		if (buttons[i].x1 <= posx && posx <= buttons[i].x2 && buttons[i].y1 <= posy && posy <= buttons[i].y2) {
-			socket.emit('click', buttons[i].name);
+			if (buttons[i].layer == highest_layer) {
+				button_to_click << buttons[i].name;
+			} else if (buttons[i].layer > highest_layer) {
+				highest_layer = buttons[i].layer;
+				button_to_click = [buttons[i].name];
+			}
 		}
 	}
+	for (var i = 0; i < button_to_click.length; i++) {
+		socket.emit('click', button_to_click[i]);
+	}
+	
+	if (button_to_click.length > 1) 
+		console.log ("Warning: Overlapping buttons in the same layer: " + JSON.stringify(button_to_click));
 }
 
 function rollover_position(event) {

@@ -3,7 +3,6 @@
 // Put them into the game object in the load_apartment() method instead.
 
 function load_apartment (game) {
-	//handle situation where user changes URL
 
 	game.apartment_variables = {
 		score:0,
@@ -34,59 +33,59 @@ function load_apartment (game) {
 
 	//History, Wired Settings, Wireless Settings, Factory Reset
 	game.webpages["http://192.168.0.1"] = new Screen (0, 70, 0, new Rectangle ("router_1_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"),
-	[new Button ("history_button", 65, 300, 165, 350, "History", "28px Arial", "rgba(0,0,0,1)", 2),
-	new Button ("factory_button", 595, 300, 780, 350, "Factory Reset", "28px Arial", "rgba(0,0,0,1)", 2),
-	new Button ("wired_button", 110, 120, 335, 160, "Wired Settings", "28px Arial", "rgba(0,0,0,1)", 2),
-	new Button ("wireless_button", 500, 120, 750, 160, "Wireless Settings", "28px Arial", "rgba(0,0,0,1)", 2)], [], []);
+	[new Button ("history_button", 65, 300, 165, 350, 2, "History", "28px Arial", "rgba(0,0,0,1)"),
+	new Button ("factory_button", 595, 300, 780, 350, 2, "Factory Reset", "28px Arial", "rgba(0,0,0,1)"),
+	new Button ("wired_button", 110, 120, 335, 160, 2, "Wired Settings", "28px Arial", "rgba(0,0,0,1)"),
+	new Button ("wireless_button", 500, 120, 750, 160, 2, "Wireless Settings", "28px Arial", "rgba(0,0,0,1)")], [], []);
 
 	game.webpages["http://192.168.0.1/history"] = new Screen(0, 70, 0, new Image("image/history", 0, 0, 0), [], [], []);
 
 	game.webpages["Jacob's Phone Networks"] = new Screen(0, 70, 0, new Image("image/jacobNetworks", 0, 0, 0), [], [], []);
 
 	game.webpages["http://192.168.0.1/wireless"] = new Screen (0, 70, 0, new Rectangle ("router_1_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"),
-	[new Button ("change_ssid", 90, 130, 270, 180, "Change SSID", "28px Arial", "rgba(0,0,0,1)", 2),
-	new Button ("broadcast", 540, 130, 740, 180, "Broadcast SSID", "28px Arial", "rgba(0,0,0,1)", 2),
-	new Button ("set_pwd", 90, 410, 280, 440, "Set Password", "28px Arial", "rgba(0,0,0,1)", 2),
-	new Button ("parental", 540, 410, 760, 440, "Parental Controls", "28px Arial", "rgba(0,0,0,1)", 2),
-	new Button ("finish_secure", 370, 435, 445, 465, "Finish", "28px Arial", "rgba(0,0,0,1)", 2)], [], []);
+	[new Button ("change_ssid", 90, 130, 270, 180, 2, "Change SSID", "28px Arial", "rgba(0,0,0,1)"),
+	new Button ("broadcast", 540, 130, 740, 180, 2, "Broadcast SSID", "28px Arial", "rgba(0,0,0,1)"),
+	new Button ("set_pwd", 90, 410, 280, 440, 2, "Set Password", "28px Arial", "rgba(0,0,0,1)"),
+	new Button ("parental", 540, 410, 760, 440, 2, "Parental Controls", "28px Arial", "rgba(0,0,0,1)"),
+	new Button ("finish_secure", 370, 435, 445, 465, 2, "Finish", "28px Arial", "rgba(0,0,0,1)")], [], []);
 
 	game.webpages["http://192.168.0.1/wireless/password"] = new Screen (0, 70, 0, new Rectangle ("router_2_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"),
-	[new Button ("router_password_finish_button", 100, 200, 200, 300, "Save and Go Back >", "18px Arial", "rgba(0,0,0,1)", 2)],
-	[new Button ("router_password_entry", 100, 130, 500, 200, "********", "24px Arial", "rgba(64,64,64,1)", 2)],
+	[new Button ("router_password_finish_button", 100, 200, 200, 300, 2,"Save and Go Back >", "18px Arial", "rgba(0,0,0,1)")],
+	[new Button ("router_password_entry", 100, 130, 500, 200, "********", 2,"24px Arial", "rgba(64,64,64,1)")],
 	[new Text ("router_instruction_enter_password_", 100, 100, 500, 150, 1, "Enter your new password:", "24px Arial", "rgba(0,0,0,1)")]);
 
 	game.screens["apartment"] = new Screen (0, 0, 0, new Image ("image/hallway", 0, 0, 0), [
-		new Button ("apartment_manager", 268, 313, 328, 396),
-		new Button ("madeline_door", 120, 360, 200, 400),
-		new Button ("billy_door", 788, 325, 812, 385),
-		new Button ("jacob_door", 444, 330, 474, 375),
-		new Button ("emily_door", 582, 321, 627, 383)
+		new Button ("apartment_manager", 268, 313, 328, 396, 0),
+		new Button ("madeline_door", 120, 360, 200, 400, 0),
+		new Button ("billy_door", 788, 325, 812, 385, 0),
+		new Button ("jacob_door", 444, 330, 474, 375, 0),
+		new Button ("emily_door", 582, 321, 627, 383, 0)
 	], [], []);
 
 	game.screens["billy_room"] = new Screen (0, 0, 0, new Image ("image/billya", 0, 0, 0), [
-		new Button ("door", 75, 355, 135, 385),
-		new Button ("bill", 650, 108, 780, 430)
+		new Button ("door", 75, 355, 135, 385, 0),
+		new Button ("bill", 650, 108, 780, 430, 0)
 	], [], []);
 
 	game.screens["jacob_room"] = new Screen (0, 0, 0, new Image ("image/jacoba", 0, 0, 0), [
-		new Button ("door1", 571, 169, 684, 429),
-		new Button ("jac", 455, 158, 510, 444),
-		new Button ("jacob_phone", 220, 438, 260, 453)
+		new Button ("door1", 571, 169, 684, 429, 0),
+		new Button ("jac", 455, 158, 510, 444, 0),
+		new Button ("jacob_phone", 220, 438, 260, 453, 0)
 	], [], []);
 
 	game.screens["emily_room"] = new Screen (0, 0, 0, new Image ("image/emilya", 0, 0, 0), [
-		new Button ("door2", 792, 190, 850, 290),
-		new Button ("em", 338, 135, 477, 425)
+		new Button ("door2", 792, 190, 850, 290, 0),
+		new Button ("em", 338, 135, 477, 425, 0)
 	], [], []);
 
 	game.screens["madeline_room"] = new Screen (0, 0, 0, new Image ("image/madelinea", 0, 0, 0), [
-		new Button ("door3", 106, 379, 140, 397),
-		new Button ("mad_laptop", 930, 410, 1090, 550),
-		new Button ("mad", 643, 155, 780, 455)
+		new Button ("door3", 106, 379, 140, 397, 0),
+		new Button ("mad_laptop", 930, 410, 1090, 550, 0),
+		new Button ("mad", 643, 155, 780, 455, 0)
 	], [], []);
 
 	game.screens["apartment_success"] = new Screen (0, 0, 0, new Image ("image/mission/complete", 0, 0, 0), [
-		new Button ("apartment_failed_quit", 404, 427, 714, 515, "Select Another Mission", "24px Arial", "rgba(255,255,255,1)", 2)
+		new Button ("apartment_failed_quit", 404, 427, 714, 515, 2, "Select Another Mission", "24px Arial", "rgba(255,255,255,1)")
 	], [], [
 		new Text ("apartment_success_score", 404, 535, 714, 600, 2, "You scored " + game.apartment_variables.score + " points!", "24px Arial", "rgba(255,255,0,1)"),
 		new Rectangle ("apartment_success_quit_backing_rectangle", 404, 427, 714, 515, 1, "rgba(255,255,255,0.5)")

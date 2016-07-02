@@ -1,6 +1,9 @@
-var app = require('http').createServer(handler)
+var http = require('http');
 var io = require('socket.io')(app);
 var fs = require('fs');
+var url = require('url');
+
+var app = http.createServer(handler);
 
 var SERVER_PORT = 8011;
 
@@ -21,7 +24,7 @@ app.listen(SERVER_PORT);
 console.log("CyberEDU server firing up on port " + SERVER_PORT);
 
 function handler (request, response) {
-	console.log("HTTP request received for " + request.url);
+	console.log("HTTP request received for " + request.url + " from " + request.socket.remoteAddress);
 	if (request.url == "/") {
 		fs.readFile(__dirname + '/index.html', function (err, data) {
 			if (err) {
@@ -58,8 +61,8 @@ function handler (request, response) {
  *
  * This constructor is also used to build text input fields. In that case, all input arguments are required.
  */
-var Button = function (name, x1, y1, x2, y2, text, font, font_color, layer) {
-	if (typeof text !== 'undefined' && (typeof font === 'undefined' || typeof font_color === 'undefined' || typeof layer === 'undefined'))
+var Button = function (name, x1, y1, x2, y2, layer, text, font, font_color) {
+	if (typeof text !== 'undefined' && (typeof font === 'undefined' || typeof font_color === 'undefined'))
 		console.log("Illegal call to Button constructor; text provided, but not all optional arguments were provided!");
 
 	this.name = name;
@@ -67,10 +70,10 @@ var Button = function (name, x1, y1, x2, y2, text, font, font_color, layer) {
 	this.x2 = x2;
 	this.y1 = y1;
 	this.y2 = y2;
+	this.layer = layer;
 	this.text = text;
 	this.font = font;
 	this.font_color = font_color;
-	this.layer = layer;
 
 };
 
@@ -139,7 +142,7 @@ var Screen = function (x, y, layer, base_element, buttons, textInputFields, extr
  * The usage of the browser object's screen field is such that it has one element in the extras list, a screen, @ (0, 70), the webpage*/
 var Browser = function () {
 	this.url = "";
-	this.screen = new Screen(0, 0, 0, new Image("image/browser/blank", 0, 0, 0), [new Button("browser-minimize", 679, 24, 705, 48), new Button("browser-x", 764, 24, 789, 48)], [new Button("browser-bar", 32, 18, 668, 49, "", "18px Arial", "rgba(0,0,0,1)", 1)], [BLANK_BROWSER_SCREEN]);
+	this.screen = new Screen(0, 0, 0, new Image("image/browser/blank", 0, 0, 0), [new Button("browser-minimize", 679, 24, 705, 48, 0), new Button("browser-x", 764, 24, 789, 48, 0)], [new Button("browser-bar", 32, 18, 668, 49, 1, "", "18px Arial", "rgba(0,0,0,1)")], [BLANK_BROWSER_SCREEN]);
 };
 
 /* A dialog box. The canvas object passed in (game.canvas) contains an x and y field to size the box.
@@ -234,14 +237,14 @@ function drawDisplayObject (element, commands) {
 
 		for (var i = 0; i < element.buttons.length; i++) {
 			if (element.buttons[i].text) {
-				commands.push(["addButton", element.buttons[i].name, element.buttons[i].x1 + element.x, element.buttons[i].y1 + element.y, element.buttons[i].x2 + element.x, element.buttons[i].y2 + element.y, element.buttons[i].text, element.buttons[i].font, element.buttons[i].font_color, element.layer + element.buttons[i].layer]);
+				commands.push(["addButton", element.buttons[i].name, element.buttons[i].x1 + element.x, element.buttons[i].y1 + element.y, element.buttons[i].x2 + element.x, element.buttons[i].y2 + element.y, element.buttons[i].layer + element.layer, element.buttons[i].text, element.buttons[i].font, element.buttons[i].font_color]);
 			} else {
-				commands.push(["addButton", element.buttons[i].name, element.buttons[i].x1 + element.x, element.buttons[i].y1 + element.y, element.buttons[i].x2 + element.x, element.buttons[i].y2 + element.y]);
+				commands.push(["addButton", element.buttons[i].name, element.buttons[i].x1 + element.x, element.buttons[i].y1 + element.y, element.buttons[i].x2 + element.x, element.buttons[i].y2 + element.y, element.buttons[i].layer + element.layer]);
 			}
 		}
 
 		for (var i = 0; i < element.textFields.length; i++) {
-			commands.push(["addTextInputField", element.textFields[i].name, element.textFields[i].x1 + element.x, element.textFields[i].y1 + element.y, element.textFields[i].x2 + element.x, element.textFields[i].y2 + element.y, element.textFields[i].text, element.textFields[i].font, element.textFields[i].font_color, element.layer + element.textFields[i].layer]);
+			commands.push(["addTextInputField", element.textFields[i].name, element.textFields[i].x1 + element.x, element.textFields[i].y1 + element.y, element.textFields[i].x2 + element.x, element.textFields[i].y2 + element.y, element.layer + element.textFields[i].layer, element.textFields[i].text, element.textFields[i].font, element.textFields[i].font_color]);
 		}
 
 		for (var i = 0; i < element.extras.length; i++) {
@@ -299,9 +302,9 @@ function translate (element, dx, dy, dl) {
 /* adds the commands required to add the specified button to commands */
 function addButton (button, commands) {
 	if (element.text) {
-		commands.push(["addButton", button.name, button.x1, button.y1, button.x2, button.y2, button.text, button.font, button.font_color, button.layer]);
+		commands.push(["addButton", button.name, button.x1, button.y1, button.x2, button.y2, button.layer, button.text, button.font, button.font_color]);
 	} else {
-		commands.push(["addButton", button.name, button.x1, button.y1, button.x2, button.y2]);
+		commands.push(["addButton", button.name, button.x1, button.y1, button.x2, button.y2, button.layer]);
 	}
 }
 
@@ -323,7 +326,7 @@ function setup_dialog_screen(dialog, canvas, previous_screen) {
 	);
 
 	for (var i = 0; i < dialog.options.length; i++) {
-		dialog.screen.buttons.push(new Button ("dialog_" + dialog.name + "_" + dialog.options[i], canvas.x/4 + i*(canvas.x/2)/dialog.options.length + DIALOG_BUTTON_PADDING, canvas.y * 3/4 - DIALOG_BUTTON_HEIGHT, canvas.x/4 + (i+1)*(canvas.x/2)/dialog.options.length - DIALOG_BUTTON_PADDING, canvas.y * 3/4, dialog.options[i], '16px Verdana', 'rgba(200,200,200,1)', 4));
+		dialog.screen.buttons.push(new Button ("dialog_" + dialog.name + "_" + dialog.options[i], canvas.x/4 + i*(canvas.x/2)/dialog.options.length + DIALOG_BUTTON_PADDING, canvas.y * 3/4 - DIALOG_BUTTON_HEIGHT, canvas.x/4 + (i+1)*(canvas.x/2)/dialog.options.length - DIALOG_BUTTON_PADDING, canvas.y * 3/4, 4, dialog.options[i], '16px Verdana', 'rgba(200,200,200,1)'));
 		dialog.screen.extras.push(new Rectangle ("dialogOptionRectangle" + i, canvas.x/4 + i*(canvas.x/2)/dialog.options.length + DIALOG_BUTTON_PADDING, canvas.y * 3/4 - DIALOG_BUTTON_HEIGHT, canvas.x/4 + (i+1)*(canvas.x/2)/dialog.options.length - DIALOG_BUTTON_PADDING, canvas.y * 3/4, 3, 'rgba(80,80,80,1)'));
 	}
 
@@ -373,8 +376,8 @@ function get_current_screen (filesystem) {
 // mailbox_index is the index of the specified message within the mailbox.
 function email_message_screen (message, mailbox_index, canvas) {
 	var screen = new Screen(canvas.x - PHONE_SCREEN_X, canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0),
-	[new Button("Email_start_button", 0, 0, 173, 30, "Back", "24px Times", "rgba(255,255,255,1)", 1),
-		new Button("Email_delete_button_" + mailbox_index, 143, 31, 173, 60, "X", "19px Times", "rgba(255,255,255,1)", 1)
+	[new Button("Email_start_button", 0, 0, 173, 30, 1, "Back", "24px Times", "rgba(255,255,255,1)"),
+		new Button("Email_delete_button_" + mailbox_index, 143, 31, 173, 60, 1, "X", "19px Times", "rgba(255,255,255,1)")
 	], [],
 	[new Text ("message_screen_sender", 0, 30, 173, 45, 1, "From: " + message.sender, "12px Arial", "rgba(255,255,255,1)"),
 		new Text("message_screen_subject", 0, 45, 173, 60, 1, "Subject: " + message.subject, "12px Arial", "rgba(255,255,255,1)"),
@@ -422,7 +425,7 @@ io.on('connection', function (socket) {
 	 */
 
 	var game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneNotYetActivatedScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false};
-	game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
+	game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100, 0)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 	game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 	game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 	game.screens["player_office"] = new Screen(0, 0, 0, new Image("image/police_station/player_office", 0, 0, 0), [], [] ,[]);
@@ -430,20 +433,20 @@ io.on('connection', function (socket) {
 	// Note that all phone applications should have an exit button; however, may be placed anywhere on the screen, not necessarily at (0,0).
 	// installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0), "phoneEmailAppScreen"));
 	game.screens["phoneEmailAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, "Exit Email", "24px Times", "rgba(255,255,255,1)", 2));
-	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-up", 145, 115, 170, 140, "/\\", "24px Times", "rgba(255,255,255,1)", 2));
-	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-down", 145, 150, 170, 175, "\\/", "24px Times", "rgba(255,255,255,1)", 2));
+	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Email", "24px Times", "rgba(255,255,255,1)"));
+	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-up", 145, 115, 170, 140, 2, "/\\", "24px Times", "rgba(255,255,255,1)"));
+	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-down", 145, 150, 170, 175, 2, "\\/", "24px Times", "rgba(255,255,255,1)"));
 
 	// Phone Map application -- add new locations to the game through this.
 
 	// installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0), "phoneMapAppScreen"));
 	game.screens["phoneMapAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, "Exit Map", "24px Times", "rgba(255,255,255,1)", 2));
-	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_player_office", 0, 30, 173, 60, "Go to DIT HQ", "18px Times", "rgba(255,255,255,1)", 2));
-	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, "Go to Coffee Shop", "18px Times", "rgba(255,255,255,1)", 2));
-	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,150, 173,180, "Go to Mall", "18px Times", "rgba(255,255,255,1)", 2));
-	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, "Go to Library", "18px Times", "rgba(255,255,255,1)", 2));
-	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, "Go to Apartment", "18px Times", "rgba(255,255,255,1)", 2));
+	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Map", "24px Times", "rgba(255,255,255,1)"));
+	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_player_office", 0, 30, 173, 60, 2, "Go to DIT HQ", "18px Times", "rgba(255,255,255,1)"));
+	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, 2, "Go to Coffee Shop", "18px Times", "rgba(255,255,255,1)"));
+	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,150, 173, 180, 2, "Go to Mall", "18px Times", "rgba(255,255,255,1)"));
+	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, 2, "Go to Library", "18px Times", "rgba(255,255,255,1)"));
+	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(255,255,255,1)"));
 
 	game.browsers["testBrowser"] = new Browser();
 
@@ -475,8 +478,8 @@ io.on('connection', function (socket) {
 	if (game.phone.visible) {
 		if (game.phone.raised) {
 			init_commands.push(["drawImage", "image/phone", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, PHONE_LAYER]);
-			init_commands.push(["addButton", "lower-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, game.canvas.x, game.canvas.y - PHONE_Y_RAISED + PHONE_Y_LOWERED]);
-			init_commands.push(["addButton", "phone-power-button", game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[0], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[1], game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[2], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[3]]);
+			init_commands.push(["addButton", "lower-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, game.canvas.x, game.canvas.y - PHONE_Y_RAISED + PHONE_Y_LOWERED, PHONE_LAYER]);
+			init_commands.push(["addButton", "phone-power-button", game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[0], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[1], game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[2], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[3], PHONE_LAYER]);
 			if (game.phone.screen_on) {
 				// Move the screen to the correct position before drawing it.
 				game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
@@ -488,7 +491,7 @@ io.on('connection', function (socket) {
 			}
 		} else {
 			init_commands.push(["drawImage", "image/phone", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_LOWERED, PHONE_LAYER]);
-			init_commands.push(["addButton", "raise-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_LOWERED, game.canvas.x, game.canvas.y]);
+			init_commands.push(["addButton", "raise-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_LOWERED, game.canvas.x, game.canvas.y, PHONE_LAYER]);
 		}
 	}
 
@@ -540,9 +543,9 @@ io.on('connection', function (socket) {
 				commands.push(["clearImage", "image/phone", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, PHONE_LAYER]);
 				commands.push(["drawImage", "image/phone", newX - PHONE_X, newY - PHONE_Y_RAISED, PHONE_LAYER]);
 				commands.push(["deleteButton", "phone-power-button"]);
-				commands.push(["addButton", "phone-power-button", newX - PHONE_POWER_BUTTON_BOUNDS[0], newY - PHONE_POWER_BUTTON_BOUNDS[1], newX - PHONE_POWER_BUTTON_BOUNDS[2], newY - PHONE_POWER_BUTTON_BOUNDS[3]]);
+				commands.push(["addButton", "phone-power-button", newX - PHONE_POWER_BUTTON_BOUNDS[0], newY - PHONE_POWER_BUTTON_BOUNDS[1], newX - PHONE_POWER_BUTTON_BOUNDS[2], newY - PHONE_POWER_BUTTON_BOUNDS[3], PHONE_LAYER]);
 				commands.push(["deleteButton", "lower-phone-button"]);
-				commands.push(["addButton", "lower-phone-button", newX - PHONE_X, newY - PHONE_Y_RAISED, newX, newY - PHONE_Y_RAISED + PHONE_Y_LOWERED]);
+				commands.push(["addButton", "lower-phone-button", newX - PHONE_X, newY - PHONE_Y_RAISED, newX, newY - PHONE_Y_RAISED + PHONE_Y_LOWERED, PHONE_LAYER]);
 				if (game.phone.screen_on) {
 					clearDisplayObject(game.screens[game.phone.screen], commands);
 					game.screens[game.phone.screen].x = newX - PHONE_SCREEN_X;
@@ -554,7 +557,7 @@ io.on('connection', function (socket) {
 				}
 			} else {
 				commands.push(["deleteButton", "raise-phone-button"]);
-				commands.push(["addButton", "raise-phone-button", newX - PHONE_X, newY - PHONE_Y_LOWERED, newX, newY]);
+				commands.push(["addButton", "raise-phone-button", newX - PHONE_X, newY - PHONE_Y_LOWERED, newX, newY, PHONE_LAYER]);
 				commands.push(["clearImage", "image/phone", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_LOWERED, PHONE_LAYER]);
 				commands.push(["drawImage", "image/phone", newX - PHONE_X, newY - PHONE_Y_LOWERED, PHONE_LAYER]);
 			}
@@ -596,8 +599,8 @@ io.on('connection', function (socket) {
 		if (!game.phone.visible) {
 			if (game.phone.raised) {
 				commands.push(["drawImage", "image/phone", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, PHONE_LAYER]);
-				commands.push(["addButton", "lower-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, game.canvas.x, game.canvas.y - PHONE_Y_RAISED + PHONE_Y_LOWERED]);
-				commands.push(["addButton", "phone-power-button", game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[0], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[1], game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[2], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[3]]);
+				commands.push(["addButton", "lower-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, game.canvas.x, game.canvas.y - PHONE_Y_RAISED + PHONE_Y_LOWERED, PHONE_LAYER]);
+				commands.push(["addButton", "phone-power-button", game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[0], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[1], game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[2], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[3], PHONE_LAYER]);
 				if (game.phone.screen_on) {
 					game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
 					game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
@@ -607,7 +610,7 @@ io.on('connection', function (socket) {
 				}
 			} else {
 				commands.push(["drawImage", "image/phone", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_LOWERED, PHONE_LAYER]);
-				commands.push(["addButton", "raise-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_LOWERED, game.canvas.x, game.canvas.y]);
+				commands.push(["addButton", "raise-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_LOWERED, game.canvas.x, game.canvas.y, PHONE_LAYER]);
 			}
 		}
 
@@ -623,8 +626,8 @@ io.on('connection', function (socket) {
 			commands.push(["clearImage", "image/phone", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_LOWERED, PHONE_LAYER]);
 			commands.push(["drawImage", "image/phone", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, PHONE_LAYER]);
 			commands.push(["deleteButton", "raise-phone-button"]);
-			commands.push(["addButton", "lower-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, game.canvas.x, game.canvas.y - PHONE_Y_RAISED + PHONE_Y_LOWERED]);
-			commands.push(["addButton", "phone-power-button", game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[0], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[1], game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[2], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[3]]);
+			commands.push(["addButton", "lower-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, game.canvas.x, game.canvas.y - PHONE_Y_RAISED + PHONE_Y_LOWERED, PHONE_LAYER]);
+			commands.push(["addButton", "phone-power-button", game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[0], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[1], game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[2], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[3], PHONE_LAYER]);
 			if (game.phone.screen_on) {
 				game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
 				game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
@@ -646,7 +649,7 @@ io.on('connection', function (socket) {
 			commands.push(["clearImage", "image/phone", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, PHONE_LAYER]);
 			commands.push(["drawImage", "image/phone", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_LOWERED, PHONE_LAYER]);
 			commands.push(["deleteButton", "lower-phone-button"]);
-			commands.push(["addButton", "raise-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_LOWERED, game.canvas.x, game.canvas.y]);
+			commands.push(["addButton", "raise-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_LOWERED, game.canvas.x, game.canvas.y, PHONE_LAYER]);
 			commands.push(["deleteButton", "phone-power-button"]);
 			if (game.phone.screen_on) {
 				clearDisplayObject(game.screens[game.phone.screen], commands);
@@ -770,17 +773,17 @@ io.on('connection', function (socket) {
 
 	// Helper function to setup a folder screen before it is displayed. The filesystem argument, where the folder resides, contains the current directory.
 	function setup_folder_screen (folder, filesystem) {
-		folder.screen = new Screen(0, 0, 0, new Image("image/filesystem/blank", 0, 0, 0), [new Button("filesystem_exit", 1180, 0, 1280, 100, "Exit", "24px Times", "rgba(0,0,0,1)", 1), new Button("filesystem_up", 1130, 0, 1170, 100, "Up", "24px Times", "rgba(0,0,0,1)", 1)], [], [new Text("filesystem_path_bar", 0, 0, 1120, 100, 1, "C:/" + filesystem.currentDirectory, "24px Times", "rgba(0,0,0,1)")]);
+		folder.screen = new Screen(0, 0, 0, new Image("image/filesystem/blank", 0, 0, 0), [new Button("filesystem_exit", 1180, 0, 1280, 100, 1, "Exit", "24px Times", "rgba(0,0,0,1)"), new Button("filesystem_up", 1130, 0, 1170, 100, 1, "Up", "24px Times", "rgba(0,0,0,1)")], [], [new Text("filesystem_path_bar", 0, 0, 1120, 100, 1, "C:/" + filesystem.currentDirectory, "24px Times", "rgba(0,0,0,1)")]);
 
 		// Add in the contents
 		for (var i = 0; i < folder.contents.length; i++) {
 			if (folder.contents[i].type == 'folder') {
 				addElementToScreen(folder.screen, new Text("name_text_" + filesystem.currentDirectory + "/" + folder.contents[i].name, 290, 140 + i*40, 1280, 180+i*40, 1, folder.contents[i].name, "24px Times", "rgba(0,0,0,1)"));
-				addButtonToScreen(folder.screen, new Button("delete_button_" + filesystem.currentDirectory + "/" + folder.contents[i].name, 1100, 140 + i*40, 1280, 180 + i*40, "Delete?", "24px Times", "rgba(0,0,0,1)", 2));
-				addButtonToScreen(folder.screen, new Button("change_directory_button_" + filesystem.currentDirectory + "/" + folder.contents[i].name, 290, 140 + i*40, 1000, 180 + i*40));
+				addButtonToScreen(folder.screen, new Button("delete_button_" + filesystem.currentDirectory + "/" + folder.contents[i].name, 1100, 140 + i*40, 1280, 180 + i*40, 2, "Delete?", "24px Times", "rgba(0,0,0,1)"));
+				addButtonToScreen(folder.screen, new Button("change_directory_button_" + filesystem.currentDirectory + "/" + folder.contents[i].name, 290, 140 + i*40, 1000, 180 + i*40, 0));
 			} else {
 				addElementToScreen(folder.screen, new Text("name_text_" + filesystem.currentDirectory + "/" + folder.contents[i], 290, 140 + i*40, 1280, 180 + i*40, 1, folder.contents[i], "24px Times", "rgba(0,0,0,1)"));
-				addButtonToScreen(folder.screen, new Button("delete_button_" + filesystem.currentDirectory + "/" + folder.contents[i], 1100, 140 + i*40, 1280, 180 + i*40, "Delete?", "24px Times", "rgba(0,0,0,1)", 2));
+				addButtonToScreen(folder.screen, new Button("delete_button_" + filesystem.currentDirectory + "/" + folder.contents[i], 1100, 140 + i*40, 1280, 180 + i*40, 2, "Delete?", "24px Times", "rgba(0,0,0,1)"));
 			}
 		}
 	}
@@ -850,9 +853,9 @@ io.on('connection', function (socket) {
 		// Need to create display elements for this item and add them. Only do this if the screen exists
 		if (typeof folder.screen !== 'undefined') {
 			addElementToScreen(folder.screen, new Text("name_text_" + filesystem.currentDirectory + "/" + item_name, 290, y1, 1280, y2, 1, item_name, "24px Times", "rgba(0,0,0,1)"));
-			addButtonToScreen(folder.screen, new Button("delete_button_" + filesystem.currentDirectory + "/" + item_name, 1100, y1, 1280, y2, "Delete?", "24px Times", "rgba(0,0,0,1)", 2));
+			addButtonToScreen(folder.screen, new Button("delete_button_" + filesystem.currentDirectory + "/" + item_name, 1100, y1, 1280, y2, 2, "Delete?", "24px Times", "rgba(0,0,0,1)"));
 			if (item.type == 'folder')
-				addButtonToScreen(folder.screen, new Button("change_directory_button_" + filesystem.currentDirectory + "/" + item_name, 290, y1, 1000, y2));
+				addButtonToScreen(folder.screen, new Button("change_directory_button_" + filesystem.currentDirectory + "/" + item_name, 290, y1, 1000, y2, 0));
 		}
 	}
 
@@ -983,7 +986,7 @@ io.on('connection', function (socket) {
 	function createMessageScreen (email_no) {
 		var message = game.mailbox[email_no];
 		var message_screen = new Screen (0, yPositionOfEmailNo(email_no), 1, new Rectangle("inbox_" + email_no + "_background", 0, 0, 143, 15, 0, "rgba(255,255,255," + (message.unread ? 1 : 0.2) + ")"),
-			/*Buttons */[new Button("inbox_" + email_no + "_button", 0, 0, 143, 14)], [],
+			/*Buttons */[new Button("inbox_" + email_no + "_button", 0, 0, 143, 14, 0)], [],
 			/*Elements */ [new Text ("inbox_" + email_no + "_sender", 0, 0, 40, 15, 1, message.sender, "11px Arial", "rgba(0,0,0,1)"), new Text("inbox_" + email_no + "_subject", 50, 0, 143, 15, 1, message.subject, "11px Arial", "rgba(0,0,0,1)")]
 		);
 		return message_screen;
@@ -1063,7 +1066,7 @@ io.on('connection', function (socket) {
 		var x = 35*(app_no % 4);
 		var y = 35*Math.floor(app_no / 4);
 
-		addElementToScreen(game.screens["phoneHomeScreen"], new Screen (x, y, 1, app.icon, [new Button (app.name + "_start_button", 0, 0, 32, 32)], [], [])); // An event to handle this button clicked is handled already.
+		addElementToScreen(game.screens["phoneHomeScreen"], new Screen (x, y, 1, app.icon, [new Button (app.name + "_start_button", 0, 0, 32, 32, 0)], [], [])); // An event to handle this button clicked is handled already.
 		game.phone_apps.push(app);
 	}
 
@@ -1128,9 +1131,9 @@ io.on('connection', function (socket) {
 		var commands = [];
 		if (screen["on_screen"]) {
 			if (button.text) {
-				commands.push(["addButton", button.name, screen.x + button.x1, screen.y + button.y1, screen.x + button.x2, screen.y + button.y2, button.text, button.font, button.font_color, button.layer]);
+				commands.push(["addButton", button.name, screen.x + button.x1, screen.y + button.y1, screen.x + button.x2, screen.y + button.y2, screen.layer + button.layer, button.text, button.font, button.font_color, button.layer]);
 			} else {
-				commands.push(["addButton", button.name, screen.x + button.x1, screen.y + button.y1, screen.x + button.x2, screen.y + button.y2]);
+				commands.push(["addButton", button.name, screen.x + button.x1, screen.y + button.y1, screen.x + button.x2, screen.y + button.y2, screen.layer + button.layer]);
 			}
 		}
 
@@ -1163,7 +1166,7 @@ io.on('connection', function (socket) {
 	function addTextInputFieldToScreen (screen, field) {
 		var commands = [];
 		if (screen["on_screen"]) {
-			commands.push(["addTextInputField", field.name, screen.x + field.x1, screen.y + field.y1, screen.x + field.x2, screen.y + field.y2, field.text, field.font, field.font_color, field.layer]);
+			commands.push(["addTextInputField", field.name, screen.x + field.x1, screen.y + field.y1, screen.x + field.x2, screen.y + field.y2, screen.layer + field.layer, field.text, field.font, field.font_color]);
 		}
 
 		screen.textFields.push(field);

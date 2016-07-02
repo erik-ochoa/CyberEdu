@@ -3,27 +3,27 @@
 
 function load_coffee_shop (game) {
 	game.screens["coffee_shop"] = new Screen (0, 0, 0, new Image ("image/coffeeshop", 0, 0, 0), [
-		new Button ("coffee_shop_manager", 268, 313, 328, 396), 
-		new Button ("coffee_shop_customer_1", 342, 321, 398, 530),
-		new Button ("coffee_shop_customer_2", 173, 440, 314, 596),
-		new Button ("coffee_shop_customer_3", 582, 321, 627, 383),
-		new Button ("coffee_shop_customer_4", 534, 381, 577, 500),
-		new Button ("coffee_shop_customer_5", 979, 353, 1021, 418),
-		new Button ("coffee_shop_culprit_1", 823, 363, 868, 405),
-		new Button ("coffee_shop_culprit_2", 894, 354, 947, 411),
-		new Button ("coffee_shop_culprit_3", 1049, 391, 1106, 527)
+		new Button ("coffee_shop_manager", 268, 313, 328, 396, 0), 
+		new Button ("coffee_shop_customer_1", 342, 321, 398, 530, 0),
+		new Button ("coffee_shop_customer_2", 173, 440, 314, 596, 0),
+		new Button ("coffee_shop_customer_3", 582, 321, 627, 383, 0),
+		new Button ("coffee_shop_customer_4", 534, 381, 577, 500, 0),
+		new Button ("coffee_shop_customer_5", 979, 353, 1021, 418, 0),
+		new Button ("coffee_shop_culprit_1", 823, 363, 868, 405, 0),
+		new Button ("coffee_shop_culprit_2", 894, 354, 947, 411, 0),
+		new Button ("coffee_shop_culprit_3", 1049, 391, 1106, 527, 0)
 	], [], []);
 	
 	game.screens["coffee_shop_success"] = new Screen (0, 0, 0, new Image ("image/mission/complete", 0, 0, 0), [
-		new Button ("coffee_shop_failed_quit", 404, 427, 714, 515, "Select Another Mission", "24px Arial", "rgba(255,255,255,1)", 2)
+		new Button ("coffee_shop_failed_quit", 404, 427, 714, 515, 2, "Select Another Mission", "24px Arial", "rgba(255,255,255,1)")
 	], [], [
 		new Text ("coffee_shop_success_score", 404, 535, 714, 600, 2, ERROR_STRING, "24px Arial", "rgba(255,255,0,1)"),
 		new Rectangle ("coffee_shop_success_quit_backing_rectangle", 404, 427, 714, 515, 1, "rgba(255,255,255,0.5)")
 	]);
 	
 	game.screens["coffee_shop_failed"] = new Screen (0, 0, 0, new Image ("image/mission/failed", 0, 0, 0), [
-		new Button ("coffee_shop_failed_restart", 224, 427, 534, 515, "Retry Mission?", "24px Arial", "rgba(255,255,255,1)", 2),
-		new Button ("coffee_shop_failed_quit", 628, 427, 938, 515, "Select Another Mission", "24px Arial", "rgba(255,255,255,1", 2)
+		new Button ("coffee_shop_failed_restart", 224, 427, 534, 515, 2, "Retry Mission?", "24px Arial", "rgba(255,255,255,1)"),
+		new Button ("coffee_shop_failed_quit", 628, 427, 938, 515, 2, "Select Another Mission", "24px Arial", "rgba(255,255,255,1")
 	], [], [
 		new Rectangle ("coffee_shop_failed_restart_backing_rectangle", 224, 427, 534, 515, 1, "rgba(255,255,255,0.5)"),
 		new Rectangle ("coffee_shop_failed_quit_backing_rectangle", 628, 427, 938, 515, 1, "rgba(255,255,0,0.5)")

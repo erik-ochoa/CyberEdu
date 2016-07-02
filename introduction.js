@@ -1,9 +1,9 @@
 function load_introduction (game, PHONE_SCREEN_LAYER) {
-	game.screens["introduction_dorm_room"] = new Screen (0, 0, 0, new Image ("image/dorm_room", 0, 0, 0), [new Button ("introduction_dorm_room_computer", 824, 211, 964, 340)], [], [/*Extras*/])
+	game.screens["introduction_dorm_room"] = new Screen (0, 0, 0, new Image ("image/dorm_room", 0, 0, 0), [new Button ("introduction_dorm_room_computer", 824, 211, 964, 340, 0)], [], [/*Extras*/])
 	
 	game.screens["introduction_computer"] = new Screen (0, 0, 0, new Image ("image/dorm_room/computer", 0, 0, 0), [
-		new Button ("introduction_computer_monitor", 435, 172, 664, 302),
-		new Button ("introduction_computer_monitor", 682, 228, 829, 460)
+		new Button ("introduction_computer_monitor", 435, 172, 664, 302, 0),
+		new Button ("introduction_computer_monitor", 682, 228, 829, 460, 0)
 	], [], []);
 	
 	game.screens["introduction_transition"] = new Screen (0, 0, 0, new Animation ("animation/dorm_room/transition", 0, 0, 0, true), [], [], []);
@@ -16,12 +16,12 @@ function load_introduction (game, PHONE_SCREEN_LAYER) {
 	
 	game.browsers["introduction_computer_browser"] = new Browser ();
 	
-	game.webpages["1"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_1_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"), [new Button ("introduction_name_entry_finish_button", 100, 200, 200, 300, "Next >", "18px Arial", "rgba(0,0,0,1)", 2)], [new Button ("introduction_name_text_entry", 100, 130, 500, 200, "Bobby", "24px Arial", "rgba(64,64,64,1)", 2)], [new Text ("introduction_registration_enter_name", 100, 100, 500, 150, 1, "What's your name?", "24px Arial", "rgba(0,0,0,1)")]);
-	game.webpages["2"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_2_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"), [new Button ("introduction_partner_name_entry_finish_button", 100, 200, 200, 300, "Next >", "18px Arial", "rgba(0,0,0,1)", 2)], [new Button ("introduction_partner_name_text_entry", 100, 130, 500, 200, "Ashley", "24px Arial", "rgba(64,64,64,1)", 2)], [new Text ("introduction_registration_enter_partner_name", 100, 100, 500, 150, 1, "What's your best friend's name?", "24px Arial", "rgba(0,0,0,1)")]);
+	game.webpages["1"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_1_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"), [new Button ("introduction_name_entry_finish_button", 100, 200, 200, 300, 2, "Next >", "18px Arial", "rgba(0,0,0,1)")], [new Button ("introduction_name_text_entry", 100, 130, 500, 200, 2, "Bobby", "24px Arial", "rgba(64,64,64,1)")], [new Text ("introduction_registration_enter_name", 100, 100, 500, 150, 1, "What's your name?", "24px Arial", "rgba(0,0,0,1)")]);
+	game.webpages["2"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_2_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"), [new Button ("introduction_partner_name_entry_finish_button", 100, 200, 200, 300, 2, "Next >", "18px Arial", "rgba(0,0,0,1)")], [new Button ("introduction_partner_name_text_entry", 100, 130, 500, 200, 2, "Ashley", "24px Arial", "rgba(64,64,64,1)")], [new Text ("introduction_registration_enter_partner_name", 100, 100, 500, 150, 1, "What's your best friend's name?", "24px Arial", "rgba(0,0,0,1)")]);
 	game.webpages["3"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_3_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"), [], [], [new Text ("introduction_done_registration", 30, 50, 200, 500, 1, "Finished registration! You may now exit the browser.", "18px Arial", "rgba(0,0,0,1)")]);
 	
 	// Phone screens.
-	game.screens["phoneAppStoreButtonScreen"] = new Screen (0, 0, PHONE_SCREEN_LAYER, new Rectangle("phoneAppStoreButtonScreenBackground", 0, 0, 173, 291, 0, "rgba(0,64,255,1)"), [new Button ("introduction_app_store_button", 10, 10, 163, 281, "Visit the APP Store!", "18px Georgia", "rgba(255,255,255,1)", 2)], [], []);
+	game.screens["phoneAppStoreButtonScreen"] = new Screen (0, 0, PHONE_SCREEN_LAYER, new Rectangle("phoneAppStoreButtonScreenBackground", 0, 0, 173, 291, 0, "rgba(0,64,255,1)"), [new Button ("introduction_app_store_button", 10, 10, 163, 281, 2, "Visit the APP Store!", "18px Georgia", "rgba(255,255,255,1)")], [], []);
 	game.screens["phoneNotYetActivatedScreen"] = new Screen (0, 0, PHONE_SCREEN_LAYER, new Rectangle("phoneNotYetActivatedScreenBackground", 0, 0, 173, 291, 0, "rgba(0,64,255,1)"), [], [], [new Text ("phone_not_yet_activated_message", 10, 10, 173, 291, 1, "Not yet activated. To place phone calls, send messages, or install apps, please register your phone online.", "10px Georgia", "rgba(255,255,255,1)")]);
 	
 	game.introduction_variables = {  
