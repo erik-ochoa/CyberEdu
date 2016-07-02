@@ -1,9 +1,10 @@
 var http = require('http');
-var io = require('socket.io')(app);
+var socket_io = require('socket.io');
 var fs = require('fs');
 var url = require('url');
 
 var app = http.createServer(handler);
+var io = socket_io(app);
 
 var SERVER_PORT = 8011;
 
@@ -1063,10 +1064,10 @@ io.on('connection', function (socket) {
 
 	function installPhoneApp (app) {
 		var app_no = game.phone_apps.length;
-		var x = 35*(app_no % 4);
-		var y = 35*Math.floor(app_no / 4);
+		var x = 58*(app_no % 3);
+		var y = 58*Math.floor(app_no / 3);
 
-		addElementToScreen(game.screens["phoneHomeScreen"], new Screen (x, y, 1, app.icon, [new Button (app.name + "_start_button", 0, 0, 32, 32, 0)], [], [])); // An event to handle this button clicked is handled already.
+		addElementToScreen(game.screens["phoneHomeScreen"], new Screen (x, y, 1, app.icon, [new Button (app.name + "_start_button", 0, 0, 56, 56, 0)], [], [])); // An event to handle this button clicked is handled already.
 		game.phone_apps.push(app);
 	}
 

@@ -152,7 +152,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 	} else if (button == "dialog_discover_poster_content_Yes.") {
 		closeDialog();
 		game.screens["phoneDiscoverAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-		installPhoneApp( new PhoneApp ("Discover Daily", new Text("Discover_app_icon", 0, 0, 32, 32, 0, "Discover Daily", "10px Georgia", "rgba(255,255,255,1)"), "phoneDiscoverAppScreen"));
+		installPhoneApp( new PhoneApp ("Discover Daily", new Image("image/phone/icon/discover_daily", 0, 0, 0), "phoneDiscoverAppScreen"));
 		addButtonToScreen(game.screens["phoneDiscoverAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Discover Daily", "24px Times", "rgba(255,255,255,1)"));
 		return true;
 	} else if (button == "dialog_do_something_poster_content_No.") {
@@ -160,7 +160,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "dialog_do_something_poster_content_Yes.") {
 		closeDialog();
-		installPhoneApp( new PhoneApp ("Do Something", new Text("Do_Something_app_icon", 0, 0, 32, 32, 0, "Do Something", "10px Georgia", "rgba(255,255,255,1)"), "phoneDoSomethingAppScreen"));
+		installPhoneApp( new PhoneApp ("Do Something", new Image("image/phone/icon/do_something", 0, 0, 0), "phoneDoSomethingAppScreen"));
 		game.screens["phoneDoSomethingAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneDoSomethingAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Do Something", "24px Times", "rgba(255,255,255,1)"));
 		return true;
@@ -192,7 +192,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "dialog_final_countdown_poster_content_Yes.") {
 		closeDialog();
-		installPhoneApp( new PhoneApp ("Final Countdown", new Text("Final_Countdown_app_icon", 0, 0, 32, 32, 0, "Final Countdown", "10px Georgia", "rgba(255,255,255,1)"), "phoneFinalCountdownAppScreen"));
+		installPhoneApp( new PhoneApp ("Final Countdown", new Image("image/phone/icon/final_countdown", 0, 0, 0), "phoneFinalCountdownAppScreen"));
 		game.screens["phoneFinalCountdownAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneFinalCountdownAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Final Countdown", "24px Times", "rgba(255,255,255,1)"));
 		return true;
@@ -204,7 +204,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "dialog_iread_stand_content_Yes.") {
 		closeDialog();
-		installPhoneApp(new PhoneApp ("I-Read", new Text("I-Read_app_icon", 0, 0, 32, 32, 0, "I-Read", "10px Georgia", "rgba(255,255,255,1)"), "phoneI-ReadAppScreen"));
+		installPhoneApp(new PhoneApp ("I-Read", new Image("image/phone/icon/iRead", 0, 0, 0), "phoneI-ReadAppScreen"));
 		game.screens["phoneI-ReadAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneI-ReadAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit I-Read", "24px Times", "rgba(255,255,255,1)"));
 		return true;
@@ -216,7 +216,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "dialog_throw_me_poster_content_Yes.") {
 		closeDialog();
-		installPhoneApp(new PhoneApp ("Throw Me", new Text("Throw_Me_app_icon", 0, 0, 32, 32, 0, "Throw Me", "10px Georgia", "rgba(255,255,255,1)"), "phoneThrowMeAppScreen"));
+		installPhoneApp(new PhoneApp ("Throw Me", new Image("image/phone/icon/throw_me", 0, 0, 0), "phoneThrowMeAppScreen"));
 		game.screens["phoneThrowMeAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneThrowMeAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Throw Me", "24px Times", "rgba(255,255,255,1)"));
 		return true;
@@ -231,7 +231,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "dialog_iUmbrella_poster_content_Yes.") {
 		closeDialog();
-		installPhoneApp(new PhoneApp ("iUmbrella", new Text("iUmbrella_app_icon", 0, 0, 32, 32, 0, "iUmbrella", "10px Georgia", "rgba(255,255,255,1)"), "phoneiUmbrellaAppScreen"));
+		installPhoneApp(new PhoneApp ("iUmbrella", new Image("image/phone/icon/iUmbrella", 0, 0, 0), "phoneiUmbrellaAppScreen"));
 		game.screens["phoneiUmbrellaAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneiUmbrellaAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit I-Umbrella", "24px Times", "rgba(255,255,255,1)"));
 		return true;
