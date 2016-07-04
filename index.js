@@ -611,6 +611,9 @@ document.onkeyup = function (e) {
 
 /* Called when the user clicks a position on the canvas. The server is sent an event for any buttons pressed. */
 function click_position(event) {
+	console.log(e);
+	console.log(event);
+	console.log(window.event);
 	// Compatibility Code taken from http://www.quirksmode.org/js/events_properties.html
 	var e = event || window.event;
 	var posx = 0;
@@ -678,7 +681,7 @@ function click_position(event) {
 
 function rollover_position(event) {
 	// Compatibility Code taken from http://www.quirksmode.org/js/events_properties.html
-	var e = event || window.event;
+	var e = typeof event === 'undefined' ? window.event : event;
 	var posx = 0;
 	var posy = 0;
 	if (e.pageX || e.pageY) {
