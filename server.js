@@ -544,11 +544,7 @@ io.on('connection', function (socket) {
 					reason += "Your session has expired. (Try refreshing the page.)"
 			}
 		}
-		socket.emit('command', [
-			["resizeCanvas", 800, 600],
-			["drawRectangle", "force-disconnect-rectangle", 0, 0, 800, 600, 9999, 'rgba(0,0,0,1)'], 
-			["drawText", "force-disconnect-message", 0, 0, 800, 600, 10000, "Authentication failure: disconnected from server. Reason(s): " + reasons, '24px Arial', 'rgba(255,255,255,1)']
-		]);
+		socket.emit('server-error', "Authentication failure: disconnected from server. \r\n\r\n Reason(s): " + reasons);
 		socket.disconnect();
 		return;
 	}
@@ -559,6 +555,18 @@ io.on('connection', function (socket) {
 		// The user has five minutes to return before their session expires and they will have to login again.
 		active_sessions[session_cookie].expires = Date.now() + 300000;
 		console.log(username + " | Disconnected.");
+		
+		// If the game object is defined, save it.
+		if (typeof game !== 'undefined') {
+			fs.writeFile(save_file, JSON.stringify(game), function (err) {
+				if (err) {
+					console.log("An error occurred trying to write a save file: " + save_file + ". Game state was " + JSON.stringify(game));
+					console.log(err.stack);
+				} else {
+					console.log(username + " | Save file written.");
+				}
+			});
+		}
 	});
 	
 	console.log(username + " | Connected.");
@@ -596,100 +604,127 @@ io.on('connection', function (socket) {
 	 *  player_name: The name of the player.
 	 *  partner_name: The name of the partner.
 	 */
-	 
-	var game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneNotYetActivatedScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false};
-	game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100, 0)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
-	game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
-	game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-	game.screens["player_office"] = new Screen(0, 0, 0, new Image("image/police_station/player_office", 0, 0, 0), [], [] ,[]);
+	var game;
 	
-	// Note that all phone applications should have an exit button; however, may be placed anywhere on the screen, not necessarily at (0,0).
-	// installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0), "phoneEmailAppScreen"));
-	game.screens["phoneEmailAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Email", "24px Times", "rgba(255,255,255,1)"));
-	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-up", 145, 115, 170, 140, 2, "/\\", "24px Times", "rgba(255,255,255,1)"));
-	addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-down", 145, 150, 170, 175, 2, "\\/", "24px Times", "rgba(255,255,255,1)"));
-
-	// Phone Map application -- add new locations to the game through this.
-
-	// installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0), "phoneMapAppScreen"));
-	game.screens["phoneMapAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Map", "24px Times", "rgba(255,255,255,1)"));
-	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_player_office", 0, 30, 173, 60, 2, "Go to DIT HQ", "18px Times", "rgba(255,255,255,1)"));
-	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, 2, "Go to Coffee Shop", "18px Times", "rgba(255,255,255,1)"));
-	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,150, 173, 180, 2, "Go to Mall", "18px Times", "rgba(255,255,255,1)"));
-	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, 2, "Go to Library", "18px Times", "rgba(255,255,255,1)"));
-	addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(255,255,255,1)"));
-
-	game.browsers["testBrowser"] = new Browser();
-
-	game.dialogs["testDialog"] = new Dialog ("Title", "Title", "Text", ["close", "browser"]);
-
-	game.filesystems["testFilesystem"] = new FileSystem();
-	addToFileSystem(game.filesystems["testFilesystem"], "", "test.txt");
-	addToFileSystem(game.filesystems["testFilesystem"], "", new Folder ("test_dir", ["a.txt", "b.txt"]));
-
-	addToMailbox(new EmailMessage ("Testing", "Jonathan", "Hello, this is a test of the email system", []));
-	addToMailbox(new EmailMessage ("Testing 2", "Jonathan", "", []));
-	addToMailbox(new EmailMessage ("Testing 3", "Jonathan", "", []));
-	for (var i = 4; i <= 27; i++) {
-		addToMailbox(new EmailMessage("Testing " + i, "Jonathan", "", []));
-	}
-
-	// Load the introduction scene into the game state object.
-	load_introduction (game, PHONE_SCREEN_LAYER);
-
-	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
-	var init_commands = [];
-	init_commands.push(["resizeCanvas", game.canvas.x, game.canvas.y]);
-	if (game.phone.visible) {
-		if (game.phone.raised) {
-			init_commands.push(["drawImage", "image/phone", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, PHONE_LAYER]);
-			init_commands.push(["addButton", "lower-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, game.canvas.x, game.canvas.y - PHONE_Y_RAISED + PHONE_Y_LOWERED, PHONE_LAYER]);
-			init_commands.push(["addButton", "phone-power-button", game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[0], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[1], game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[2], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[3], PHONE_LAYER]);
-			if (game.phone.screen_on) {
-				// Move the screen to the correct position before drawing it.
-				game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
-				game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
-
-				drawDisplayObject(game.screens[game.phone.screen], init_commands);
+	var save_file = __dirname + "/saves/" + username + ".json";
+	// Load the player's save game, if applicable.
+	fs.readFile(save_file, function (err, buf) {
+		if (err) {
+			if (err.code == 'ENOENT') { // File not found, so this user doesn't have a save.
+				makeNewGame();
+				sendClientInitCommands();
 			} else {
-				init_commands.push(["drawImage", "image/phone/screen/off", game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER]);
+				// Some other error; not good.
+				console.log("An error occurred while reading a save file: " + save_file);
+				console.log(err.stack);
+				
+				socket.emit('server-error', "Unexpected error attempting to load save file.");
 			}
 		} else {
-			init_commands.push(["drawImage", "image/phone", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_LOWERED, PHONE_LAYER]);
-			init_commands.push(["addButton", "raise-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_LOWERED, game.canvas.x, game.canvas.y, PHONE_LAYER]);
+			game = JSON.parse(buf.toString());
+			console.log(username + " | Save file read.");
+			sendClientInitCommands();
 		}
+	});
+	
+	/* Creates a fresh game object, for a player who has never played before. */
+	function makeNewGame () {
+		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneNotYetActivatedScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false};
+		game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100, 0)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
+		game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
+		game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
+		game.screens["player_office"] = new Screen(0, 0, 0, new Image("image/police_station/player_office", 0, 0, 0), [], [] ,[]);
+
+		// Note that all phone applications should have an exit button; however, may be placed anywhere on the screen, not necessarily at (0,0).
+		// installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0), "phoneEmailAppScreen"));
+		game.screens["phoneEmailAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
+		addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Email", "24px Times", "rgba(255,255,255,1)"));
+		addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-up", 145, 115, 170, 140, 2, "/\\", "24px Times", "rgba(255,255,255,1)"));
+		addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-down", 145, 150, 170, 175, 2, "\\/", "24px Times", "rgba(255,255,255,1)"));
+
+		// Phone Map application -- add new locations to the game through this.
+
+		// installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0), "phoneMapAppScreen"));
+		game.screens["phoneMapAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
+		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Map", "24px Times", "rgba(255,255,255,1)"));
+		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_player_office", 0, 30, 173, 60, 2, "Go to DIT HQ", "18px Times", "rgba(255,255,255,1)"));
+		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, 2, "Go to Coffee Shop", "18px Times", "rgba(255,255,255,1)"));
+		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,150, 173, 180, 2, "Go to Mall", "18px Times", "rgba(255,255,255,1)"));
+		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, 2, "Go to Library", "18px Times", "rgba(255,255,255,1)"));
+		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(255,255,255,1)"));
+
+		game.browsers["testBrowser"] = new Browser();
+
+		game.dialogs["testDialog"] = new Dialog ("Title", "Title", "Text", ["close", "browser"]);
+
+		game.filesystems["testFilesystem"] = new FileSystem();
+		addToFileSystem(game.filesystems["testFilesystem"], "", "test.txt");
+		addToFileSystem(game.filesystems["testFilesystem"], "", new Folder ("test_dir", ["a.txt", "b.txt"]));
+
+		addToMailbox(new EmailMessage ("Testing", "Jonathan", "Hello, this is a test of the email system", []));
+		addToMailbox(new EmailMessage ("Testing 2", "Jonathan", "", []));
+		addToMailbox(new EmailMessage ("Testing 3", "Jonathan", "", []));
+		for (var i = 4; i <= 27; i++) {
+			addToMailbox(new EmailMessage("Testing " + i, "Jonathan", "", []));
+		}
+
+		// Load the introduction scene into the game state object.
+		load_introduction (game, PHONE_SCREEN_LAYER);
 	}
 
-	if (typeof game.active_browser !== 'undefined') {
-		init_commands.push(["resizeCanvas", 800, 600]);
-		drawDisplayObject(game.browsers[game.active_browser].screen, init_commands);
-	} else if (typeof game.active_filesystem !== 'undefined') {
-		drawDisplayObject(get_current_screen(game.filesystems[game.active_filesystem]), init_commands);
-	} else {
-		drawDisplayObject(game.screens[game.main_screen], init_commands);
-	}
+	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
+	function sendClientInitCommands () {
+		var init_commands = [];
+		init_commands.push(["resizeCanvas", game.canvas.x, game.canvas.y]);
+		if (game.phone.visible) {
+			if (game.phone.raised) {
+				init_commands.push(["drawImage", "image/phone", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, PHONE_LAYER]);
+				init_commands.push(["addButton", "lower-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, game.canvas.x, game.canvas.y - PHONE_Y_RAISED + PHONE_Y_LOWERED, PHONE_LAYER]);
+				init_commands.push(["addButton", "phone-power-button", game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[0], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[1], game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[2], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[3], PHONE_LAYER]);
+				if (game.phone.screen_on) {
+					// Move the screen to the correct position before drawing it.
+					game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
+					game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
 
-	if (typeof game.active_dialog !== 'undefined') {
+					drawDisplayObject(game.screens[game.phone.screen], init_commands);
+				} else {
+					init_commands.push(["drawImage", "image/phone/screen/off", game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER]);
+				}
+			} else {
+				init_commands.push(["drawImage", "image/phone", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_LOWERED, PHONE_LAYER]);
+				init_commands.push(["addButton", "raise-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_LOWERED, game.canvas.x, game.canvas.y, PHONE_LAYER]);
+			}
+		}
+
 		if (typeof game.active_browser !== 'undefined') {
-			setup_dialog_screen(game.dialogs[game.active_dialog.name], game.canvas, game.browsers[game.active_browser].screen);
+			init_commands.push(["resizeCanvas", 800, 600]);
+			drawDisplayObject(game.browsers[game.active_browser].screen, init_commands);
 		} else if (typeof game.active_filesystem !== 'undefined') {
-			setup_dialog_screen(game.dialogs[game.active_dialog.name], game.canvas, get_current_screen(game.filesystems[game.active_filesystem]));
+			drawDisplayObject(get_current_screen(game.filesystems[game.active_filesystem]), init_commands);
 		} else {
-			setup_dialog_screen(game.dialogs[game.active_dialog.name], game.canvas, game.screens[game.main_screen]);
+			drawDisplayObject(game.screens[game.main_screen], init_commands);
 		}
 
-		clearDisplayObject(game.screens[game.main_screen], init_commands);
-		drawDisplayObject(game.dialogs[game.active_dialog.name].screen, init_commands);
-	}
+		if (typeof game.active_dialog !== 'undefined') {
+			if (typeof game.active_browser !== 'undefined') {
+				setup_dialog_screen(game.dialogs[game.active_dialog.name], game.canvas, game.browsers[game.active_browser].screen);
+			} else if (typeof game.active_filesystem !== 'undefined') {
+				setup_dialog_screen(game.dialogs[game.active_dialog.name], game.canvas, get_current_screen(game.filesystems[game.active_filesystem]));
+			} else {
+				setup_dialog_screen(game.dialogs[game.active_dialog.name], game.canvas, game.screens[game.main_screen]);
+			}
 
-	if (typeof game.background_music[game.main_screen] !== 'undefined') {
-		init_commands.push(["playSound", game.background_music[game.main_screen]]);
+			clearDisplayObject(game.screens[game.main_screen], init_commands);
+			drawDisplayObject(game.dialogs[game.active_dialog.name].screen, init_commands);
+		}
+
+		if (typeof game.background_music[game.main_screen] !== 'undefined') {
+			init_commands.push(["playSound", game.background_music[game.main_screen]]);
+		}
+		
+		socket.emit('command', init_commands);
 	}
 	
-	socket.emit('command', init_commands);
-
 	/* Loads all the additional scenes into the game object. */
 	function loadScenes () {
 		load_coffee_shop (game);

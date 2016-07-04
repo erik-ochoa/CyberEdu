@@ -544,6 +544,9 @@ socket.on('command', function (array) {
 	setMousePointer();
 });
 
+socket.on('server-error', function (error_message) {
+	alert(error_message);
+});
  
 document.onkeydown = function (e) {
 	var key = e.keycode ? e.keycode : e.which;
@@ -611,9 +614,6 @@ document.onkeyup = function (e) {
 
 /* Called when the user clicks a position on the canvas. The server is sent an event for any buttons pressed. */
 function click_position(event) {
-	console.log(e);
-	console.log(event);
-	console.log(window.event);
 	// Compatibility Code taken from http://www.quirksmode.org/js/events_properties.html
 	var e = event || window.event;
 	var posx = 0;
