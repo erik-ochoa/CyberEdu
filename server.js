@@ -28,10 +28,11 @@ var Session = function (cookie, ip, username) {
 	this.ip_address = ip;
 	this.username = username;
 	this.connected = false;
+	this.created = Date.now();
 	// Expiration date is in milliseconds since January 1, 1970. 
 	// This sets the expiration to five minutes from now.
 	// The user will have five minutes to connect to Socket IO before the session times out.
-	this.expires = Date.now() + 300000;
+	this.expires = this.created + 300000;
 };
 
 /* Map of session cookie OR user name -> Session object */
@@ -41,8 +42,7 @@ var active_sessions = {};
 function generateSessionId () {
 	/* Yes, it is technically possible, though unlikely, for this session ID to conflict with
 	 * another session ID that is still active. However, the probably of that event is extremely
-	 * rare, and the consequence is only that the user whose session was overwritten will have to
-	 * log in again, so it is good enough. */
+	 * rare, so it is good enough. */
 	return Math.random().toString(36);
 }
 
@@ -72,7 +72,7 @@ function hasExpired (session) {
  * DO NOT CALL THIS METHOD anywhere in the code because it sets up a timer to run again in the future.
  */
 function clearExpiredSessions () {
-	console.log("system | Clearing expired sessions." + JSON.stringify(active_sessions));
+	console.log("system | Clearing expired sessions. Active sessions are: " + JSON.stringify(active_sessions));
 	for (item in active_sessions) {
 		if (hasExpired(active_sessions[item])) {
 			delete active_sessions[item];
@@ -84,7 +84,7 @@ function clearExpiredSessions () {
 /* Processes an incoming HTTP request that has been authenticated. */
 function processAuthenticatedRequest(request, response) {
 	var request_url = url.parse(request.url, true);
-	console.log("system | Responding with the file");
+	console.log("client: " + request.socket.remoteAddress + " | Responding with the file " + request_url.pathname + ".");
 	
 	if (request_url.pathname == "/") {
 		fs.readFile(__dirname + '/index.html', function (err, data) {
@@ -112,8 +112,14 @@ function processAuthenticatedRequest(request, response) {
 // Deals with incoming HTTP requests.
 function handler (request, response) {
 	var request_url = url.parse(request.url, true);
-	console.log("system | HTTP request received for " + request_url.pathname + " from " + request.socket.remoteAddress + " with cookies " + request.headers.cookie + " and query parameters " + JSON.stringify(request_url.query));	
+	console.log("client: " + request.socket.remoteAddress + " | HTTP request received for " + request_url.pathname + " with cookies " + request.headers.cookie + " and query parameters " + JSON.stringify(request_url.query));	
 	var session_cookie = parseSessionCookie(request.headers.cookie);	
+	
+	// For some reason (at least IE and Firefox) do not send the cookies when requesting the favicon. This permits the favicon to be accessed without authentication.
+	if (request_url.pathname == "/favicon.ico") {
+		processAuthenticatedRequest(request, response);
+		return;
+	}
 	
 	// If the user has already logged in.
 	if (typeof session_cookie !== 'undefined' && typeof active_sessions[session_cookie] !== 'undefined' && active_sessions[session_cookie].ip_address == request.socket.remoteAddress && !hasExpired(active_sessions[session_cookie])) {
@@ -122,7 +128,7 @@ function handler (request, response) {
 		
 		if (typeof request_url.query.ticket === 'undefined') {
 			// The user has not started the login process and, needs to be redirected to CAS.
-			console.log("system | Redirecting user to the CAS server.");
+			console.log("client: " + request.socket.remoteAddress + " | Redirecting user to the CAS server.");
 			response.setHeader("Location", "https://login.umd.edu/cas/login?service=" + encodeURIComponent(SERVER_HOSTNAME + request_url.pathname));
 			response.writeHead(303);
 			response.end();
@@ -144,6 +150,8 @@ function handler (request, response) {
 							// User logged in successfully, but already had a valid session.
 							response.writeHead(403);
 							response.end("Login failed.\r\n\r\nReason: You're already logged in.");
+							
+							console.log("client: " + request.socket.remoteAddress + " | failed to login: already logged in.");
 						} else {
 							// Creates and stores a session for this user.
 							var cookie = generateSessionId();
@@ -151,25 +159,28 @@ function handler (request, response) {
 							var new_session = new Session(cookie, request.socket.remoteAddress, username);
 							active_sessions[cookie] = new_session;
 							active_sessions[username] = new_session;
-							
+
+							console.log("client: " + request.socket.remoteAddress + " | logged in as " + username + ".");
 							processAuthenticatedRequest(request, response);	
 						}
 					} else {					
 						response.writeHead(403);
 						response.end("Login failed.\r\n\r\nReason: CAS validation failed. Try deleting ?ticket=" + request_url.query.ticket + " from the URL and try again.");
+						
+						console.log("client: " + request.socket.remoteAddress + " | failed to login: bad CAS ticket.");
 					}
 				});
 			});
 			
 			cas_request.on('error', function (err) {
-				console.log("An error occurred sending the validation request to CAS.");
+				console.log("client: " + request.socket.remoteAddress +  " | An error occurred sending the validation request to CAS.");
 				console.log(err.trace);
 				
 				response.writeHead(500);
 				response.end("Error communicating with the authentication server.");
 			});
 			
-			console.log("system | Sending validation HTTPS request to CAS server");
+			console.log("client: " + request.socket.remoteAddress + " | Sending validation HTTPS request to CAS server");
 			cas_request.end();
 		}
 	}
@@ -177,7 +188,7 @@ function handler (request, response) {
 
 app.listen(SERVER_PORT);
 setTimeout(clearExpiredSessions, 3600000);
-console.log("CyberEDU server firing up on port " + SERVER_PORT);
+console.log("system | CyberEDU server firing up on port " + SERVER_PORT);
 
 /* Constructors */
 
@@ -673,6 +684,7 @@ io.on('connection', function (socket) {
 	}
 
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
+	// Throughout this function, screens that are being drawn will have their "on_screen" fields deleted - this is so false warnings will not be logged when a user loads their save file.
 	function sendClientInitCommands () {
 		var init_commands = [];
 		init_commands.push(["resizeCanvas", game.canvas.x, game.canvas.y]);
@@ -685,7 +697,8 @@ io.on('connection', function (socket) {
 					// Move the screen to the correct position before drawing it.
 					game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
 					game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
-
+					
+					delete game.screens[game.phone.screen].on_screen;
 					drawDisplayObject(game.screens[game.phone.screen], init_commands);
 				} else {
 					init_commands.push(["drawImage", "image/phone/screen/off", game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER]);
@@ -698,10 +711,14 @@ io.on('connection', function (socket) {
 
 		if (typeof game.active_browser !== 'undefined') {
 			init_commands.push(["resizeCanvas", 800, 600]);
+			
+			delete game.browsers[game.active_browser].screen.on_screen;
 			drawDisplayObject(game.browsers[game.active_browser].screen, init_commands);
 		} else if (typeof game.active_filesystem !== 'undefined') {
+			delete get_current_screen(game.filesystems[game.active_filesystem]).on_screen;
 			drawDisplayObject(get_current_screen(game.filesystems[game.active_filesystem]), init_commands);
 		} else {
+			delete game.screens[game.main_screen].on_screen;
 			drawDisplayObject(game.screens[game.main_screen], init_commands);
 		}
 
@@ -715,6 +732,8 @@ io.on('connection', function (socket) {
 			}
 
 			clearDisplayObject(game.screens[game.main_screen], init_commands);
+			
+			delete game.dialogs[game.active_dialog].screen.on_screen;
 			drawDisplayObject(game.dialogs[game.active_dialog.name].screen, init_commands);
 		}
 
@@ -1598,7 +1617,8 @@ io.on('connection', function (socket) {
 			if (game.mailbox_displayed_index < game.mailbox.length - 1)
 				changeMailboxScrollPosition(game.mailbox_displayed_index + 1);
 		} else if (button == 'go_to_mall') {
-			changeMainScreen("mall_scene")
+			resizeCanvas(1152, 648);
+			changeMainScreen("mall_scene");
 		} else {
 			console.log(username + " | Received unhandled click event: " + button);
 		}

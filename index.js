@@ -6,6 +6,8 @@ var MAX_Y = 630;
 var CANVAS_X = CANVAS_ELEMENT.getBoundingClientRect().left;
 var CANVAS_Y = CANVAS_ELEMENT.getBoundingClientRect().top;
 
+var SETTINGS_PAGE = document.getElementById('settings');
+
 // Draw CyberEdu logo while the game is loading
 g.drawImage(document.getElementById("logo"), 45, 138);
 
@@ -555,6 +557,10 @@ document.onkeydown = function (e) {
 		shiftHeld = true;
 	}
 	
+	if (key == 27) { // Escape key
+		displaySettingsPage();
+	}
+	
 	if (activeTextInputField != null) {
 		// Update the active text field and then redraw all the display elements.
 		var found = false;
@@ -583,17 +589,16 @@ document.onkeydown = function (e) {
 					display[i].text += '0123456789*+'.charAt(key-96);
 				} else if (109 <= key && key <= 111) { // More numpad keys
 					display[i].text += '-./'.charAt(key-109);
-				} else if (186 <= key && key <= 192) {
+				} else if (186 <= key && key <= 192) { // Various special character keys
 					if (shiftHeld)
 						display[i].text += ':+<_>?~'.charAt(key-186);
 					else
 						display[i].text += ';=,-./`'.charAt(key-186);
-				} else if (219 <= key && key <= 222) {
+				} else if (219 <= key && key <= 222) { // More special character keys
 					if (shiftHeld)
 						display[i].text += '{|}"'.charAt(key-219);
 					else	
 						display[i].text += "[\\]'".charAt(key-219);
-					
 				}
 			}
 		}
@@ -706,25 +711,6 @@ function rollover_position(event) {
 	lastKnownMousePosition.y = posy;
 }
 
-function setVideoVolume (newVolume) {
-	var video_elements = document.getElementsByTagName("video");
-	
-	for (var i = 0; i < video_elements.length; i++) {
-		video_elements[i].volume = newVolume;
-	}
-}
-
-function setMusicVolume (newVolume) { 
-	var audio_elements = document.getElementsByTagName("audio");
-
-	for (var i = 0; i < audio_elements.length; i++) {
-		audio_elements[i].volume = newVolume;
-	}
-}
-
-function setSpeechVolume (newVolume) {
-	textToSpeechVolume = newVolume;
-}
 /* Sets the mouse to be either the regular pointer or the hand based on the current mouse position,
  * which is given by (posx, posy), or the last known mouse position if the mouse position is not specified. */
 function setMousePointer (posx, posy) {
@@ -750,4 +736,63 @@ function setMousePointer (posx, posy) {
 		CANVAS_ELEMENT.style.cursor = "pointer";
 	else
 		CANVAS_ELEMENT.style.cursor = "auto";
+}
+
+function displaySettingsPage () {
+	// Avoid swapping if a video is currently playing!
+	if (CANVAS_ELEMENT.width != 0) {
+		CANVAS_ELEMENT.width = 0;
+		CANVAS_ELEMENT.height = 0;
+		SETTINGS_PAGE.style.display = 'block';
+		
+		// Ensure that the values displayed are correct.
+		music_volume_input_field.value = music_volume;
+		speech_volume_input_field.value = speech_volume;
+	}
+}
+
+function exitSettingsPage () {
+	SETTINGS_PAGE.style.display = 'none';
+	CANVAS_ELEMENT.width = MAX_X;
+	CANVAS_ELEMENT.height = MAX_Y;
+	CANVAS_X = CANVAS_ELEMENT.getBoundingClientRect().left;
+	CANVAS_Y = CANVAS_ELEMENT.getBoundingClientRect().top;
+	for (var j = 0; j < display.length; j++) {
+		drawDisplayElement(display[j]);
+	}
+}
+
+function setVideoVolume (newVolume) {
+	var video_elements = document.getElementsByTagName("video");
+	
+	for (var i = 0; i < video_elements.length; i++) {
+		video_elements[i].volume = newVolume;
+	}
+}
+
+var music_volume_input_field = document.getElementById("settings/music_volume");
+var music_volume = 100;
+function setMusicVolume () { 
+	var newVolume = parseFloat(music_volume_input_field.value);
+	
+	if (0 <= newVolume && newVolume <= 100) {
+		music_volume = newVolume;
+		console.log("changing music volume to " + music_volume);
+		var audio_elements = document.getElementsByTagName("audio");
+
+		for (var i = 0; i < audio_elements.length; i++) {
+			audio_elements[i].volume = music_volume / 100.0;
+		}
+	} 
+}
+
+var speech_volume_input_field = document.getElementById("settings/voice_volume");
+var speech_volume = 100;
+function setSpeechVolume (newVolume) {
+	var newVolume = parseFloat(speech_volume_input_field.value);
+	
+	if (0 <= newVolume && newVolume <= 100) {
+		speech_volume = newVolume;
+		textToSpeechVolume = speech_volume / 100.0;
+	}
 }

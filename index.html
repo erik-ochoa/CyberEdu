@@ -21,8 +21,22 @@
 	</head>
 
 	<body>
+		<!-- The primary canvas element, used to display the game graphics -->
 		<canvas id="view" width="1280" height="630" style="border:1px solid #000000; position:relative;" onclick="click_position(event)" onmousemove="rollover_position(event)"></canvas>
 		<p id="text"> </p>
+		
+		<!-- Settings page -->
+		<table id="settings" style="display:none;">
+			<tr>
+				<td> Music Volume (0 - 100): </td> 
+				<td> <input id="settings/music_volume" type="range" name="Music Volume" min="0" max="100" value="100" onchange="setMusicVolume()"/> </td>
+			</tr> <tr> 
+				<td> Voice Volume (0 - 100): </td> 
+				<td> <input id="settings/voice_volume" type="range" name="Voice Volume" min="0" max="100" value="100" onchange="setVoiceVolume()"/> </td>
+			</tr> <tr>
+				<td colspan="2"> <input type="button" value="Return To Game" onclick="exitSettingsPage()"/> </td>
+			</tr>
+		</table>
 		
 		<!-- The entire CyberEdu logo (the favicon is only the C) -->
 		<img id="logo" src="/images/cyberEduLogo.png" width="0" height="0"/>
