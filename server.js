@@ -96,7 +96,7 @@ function processAuthenticatedRequest(request, response) {
 				response.end(data);
 			}
 		});
-	} else {
+	} /* else {
 		fs.readFile(__dirname + request_url.pathname, function (err, data) {
 			if (err) {
 				response.writeHead(500);
@@ -105,6 +105,26 @@ function processAuthenticatedRequest(request, response) {
 				response.writeHead(200);
 				response.end(data);
 			}
+		});
+	} */ else {
+		var inputStream = fs.createReadStream(__dirname + request_url.pathname);
+		
+		response.writeHead(200);
+		inputStream.pipe(response);
+		/*
+		inputStream.on('data', function (chunk) {
+			response.write(chunk);
+		});
+		
+		inputStream.on('end', function () {
+			response.end();
+		});
+		*/
+		inputStream.on('error', function (err) {
+			console.log("client : " + request.socket.remoteAddress + " | A ReadStream error occurred.");
+			console.log(err.stack);
+		
+			response.end();
 		});
 	}
 }
@@ -732,8 +752,8 @@ io.on('connection', function (socket) {
 			}
 
 			clearDisplayObject(game.screens[game.main_screen], init_commands);
-			
-			delete game.dialogs[game.active_dialog].screen.on_screen;
+						
+			delete game.dialogs[game.active_dialog.name].screen.on_screen;
 			drawDisplayObject(game.dialogs[game.active_dialog.name].screen, init_commands);
 		}
 
@@ -1652,5 +1672,9 @@ io.on('connection', function (socket) {
 		} else {
 			console.log(username + " | Received unhandled animated-GIF-ended event with name = " + name);
 		}
+	});
+	
+	socket.on('hard-reset', function () {
+		makeNewGame();
 	});
 });

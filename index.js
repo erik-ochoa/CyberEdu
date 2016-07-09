@@ -796,3 +796,7 @@ function setSpeechVolume (newVolume) {
 		textToSpeechVolume = speech_volume / 100.0;
 	}
 }
+
+function hardReset () {
+	socket.emit('hard-reset');
+}
