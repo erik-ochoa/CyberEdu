@@ -511,6 +511,22 @@ var PhoneApp = function (name, icon, screen_name) {
 	this.screen_name = screen_name;
 }
 
+var ToDoTask = function(name, locationOfTask, task) {
+	this.name = name;
+	this.task = task;
+	this.locationOfTask = locationOfTask;
+	this.text = null;
+	this.completed = false;
+}
+
+var sceneTasks = function(name) {
+	this.name = name;
+	this.tasks = new Array();
+	this.xpos = 30;
+	this.ypos = 30;
+	this.position = 45;
+	this.size = 0;
+}
 // Constants
 var PHONE_X = 200;
 var PHONE_Y_RAISED = 400;
@@ -531,6 +547,7 @@ var DIALOG_BUTTON_HEIGHT = 100;
 var DIALOG_BUTTON_PADDING = 5;
 
 var MAX_DISPLAYED_MAILBOX_ENTRIES = 17;
+var MAX_TODO_LIST_TASKS = 5;
 
 /* Pushes the commands needed to draw the display element into the commands argument. */
 function drawDisplayObject (element, commands) {
@@ -814,7 +831,7 @@ io.on('connection', function (socket) {
 	
 	/* Creates a fresh game object, for a player who has never played before. */
 	function makeNewGame () {
-		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneNotYetActivatedScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false};
+		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneNotYetActivatedScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, toDoList:[], todolist_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false};
 		game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100, 0)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 		game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 		game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
@@ -838,9 +855,24 @@ io.on('connection', function (socket) {
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, 2, "Go to Library", "18px Times", "rgba(255,255,255,1)"));
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(255,255,255,1)"));
 
+		game.screens["phoneTodoListAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
+		installPhoneApp( new PhoneApp ("To-Do", new Text("ToDo_app_icon", 0, 0, 32, 32, 0, "To-Do", "10px Georgia", "rgba(255,255,255,1)"), "phoneTodoListAppScreen"));
+		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit To-Do List", "24px Times", "rgba(255,255,255,1)", 2));
+		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-mall", 0, 30, 173, 60, 2, "Mall", "24px Times", "rgba(255,255,255,1)", 2));
+		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-coffee", 0, 60, 173, 90, 2, "Coffee Shop", "24px Times", "rgba(255,255,255,1)", 2));
+		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-library", 0, 90, 173, 120, 2, "Library", "24px Times", "rgba(255,255,255,1)", 2));
+		game.screens["phoneTodoLibrary"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
+		game.screens["phoneTodoMall"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
+		game.screens["phoneTodoCoffeeShop"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
+		addButtonToScreen(game.screens["phoneTodoLibrary"], new Button("phone-backto-locations", 0, 0, 173, 30, 2, "Back", "24px Times", "rgba(255,255,255,1)", 2));
+		addButtonToScreen(game.screens["phoneTodoMall"], new Button("phone-backto-locations", 0, 0, 173, 30, 2, "Back", "24px Times", "rgba(255,255,255,1)", 2));
+		addButtonToScreen(game.screens["phoneTodoCoffeeShop"], new Button("phone-backto-locations", 0, 0, 173, 30, 2, "Back", "24px Times", "rgba(255,255,255,1)", 2));
+
 		game.browsers["testBrowser"] = new Browser();
 
 		game.dialogs["testDialog"] = new Dialog ("Title", "Title", "Text", ["close", "browser"]);
+
+
 
 		game.filesystems["testFilesystem"] = new FileSystem();
 		addToFileSystem(game.filesystems["testFilesystem"], "", "test.txt");
@@ -852,6 +884,8 @@ io.on('connection', function (socket) {
 		for (var i = 4; i <= 27; i++) {
 			addToMailbox(new EmailMessage("Testing " + i, "Jonathan", "", []));
 		}
+
+
 
 		// Load the introduction scene into the game state object.
 		load_introduction (game, PHONE_SCREEN_LAYER);
@@ -1306,6 +1340,54 @@ io.on('connection', function (socket) {
 
 	}
 
+	function addToTodoList (task) {
+		for(var ctr = 0; ctr < game.toDoList.length; ctr++) {
+			if(task.locationOfTask == game.toDoList[ctr].name) {
+				if(task.locationOfTask == 'library' && game.toDoList[ctr].tasks.length < MAX_TODO_LIST_TASKS) {
+					task.text = new Text (task.name, 0, game.toDoList[ctr].position, 173, 261,2, task.task, "16px Times", "rgba(255,255,255,1)");
+					game.toDoList[ctr].tasks.push(task);
+					addElementToScreen(game.screens["phoneTodoLibrary"], task.text);
+					game.toDoList[ctr].position = game.toDoList[ctr].position + 36;
+				}else if (task.locationOfTask == 'mall' && game.toDoList[ctr].tasks.length < MAX_TODO_LIST_TASKS) {
+					game.toDoList[ctr].tasks.push(task);
+					task.text = new Text (task.name, 0, game.toDoList[ctr].position, 173, 261 , 2, task.task, "16px Times", "rgba(255,255,255,1)");
+					addElementToScreen(game.screens["phoneTodoMall"], task.text);
+					game.toDoList[ctr].position = game.toDoList[ctr].position + 36;
+				}else if(task.locationOfTask == 'coffee-shop' && game.toDoList[ctr].tasks.length < MAX_TODO_LIST_TASKS) {
+					task.text = new Text (task.name, 0, game.toDoList[ctr].position, 173, 261, 2, task.task, "16px Times", "rgba(255,255,255,1)");
+					addElementToScreen(game.screens["phoneTodoCoffeeShop"], task.text);
+					game.toDoList[ctr].tasks.push(task);
+					game.toDoList[ctr].position = game.toDoList[ctr].position + 36;
+				}
+			}
+		}
+			
+	}
+
+	function markAsComplete(taskName, location) {
+		for(var ctr = 0; ctr < game.toDoList.length; ctr++) {
+			if(location == game.toDoList[ctr].name) {
+				for(var i = 0; i < game.toDoList[ctr].tasks.length; i++) {
+					if(game.toDoList[ctr].tasks[i].name == taskName) {
+						game.toDoList[ctr].tasks[i].completed = true;
+						game.toDoList[ctr].tasks[i].text.font_color = "rgba(192,192,192,1)";
+						if(location == 'mall') {
+							removeElementFromScreen(game.screens["phoneTodoMall"], game.toDoList[ctr].tasks[i].text);
+							addElementToScreen(game.screens["phoneTodoMall"], game.toDoList[ctr].tasks[i].text);
+						} else if (location == 'library') {
+							removeElementFromScreen(game.screens["phoneTodoLibrary"], game.toDoList[ctr].tasks[i].text);
+							addElementToScreen(game.screens["phoneTodoLibrary"], game.toDoList[ctr].tasks[i].text);
+						} else if (location == 'coffee-shop') {
+							removeElementFromScreen(game.screens["phoneTodoCoffeeShop"], game.toDoList[ctr].tasks[i].text);
+							addElementToScreen(game.screens["phoneTodoCoffeeShop"], game.toDoList[ctr].tasks[i].text);
+						}
+					}
+				}
+
+			}
+		}
+	}
+
 	/* Deletes the item in the player's mailbox at the specified index */
 	function removeFromMailbox (email_no) {
 		var y = yPositionOfEmailNo(email_no);
@@ -1673,7 +1755,7 @@ io.on('connection', function (socket) {
 		if (game.scenes_loaded) {
 			if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, game.coffee_shop_variables, game)) {
 				return;
-			} else if(mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, installPhoneApp, addButtonToScreen, changePhoneScreen, game, game.mall_scene_variables)) {
+			} else if(mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, installPhoneApp, addButtonToScreen, changePhoneScreen, addToTodoList, markAsComplete, removeElementFromScreen, game, game.mall_scene_variables)) {
 				return;
 			}
 			if (library_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFileSystem, existsInFileSystem, game.library_variables, game.screens["library_success"].extras[1])) {
@@ -1793,6 +1875,15 @@ io.on('connection', function (socket) {
 		} else if (button == 'go_to_mall') {
 			resizeCanvas(1152, 648);
 			changeMainScreen("mall_scene");
+		} else if(button == 'phone-backto-locations') {
+			changePhoneScreen("phoneTodoListAppScreen");
+		} 
+		else if(button == 'phone-todo-library') {
+			changePhoneScreen("phoneTodoLibrary");
+		} else if(button == 'phone-todo-coffee') {
+			changePhoneScreen("phoneTodoCoffeeShop");
+		} else if(button = 'phone-todo-mall') {
+			changePhoneScreen("phoneTodoMall");
 		} else {
 			console.log(username + " | Received unhandled click event: " + button);
 		}

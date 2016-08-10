@@ -29,6 +29,7 @@ function load_mall(game) {
 	game.background_music["Navigation_Store"] = "audio/mall";
 	game.background_music["Social_Hub"] = "audio/mall";
 
+
 	var inside_female = "Emma";
 	var social_employee ="Craig"
 	var social_male = "Patrick";
@@ -74,7 +75,7 @@ function resetMallVariables (vars) {
 
 }
 
-function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, installPhoneApp, addButtonToScreen, changePhoneScreen, game, vars) {
+function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, installPhoneApp, addButtonToScreen, changePhoneScreen, addToTodoList, markAsComplete, removeElementFromScreen, game, vars) {
 
 	var PHONE_X = 200;
 	var PHONE_Y_RAISED = 400;
@@ -91,6 +92,16 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 			showDialog("inside_female_dialog_1");
 			vars.spoken_to_emma = true;
 	}
+
+		game.toDoList.push(new sceneTasks("mall"));
+		game.toDoList.push(new sceneTasks("library"));
+		game.toDoList.push(new sceneTasks("coffee-shop"));
+		addToTodoList(new ToDoTask("task1", "mall", "Go home"));
+		addToTodoList(new ToDoTask("task2", "mall", "Go to bed"));
+		addToTodoList(new ToDoTask("task3", "mall", "The office is one of the gretaest shows ever"));
+		addToTodoList(new ToDoTask("task4", "mall", "The office is one of the gretaest shows ever"));
+		addToTodoList(new ToDoTask("task5", "mall", "The office is one of the gretaest shows ever"));
+		markAsComplete("task1","mall");
 		return true;
 	} else if (button == "productivity_store") {
 		changeMainScreen("Productivity_Store");
@@ -169,7 +180,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "dialog_2spooky_poster_content_Yes.") {
 		closeDialog();
-		installPhoneApp( new PhoneApp ("2Spooky4Me", new Text("2Spooky4Me_app_icon", 0, 0, 32, 32, 0, "2Spooky4Me", "10px Georgia", "rgba(255,255,255,1)"), "phone2Spooky4MeAppScreen"));
+		installPhoneApp( new PhoneApp ("2Spooky4Me", new Image("image/phone/icon/2spooky", 0, 0, 0), "phone2Spooky4MeAppScreen"));
 		game.screens["phone2Spooky4MeAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phone2Spooky4MeAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit 2Spooky", "24px Times", "rgba(255,255,255,1)"));
 		return true;
