@@ -3,6 +3,7 @@ var https = require('https');
 var socket_io = require('socket.io');
 var fs = require('fs');
 var url = require('url');
+var child_process = require('child_process');
 
 var app = http.createServer(handler);
 var io = socket_io(app);
@@ -69,7 +70,7 @@ function hasExpired (session) {
 }
 
 /* Clears out all expired sessions.
- * DO NOT CALL THIS METHOD anywhere in the code because it sets up a timer to run again in the future.
+ * DO NOT CALL THIS METHOD anywhere in the code because it sets up a timer to run itself again in the future.
  */
 function clearExpiredSessions () {
 	console.log("system | Clearing expired sessions. Active sessions are: " + JSON.stringify(active_sessions));
@@ -166,14 +167,20 @@ function handler (request, response) {
 					if (response_lines[0] == "yes") {
 						var username = response_lines[1];
 						
-						if (typeof active_sessions[username] !== 'undefined' && !hasExpired(active_sessions[username])) {
+						if (typeof active_sessions[username] !== 'undefined' && active_sessions[username].connected) {
 							// User logged in successfully, but already had a valid session.
 							response.writeHead(403);
 							response.end("Login failed.\r\n\r\nReason: You're already logged in.");
 							
 							console.log("client: " + request.socket.remoteAddress + " | failed to login: already logged in.");
 						} else {
-							// Creates and stores a session for this user.
+							// Delete the previous session for this user, if one exists.
+							if (typeof active_sessions[username] !== 'undefined') {
+								delete active_sessions[active_sessions[username].cookie];
+								console.log("client: " + request.socket.remoteAddress + " | deleted previous session for " + username + ".");
+							}
+							
+							// Creates and stores a new session for this user.
 							var cookie = generateSessionId();
 							response.setHeader("Set-Cookie", "session = " + cookie + "; PATH=/;");
 							var new_session = new Session(cookie, request.socket.remoteAddress, username);
@@ -206,9 +213,72 @@ function handler (request, response) {
 	}
 }
 
+/* Sends an email message using sendmail.
+ * content must be a string variable in MIME format, which is the entire
+ * content of the email message. An example message could look like this:
+TO: jrhansf@terpmail.umd.edu
+FROM: cyber_edu@umd.edu
+SUBJECT: the message's subject
+MIME-Version: 1.0
+Content-Type: multipart/alternative;boundary="boundary1"
+
+--boundary1
+Content-Type: text/plain
+
+This the body of the message goes here. This section is a fallback for email clients that do not support (or are configured to refuse) HTML email content.
+--boundary1
+Content-Type: multipart/related;boundary="boundary2"
+
+--boundary2
+Content-Type: text/html
+
+<html>
+<body>
+<p> The body of the message goes here. This will be displayed for most email clients, who support HTML. </p>
+<p> Note that it is even possible to include an image in the email, like this: </p>
+<img src="cid:image001"> </img>
+</body>
+</html>
+--boundary2
+Content-Type: image/gif
+Content-Id: <image001>
+Content-Transfer-Encoding: base64
+
+$(base64 /export/software/cyberedu/alpha_v3/images/phone_app_icon_mail.gif)
+--boundary2--
+
+--boundary1--
+ * Note that the FROM address MUST be cyber_edu@umd.edu.
+ */
+function sendEmail (content) {
+	if (/FROM: cyber_edu@umd\.edu/i.test(content)) {
+		var mail_process = child_process.exec('sendmail -t', function (error, stdout, stderr) {
+			if (error) {
+				console.log("sendmail | An error occurred. Error code: " + error);
+				console.log("sendmail | stderr = " + stderr);
+			}
+		});
+	
+		mail_process.stdin.write(content);
+		mail_process.stdin.end();
+	} else {
+		throw new Error ("Invalid or unspecified FROM address in email content.");
+	}
+}
+
 app.listen(SERVER_PORT);
 setTimeout(clearExpiredSessions, 3600000);
 console.log("system | CyberEDU server firing up on port " + SERVER_PORT);
+
+// Test email code.
+console.log("system | Sending a test email");
+fs.readFile(__dirname + "/sample-mail.txt", function (err, data) {
+	if (err) {
+		throw err;
+	} else {
+		sendEmail(data);
+	}
+});
 
 /* Constructors */
 

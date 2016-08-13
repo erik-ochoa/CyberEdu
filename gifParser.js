@@ -2,16 +2,23 @@
  * 
  * Note that this code is used on the client side, not the server side.
  */
-
+ 
+ var inBackground = false; // Whether or not the GIF parser is running in the background or on the main thread.
+  
 /* An object representing an animated GIF. Has the following fields:
  *  - frames: an array of canvases (although they can be drawn using the drawImage method), that are the frames in order.
+ *		(Note: when inBackground is true, frames is an array of ImageData objects instead, because the canvas is not available.)
  *  - delays: an array of positive integers, representing how long to display a given frame before switching to the next.
  *  - loops: an non-negative integer, indicating how many times the animation should loop. If the value is 0, it should loop forever.
+ *  - width: The with of the animated GIF.
+ *  - height: The height of the animated GIF.
  */
-var GIF = function (frames, delays, loops) {
+var GIF = function (frames, delays, loops, width, height) {
 	this.frames = frames;
 	this.delays = delays;
 	this.loops = loops;
+	this.width = width;
+	this.height = height;
 }
 
 /* The Stream class is a data stream. 
@@ -246,11 +253,17 @@ function parseGIF (stream) {
 			var indicies = lzwDecode(minimum_code_size, readSubBlocks(stream));
 			var x = 0; // index into the indicies array
 			
-			// Actually create the frame.
-			var canvas = document.createElement('canvas');
-			canvas.width = width;
-			canvas.height = height;
-			var g = canvas.getContext('2d');
+			/* This code works slightly differently if it is running in the background,
+			* since the canvas is not available, the ImageData object must be created
+			* via its constructor.
+			*/ 
+			if (!inBackground) {
+				// Actually create the frame.
+				var canvas = document.createElement('canvas');
+				canvas.width = width;
+				canvas.height = height;
+				var g = canvas.getContext('2d');
+			}
 			
 			// Use the local color table if one exists, otherwise use global. If neither exists, an error will occur.
 			var color_table = imageDescriptor.local_color_table_flag ? imageDescriptor.local_color_table : global_color_table;
@@ -262,10 +275,19 @@ function parseGIF (stream) {
 			var imageData;
 			if (disposal_of_previous_frame == 1) {
 				// Disposal method 1 means to start from previous frame.
-				imageData = frames[frames.length - 1].getContext('2d').getImageData(0, 0, width, height);
+				if (!inBackground) {
+					imageData = frames[frames.length - 1].getContext('2d').getImageData(0, 0, width, height);
+				} else {
+					// Note: frames[frames.length - 1].data must be deep copied to avoid aliasing issues.
+					imageData = new ImageData (new Uint8ClampedArray(frames[frames.length - 1].data), width, height);
+				}
 			} else if (disposal_of_previous_frame == 2) {
 				// Disposal method 2 means to start from the background color
-				imageData = g.createImageData(width, height);
+				if (!inBackground) {
+					imageData = g.createImageData(width, height);
+				} else {
+					imageData = new ImageData(width, height);
+				}
 				for (var i = 0; i < imageData.data.length; i += 4) {
 					imageData.data[i+0] = global_color_table.red[background_color_index];
 					imageData.data[i+1] = global_color_table.green[background_color_index];
@@ -293,8 +315,12 @@ function parseGIF (stream) {
 			
 			disposal_of_previous_frame = disposal_of_current_frame;
 			
-			g.putImageData(imageData, 0, 0);
-			frames.push(canvas);
+			if (!inBackground) {
+				g.putImageData(imageData, 0, 0);
+				frames.push(canvas);
+			} else {
+				frames.push(imageData);
+			}
 			
 		} else if (indicator == 0x21) {
 			var extension_type = stream.readByte();
@@ -329,7 +355,7 @@ function parseGIF (stream) {
 		indicator = stream.readByte();
 	}
 	
-	return new GIF (frames, delays, loops);
+	return new GIF (frames, delays, loops, width, height);
 }
 
 /* This function takes a URL and uses an XHLHttpRequest to
@@ -366,4 +392,11 @@ function load_gif_from_url (url) {
 	}
 
 	return parseGIF(new Stream(data));
+}
+
+// This code turns this file into a web worker 
+onmessage = function (message) {
+	inBackground = true;
+	console.log("Web Worker began loading: " + message.data);
+	postMessage(load_gif_from_url(message.data));
 }

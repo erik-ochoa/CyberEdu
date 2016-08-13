@@ -51,7 +51,7 @@ function load_apartment (game) {
 
 	game.webpages["http://192.168.0.1/wireless/password"] = new Screen (0, 70, 0, new Rectangle ("router_2_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"),
 	[new Button ("router_password_finish_button", 100, 200, 200, 300, 2,"Save and Go Back >", "18px Arial", "rgba(0,0,0,1)")],
-	[new Button ("router_password_entry", 100, 130, 500, 200, "********", 2,"24px Arial", "rgba(64,64,64,1)")],
+	[new Button ("router_password_entry", 100, 130, 500, 200, 2, "********", "24px Arial", "rgba(64,64,64,1)")],
 	[new Text ("router_instruction_enter_password_", 100, 100, 500, 150, 1, "Enter your new password:", "24px Arial", "rgba(0,0,0,1)")]);
 
 	game.screens["apartment"] = new Screen (0, 0, 0, new Image ("image/hallway", 0, 0, 0), [

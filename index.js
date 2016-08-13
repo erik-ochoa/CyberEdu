@@ -15,7 +15,44 @@ g.drawImage(document.getElementById("logo"), 45, 138);
  * Contains all GIFs that will be used by the game.
  */
 var animatedGIFs = {};
-animatedGIFs["animation/dorm_room/transition"] = load_gif_from_url(SERVER_HOSTNAME + "/images/transition_to_cyberworld.gif");
+
+var background_loading_supported = background_loading_supported();
+
+/* Web Workers allow multi-threading to occur in the browser. Here I use them to load 
+ * the animated GIFs in the background.
+ * If they are not supported, we'll have to just load the GIFs in the main thread.
+ */
+if (!background_loading_supported) {
+	console.log("Background GIF Parsing unsupported. Loading animations on the main thread. Expect a long load time.");
+	animatedGIFs["animation/dorm_room/transition"] = load_gif_from_url(SERVER_HOSTNAME + "/images/transition_to_cyberworld.gif");
+} else {
+	var loadTransitionToCyberworld = new Worker('gifParser.js');
+	
+	loadTransitionToCyberworld.onmessage = function (message) {
+		animatedGIFs["animation/dorm_room/transition"] = message.data;
+		console.log("Received animated GIF object for /images/transition_to_cyberworld.gif");
+	};
+	
+	loadTransitionToCyberworld.postMessage(SERVER_HOSTNAME + "/images/transition_to_cyberworld.gif");
+}
+
+/* Helper function to test whether or not it is possible to load
+ * animated GIFs in a background thread.
+ */
+ function background_loading_supported() {
+	var background_loading_supported = true;
+	if (typeof Worker === 'undefined')
+		background_loading_supported = false;
+	try {
+		new ImageData(1, 1);
+	} catch (e) {
+		background_loading_supported = false;
+	}
+	return background_loading_supported;
+ }
+ 
+// true if the game is currently waiting on an animation to load.
+var game_paused_for_loading = false;
 
 var socket = io(SERVER_HOSTNAME);
 
@@ -80,7 +117,16 @@ function drawDisplayElement (element) {
 		g.fillRect(element.x, element.y, element.x2 - element.x, element.y2 - element.y);
 	} else if (element.type == 'animation') {
 		// Draw the current frame
-		g.drawImage(animatedGIFs[element.id].frames[element.frame_no], element.x, element.y);
+		if (background_loading_supported) {
+			// Creating a temporary canvas off-screen seems to avoid white flashes between frames.
+			var tempCanvas = document.createElement('canvas');
+			tempCanvas.width = animatedGIFs[element.id].width;
+			tempCanvas.height = animatedGIFs[element.id].height;
+			tempCanvas.getContext('2d').putImageData(animatedGIFs[element.id].frames[element.frame_no], 0, 0);
+			g.drawImage(tempCanvas, element.x, element.y);
+		} else {
+			g.drawImage(animatedGIFs[element.id].frames[element.frame_no], element.x, element.y);
+		}
 	} else {
 		console.log("Bad display element: " + element);
 	}
@@ -133,6 +179,60 @@ function redrawAtOrAboveLayer (layer) {
 		drawDisplayElement(display[j])
 		j++;
 	}
+}
+
+// Helper function that creates an animation display object, and starts the animation timer.
+function createAnimationElement (id, x1, y1, layer, request_end_notification) {
+	var animation = {frame_no:0,
+		loops_remaining:animatedGIFs[id].loops - 1, // Because the 1st loop has started, there is one fewer loop remaining than the total amount of loops
+		id:id, 
+		x:x1, 
+		y:y1, 
+		layer:layer, 
+		type:'animation',
+		request_end_notification:request_end_notification
+	};
+	
+	var j = 0;
+	// Scan to where this element belongs and insert it.
+	while (display[j].layer <= layer) {
+		j++;
+	}
+	
+	display.splice(j, 0, animation);
+	
+	// Draw the 1st frame of the animation, along anything above it.
+	// This is permissible because a GIF image can never be partially transparent.
+	redrawAtOrAboveLayer(animation.layer);
+	
+	/* Nested helper function that advances the animation by one frame. */
+	function advanceAnimation () {
+		var n_frames = animatedGIFs[animation.id].frames.length;
+		
+		if (animation.frame_no != n_frames - 1) {
+			animation.frame_no++;
+		} else {
+			if (animation.loops_remaining == -1) {
+				animation.frame_no = 0;
+			} else if (animation.loops_remaining > 0) {
+				animation.frame_no = 0;
+				animation.loops_remaining--;
+			} else {
+				if (animation.request_end_notification)
+					socket.emit('animation-ended', animation.id);
+				return;
+			}
+		}
+		
+		// Draw the next frame along with anything above it.
+		redrawAtOrAboveLayer(animation.layer);
+		
+		// Setup the next timer.
+		animation.timer_id = setTimeout(advanceAnimation, animatedGIFs[animation.id].delays[animation.frame_no] * 10);
+	}
+	
+	// Start animation.
+	animation.timer_id = setTimeout(advanceAnimation, animatedGIFs[animation.id].delays[animation.frame_no] * 10); /* The *10 converts from 1/100ths of a second to milliseconds. */
 }
  
 /* The buttons that are currently active. Buttons are objects with the following fields:
@@ -468,57 +568,39 @@ socket.on('command', function (array) {
 			var layer = array[i][4];
 			var request_end_notification = array[i][5];
 			
-			var animation = {frame_no:0,
-				loops_remaining:animatedGIFs[id].loops - 1, // Because the 1st loop has started, there is one fewer loop remaining than the total amount of loops
-				id:id, 
-				x:x1, 
-				y:y1, 
-				layer:layer, 
-				type:'animation',
-				request_end_notification:request_end_notification
-			};
+			if (!(background_loading_supported && typeof animatedGIFs[id] === 'undefined')) {
+				createAnimationElement(id, x1, y1, layer, request_end_notification);
+			} else {
+				game_paused_for_loading = true;
 			
-			var j = 0;
-			// Scan to where this element belongs and insert it.
-			while (display[j].layer <= layer) {
-				j++;
-			}
-			
-			display.splice(j, 0, animation);
-			
-			// Draw the 1st frame of the animation, along anything above it.
-			// This is permissible because a GIF image can never be partially transparent.
-			redrawAtOrAboveLayer(animation.layer);
-			
-			/* Nested helper function that advances the animation by one frame. */
-			function advanceAnimation () {
-				var n_frames = animatedGIFs[animation.id].frames.length;
+				var j = 0;
+				while (j < display.length && display[j].layer <= layer) {
+					j++;
+				}
 				
-				if (animation.frame_no != n_frames - 1) {
-					animation.frame_no++;
-				} else {
-					if (animation.loops_remaining == -1) {
-						animation.frame_no = 0;
-					} else if (animation.loops_remaining > 0) {
-						animation.frame_no = 0;
-						animation.loops_remaining--;
+				var loading_text_element = {type:'text', name:"loadingAnimation" + id, x:x1, y:y1, x2:MAX_X, y2:MAX_Y, layer:layer, text:"Game paused. Loading animation. Please wait.", font:'24px Arial', font_color:'rgba(128, 128, 128, 255)'};
+				
+				display.splice(j, 0, loading_text_element);
+				redrawAtOrAboveLayer(layer);
+				
+				function tryAgain () {
+					if (typeof animatedGIFs[id] === 'undefined') {
+						loading_text_element.timer_id = setTimeout(tryAgain, 100);
 					} else {
-						if (animation.request_end_notification)
-							socket.emit('animation-ended', animation.id);
-						return;
+						// Must delete the "loadingAnimation" text element
+						for (var j = 0; j < display.length; j++) {
+							if (display[j].type == 'text' && display[j].name == "loadingAnimation" + id) {
+								display.splice(j, 1);
+								j--;
+							}
+						}
+						game_paused_for_loading = false;
+						createAnimationElement(id, x1, y1, layer, request_end_notification);
 					}
 				}
 				
-				// Draw the next frame along with anything above it.
-				redrawAtOrAboveLayer(animation.layer);
-				
-				// Setup the next timer.
-				animation.timer_id = setTimeout(advanceAnimation, animatedGIFs[animation.id].delays[animation.frame_no] * 10);
+				loading_text_element.timer_id = setTimeout(tryAgain, 100);
 			}
-			
-			// Start animation.
-			animation.timer_id = setTimeout(advanceAnimation, animatedGIFs[animation.id].delays[animation.frame_no] * 10); /* The *10 converts from 1/100ths of a second to milliseconds. */
-			
 		} else if (command_name == 'clearAnimation') {
 			var id = array[i][1];
 			
@@ -531,7 +613,15 @@ socket.on('command', function (array) {
 						console.log("Warning: clearAnimatedGIF tried to delete a GIF with no timer. Unless the GIF had already stopped, expect trouble.");
 					
 					// Delete the GIF.
-					splice(j, 1);
+					display.splice(j, 1);
+					j--;
+				} else if (display[j].type == 'text' && display[j].name == "loadingAnimation" + id) {
+					if (typeof display[j].timer_id !== 'undefined')
+						clearTimeout(display[j].timer_id);
+				
+					game_paused_for_loading = false;
+				
+					display.splice(j, 1);
 					j--;
 				}
 			}
@@ -557,10 +647,12 @@ document.onkeydown = function (e) {
 		shiftHeld = true;
 	}
 	
+	if (game_paused_for_loading) return;
+	
 	if (key == 27) { // Escape key
 		displaySettingsPage();
 	}
-	
+		
 	if (activeTextInputField != null) {
 		// Update the active text field and then redraw all the display elements.
 		var found = false;
@@ -637,6 +729,8 @@ function click_position(event) {
 	posy -= CANVAS_Y;
 	// End compatibility code, posx & posy contain the clicked position
 	
+	if (game_paused_for_loading) return;
+	
 	var previousActiveField = activeTextInputField;
 	var found = false;
 	for (var i = 0; i < textInputFields.length; i++) {
@@ -665,7 +759,7 @@ function click_position(event) {
 	// Click the button that is in the highest layer.
 	var highest_layer = -999;
 	var button_to_click = [];
-	console.log(JSON.stringify(buttons));
+
 	for (var i = 0; i < buttons.length; i++) {
 		if (buttons[i].x1 <= posx && posx <= buttons[i].x2 && buttons[i].y1 <= posy && posy <= buttons[i].y2) {
 			if (buttons[i].layer == highest_layer) {
@@ -732,7 +826,7 @@ function setMousePointer (posx, posy) {
 		}
 	}
 
-	if (found)
+	if (found && !game_paused_for_loading)
 		CANVAS_ELEMENT.style.cursor = "pointer";
 	else
 		CANVAS_ELEMENT.style.cursor = "auto";

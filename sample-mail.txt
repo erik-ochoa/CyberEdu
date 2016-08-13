@@ -1,0 +1,52 @@
+TO: jrhansf@terpmail.umd.edu
+FROM: cyber_edu@umd.edu
+SUBJECT: the message's subject
+MIME-Version: 1.0
+Content-Type: multipart/alternative;boundary="someRandomCharacters"
+
+--someRandomCharacters
+Content-Type: text/plain
+
+This the body of the message goes here. This section is a fallback for email clients that do not support (or are configured to refuse) HTML email content.
+--someRandomCharacters
+Content-Type: multipart/related;boundary="someOtherRandomCharacters"
+
+--someOtherRandomCharacters
+Content-Type: text/html
+
+<html>
+<body>
+<p> The body of the message goes here. This will be displayed for most email clients, who support HTML. </p>
+<p> Note that it is even possible to include an image in the email, like this: </p>
+<img src="cid:image001"> </img>
+</body>
+</html>
+--someOtherRandomCharacters
+Content-Type: image/gif
+Content-Id: <image001>
+Content-Transfer-Encoding: base64
+
+R0lGODlhIAAgAHAAACH5BAEAAPwALAAAAAAgACAAhwAAAAAAMwAAZgAAmQAAzAAA/wArAAArMwAr
+ZgArmQArzAAr/wBVAABVMwBVZgBVmQBVzABV/wCAAACAMwCAZgCAmQCAzACA/wCqAACqMwCqZgCq
+mQCqzACq/wDVAADVMwDVZgDVmQDVzADV/wD/AAD/MwD/ZgD/mQD/zAD//zMAADMAMzMAZjMAmTMA
+zDMA/zMrADMrMzMrZjMrmTMrzDMr/zNVADNVMzNVZjNVmTNVzDNV/zOAADOAMzOAZjOAmTOAzDOA
+/zOqADOqMzOqZjOqmTOqzDOq/zPVADPVMzPVZjPVmTPVzDPV/zP/ADP/MzP/ZjP/mTP/zDP//2YA
+AGYAM2YAZmYAmWYAzGYA/2YrAGYrM2YrZmYrmWYrzGYr/2ZVAGZVM2ZVZmZVmWZVzGZV/2aAAGaA
+M2aAZmaAmWaAzGaA/2aqAGaqM2aqZmaqmWaqzGaq/2bVAGbVM2bVZmbVmWbVzGbV/2b/AGb/M2b/
+Zmb/mWb/zGb//5kAAJkAM5kAZpkAmZkAzJkA/5krAJkrM5krZpkrmZkrzJkr/5lVAJlVM5lVZplV
+mZlVzJlV/5mAAJmAM5mAZpmAmZmAzJmA/5mqAJmqM5mqZpmqmZmqzJmq/5nVAJnVM5nVZpnVmZnV
+zJnV/5n/AJn/M5n/Zpn/mZn/zJn//8wAAMwAM8wAZswAmcwAzMwA/8wrAMwrM8wrZswrmcwrzMwr
+/8xVAMxVM8xVZsxVmcxVzMxV/8yAAMyAM8yAZsyAmcyAzMyA/8yqAMyqM8yqZsyqmcyqzMyq/8zV
+AMzVM8zVZszVmczVzMzV/8z/AMz/M8z/Zsz/mcz/zMz///8AAP8AM/8AZv8Amf8AzP8A//8rAP8r
+M/8rZv8rmf8rzP8r//9VAP9VM/9VZv9Vmf9VzP9V//+AAP+AM/+AZv+Amf+AzP+A//+qAP+qM/+q
+Zv+qmf+qzP+q///VAP/VM//VZv/Vmf/VzP/V////AP//M///Zv//mf//zP///wAAAAAAAAAAAAAA
+AAj/AHXQ0CGQ4MCCCA8eTGiQIEEvDyPqgDhRIkQaZARmxChQocSDFEE2rMiwIpmB9lLaU7jRYEuN
+JheiHEiDhr2TDXGSDMkQ4kqSNmOO5DhQp0yVSH8ihGj05UWcK2nSrIhxKlAdRhPag0nyJdWeDk9C
+TQmvYdGqBMUCPemx4FSO+xZezLkQJkSKTHXs2wdgL0u3EYkONRgXYdyWHHXSxQp330e9jq+iFVxw
+L+CMIS0X5OkSLk3ELitzhGkV8uONLXH69Xqx8N+3jCU6Pntwr+3buHPjdgp5NmCGsG3TJlh4ddqz
+WNOapuG7YXO/BXFKhT7Q8dyTkefubQr5b2GH1Ym2UrSMEXpsgbPZEi9JU3jg2PsoRkx/lgx506Sx
++p4aHzz+0cxFplB24NFHXUuZWUdcXRBFpllybSWInkYDUueWWn+hZ1lWunXoYXOxtSUiYFaJFBAA
+Ow==
+--someOtherRandomCharacters--
+
+--someRandomCharacters--
