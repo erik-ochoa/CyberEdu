@@ -1,7 +1,7 @@
 // DO NOT declare variables at the Top level scope in this file.
 // Put them into the game object in the load_coffee_shop() method instead.
 
-function load_coffee_shop (game) {
+function load_coffee_shop (game, addElementToScreen, removeElementFromScreen) {
 	game.screens["coffee_shop"] = new Screen (0, 0, 0, new Image ("image/coffeeshop", 0, 0, 0), [
 		new Button ("coffee_shop_manager", 268, 313, 328, 396, 0), 
 		new Button ("coffee_shop_customer_1", 342, 321, 398, 530, 0),
@@ -106,7 +106,7 @@ function load_coffee_shop (game) {
 	game.dialogs["coffee_shop_police_dialog_2"] = new Dialog ("coffee_shop_police_dialog_2", "Police", "Hmm. I don't see anything malicious. Looks like you got the wrong guy.", ["Continue."], police_voice);
 	game.dialogs["coffee_shop_police_dialog_3"] = new Dialog ("coffee_shop_police_dialog_3", "Police", "Man, this " + game.player_name + " is the worst detective ever!", ["Okay."], police_voice);
 	game.dialogs["coffee_shop_police_dialog_4"] = new Dialog ("coffee_shop_police_dialog_4", "Police", "Well the processes on your PC say otherwise! You're downloading all the Wi-Fi traffic onto your computer! You're under arrest for fraud and robbery. You have the right to remain silent. Anything you say can be used against you in a court of law. You have the right to an attorney. If you cannot afford one, one will be provided for you.", ["Continue."], police_voice);
-	game.dialogs["coffee_shop_police_dialog_5"] = new Dialog ("coffee_shop_police_dialog_5", manager_name, "Why'd do it ya scum?! I hope you learn your lesson in jail.", ["Continue."], manager_voice);
+	game.dialogs["coffee_shop_police_dialog_5"] = new Dialog ("coffee_shop_police_dialog_5", manager_name, "Why'd you do it?! I hope you learn your lesson in jail.", ["Continue."], manager_voice);
 	game.dialogs["coffee_shop_police_dialog_6"] = new Dialog ("coffee_shop_police_dialog_6", "Police", "We've got all the evidence we need. We'll handle it from here, Detective " + game.player_name + ".", ["Continue."], police_voice);
 	game.dialogs["coffee_shop_police_dialog_7"] = new Dialog ("coffee_shop_police_dialog_7", manager_name, "Thank you for your help, " + game.player_name + " and " + game.partner_name + ". With the robber in custody, I'll be able to resume business as usual again. I'll post a notice regarding the risk of using my public network for financial transactions.", ["Continue."], manager_voice);
 	game.dialogs["coffee_shop_police_dialog_8"] = new Dialog ("coffee_shop_police_dialog_8", customer_2_name, "Yeah, thanks guys! I had no idea that wireless network connections could be easily intercepted, even if the website itself is secure. I won't buy anything on a public network again.", ["Continue."], customer_2_voice);
@@ -129,24 +129,82 @@ function load_coffee_shop (game) {
 		partner_dialog_2_shown:false,
 		partner_dialog_3_shown:false,
 		picking_culprit:false,
-		culprit:"coffee_shop_culprit_3",
 		names_of_people:{coffee_shop_manager:manager_name, coffee_shop_customer_1:customer_1_name, coffee_shop_customer_2:customer_2_name, coffee_shop_customer_3:customer_3_name, coffee_shop_customer_4:customer_4_name, coffee_shop_customer_5:customer_5_name, coffee_shop_culprit_1:culprit_1_name, coffee_shop_culprit_2:culprit_2_name, coffee_shop_culprit_3:culprit_3_name},
-		accusation_dialog:game.dialogs["coffee_shop_player_dialog"],
-		accused_dialog:game.dialogs["coffee_shop_accused_dialog"],
 		after_accused_speaks_show:"coffee_shop_police_dialog_2",
 		cat_shown:"sunshine",
 		cat_vote:0,
-		cat_dialog:game.dialogs["coffee_shop_culprit_2_dialog_2"],
 		cat_display_element:new Image("image/sunshine", 448, 237, 1000),
 		background_music_audio_id:"audio/mall",
 		times_reset:0,
 		score:0,
-		score_display_element:game.screens["coffee_shop_success"].extras[0], // WARNING: Potential Bug (Aliasing problem) regarding saved games.
 		wifi_sniffing_video_played:false
 	};
+	
+	coffeeShopSetRandomCulprit(game.coffee_shop_variables, game, addElementToScreen, removeElementFromScreen);
 }
 
-function resetCoffeeShopVariables (vars) {
+function coffeeShopSetRandomCulprit (vars, game, addElementToScreen, removeElementFromScreen) {
+	var random_num = 1 + Math.floor(Math.random() * 3); // An integer from 1 to 3, inclusive
+	var second_random_num = Math.floor(Math.random() * 2); // Either 0 or 1 with equal probability
+	
+	var culprit_1_mouse = new Image ("image/electronics-02", 833, 399, 1, 0.01); // scale: 1%
+	var culprit_1_headset = new Image ("image/electronics-03", 776, 394, 1, 0.01); // scale: 1%
+	
+	var culprit_2_mouse = new Image ("image/electronics-02", 854, 400, 1, 0.01); // scale: 1%
+	var culprit_2_headset = new Image ("image/electronics-03", 913, 404, 1, 0.0125); // scale: 1.25% (26px wide).
+	
+	var culprit_3_mouse = new Image ("image/electronics-01", 1002, 488, 1, 0.01); // scale: 1%
+	var culprit_3_headset = new Image ("image/electronics-03", 952, 480, 1, 0.02); // scale: 2% 
+	
+	for (var i = 0; game.screens["coffee_shop"].extras.length; i++) {
+		if (game.screens["coffee_shop"].extras[i].type == 'image' && game.screens["coffee_shop"].extras[i].id.indexOf("image/electronics") == 0) {
+			removeElementFromScreen(game.screens["coffee_shop"], game.screens["coffee_shop"].extras[i]);
+			i--;
+		}
+	}
+	
+	console.log("Random num : " + random_num);
+	console.log("Second num : " + second_random_num);
+	if (random_num == 1) {
+		vars.culprit = "coffee_shop_culprit_1"
+		
+		addElementToScreen(game.screens["coffee_shop"], culprit_1_mouse);
+		addElementToScreen(game.screens["coffee_shop"], culprit_1_headset);
+		if (second_random_num == 0) {
+			addElementToScreen(game.screens["coffee_shop"], culprit_2_mouse);
+			addElementToScreen(game.screens["coffee_shop"], culprit_3_headset);
+		} else {
+			addElementToScreen(game.screens["coffee_shop"], culprit_3_mouse);
+			addElementToScreen(game.screens["coffee_shop"], culprit_2_headset);
+		}
+	} else if (random_num == 2) {
+		vars.culprit = "coffee_shop_culprit_2"
+		
+		addElementToScreen(game.screens["coffee_shop"], culprit_2_mouse);
+		addElementToScreen(game.screens["coffee_shop"], culprit_2_headset);
+		if (second_random_num == 0) {
+			addElementToScreen(game.screens["coffee_shop"], culprit_1_mouse);
+			addElementToScreen(game.screens["coffee_shop"], culprit_3_headset);
+		} else {
+			addElementToScreen(game.screens["coffee_shop"], culprit_3_mouse);
+			addElementToScreen(game.screens["coffee_shop"], culprit_1_headset);
+		}
+	} else {
+		vars.culprit = "coffee_shop_culprit_3"
+		
+		addElementToScreen(game.screens["coffee_shop"], culprit_3_mouse);
+		addElementToScreen(game.screens["coffee_shop"], culprit_3_headset);
+		if (second_random_num == 0) {
+			addElementToScreen(game.screens["coffee_shop"], culprit_1_mouse);
+			addElementToScreen(game.screens["coffee_shop"], culprit_2_headset);
+		} else {
+			addElementToScreen(game.screens["coffee_shop"], culprit_2_mouse);
+			addElementToScreen(game.screens["coffee_shop"], culprit_1_headset);
+		}
+	}
+}
+
+function resetCoffeeShopVariables (vars, game, addElementToScreen, removeElementFromScreen) {
 	vars.spoken_to_manager = false;
 	vars.spoken_to_customer_1 = false;
 	vars.spoken_to_customer_2 = false;
@@ -160,13 +218,14 @@ function resetCoffeeShopVariables (vars) {
 	vars.partner_dialog_2_shown = false;
 	vars.partner_dialog_3_shown = false;
 	vars.picking_culprit = false;
-	vars.culprit = "coffee_shop_culprit_3";
 	vars.times_reset++;
+	
+	coffeeShopSetRandomCulprit(vars, game, addElementToScreen, removeElementFromScreen);
 }
 
-function coffeeShopPickCulprt (accused, showDialog, closeDialog, vars) {
-	vars.accusation_dialog.text = vars.names_of_people[accused] + " is the one responsible.";
-	vars.accused_dialog.title = vars.names_of_people[accused];
+function coffeeShopPickCulprit (accused, showDialog, closeDialog, vars, game) {
+	game.dialogs["coffee_shop_player_dialog"].text = vars.names_of_people[accused] + " is the one responsible.";
+	game.dialogs["coffee_shop_accused_dialog"].title = vars.names_of_people[accused]
 	if (accused == vars.culprit) {
 		vars.after_accused_speaks_show = "coffee_shop_police_dialog_4";
 	} else {
@@ -195,7 +254,7 @@ function enterCoffeeShop (resizeCanvas, changeMainScreen, showDialog, vars) {
 // Returns true if the input event is consumed by this function, false if it does not.
 // Takes the name of the button and whatever other arguments it needs from the server.js in order to work.
 // Here vars is game.coffee_shop_variables as assigned above.
-function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, vars) {
+function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, vars, game) {
 	if (button == "coffee_shop_manager") {
 		if (!vars.spoken_to_manager) {
 			showDialog("coffee_shop_manager_dialog");
@@ -235,7 +294,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		return true;
 	} else if (button == "dialog_coffee_shop_manager_dialog_6_It was YOU!") {
 		closeDialog();
-		coffeeShopPickCulprt("coffee_shop_manager", showDialog, closeDialog, vars);
+		coffeeShopPickCulprit("coffee_shop_manager", showDialog, closeDialog, vars, game);
 		return true;
 	} else if (button == "dialog_coffee_shop_manager_dialog_6_I'm not so sure anymore.") {
 		vars.picking_culprit = false;
@@ -247,7 +306,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		return true;
 	} else if (button == "coffee_shop_customer_1") {
 		if (vars.picking_culprit) {
-			coffeeShopPickCulprt(button, showDialog, closeDialog, vars);
+			coffeeShopPickCulprit(button, showDialog, closeDialog, vars, game);
 		} else {
 			showDialog("coffee_shop_customer_1_dialog");
 		}
@@ -263,7 +322,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		return true;
 	} else if (button == "coffee_shop_customer_2") {
 		if (vars.picking_culprit) {
-			coffeeShopPickCulprt(button, showDialog, closeDialog, vars);
+			coffeeShopPickCulprit(button, showDialog, closeDialog, vars, game);
 		} else {
 			showDialog("coffee_shop_customer_2_dialog");
 		}
@@ -279,7 +338,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		return true;
 	} else if (button == "coffee_shop_customer_3") {
 		if (vars.picking_culprit) {
-			coffeeShopPickCulprt(button, showDialog, closeDialog, vars);
+			coffeeShopPickCulprit(button, showDialog, closeDialog, vars, game);
 		} else {
 			showDialog("coffee_shop_customer_3_dialog");
 		}
@@ -295,7 +354,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		return true;
 	} else if (button == "coffee_shop_customer_4") {
 		if (vars.picking_culprit) {
-			coffeeShopPickCulprt(button, showDialog, closeDialog, vars);
+			coffeeShopPickCulprit(button, showDialog, closeDialog, vars, game);
 		} else {
 			showDialog("coffee_shop_customer_4_dialog");
 		}
@@ -311,7 +370,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		return true;
 	} else if (button == "coffee_shop_customer_5") {
 		if (vars.picking_culprit) {
-			coffeeShopPickCulprt(button, showDialog, closeDialog, vars);
+			coffeeShopPickCulprit(button, showDialog, closeDialog, vars, game);
 		} else {
 			showDialog("coffee_shop_customer_5_dialog");
 		}
@@ -327,7 +386,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		return true;
 	} else if (button == "coffee_shop_culprit_1") {
 		if (vars.picking_culprit) {
-			coffeeShopPickCulprt(button, showDialog, closeDialog, vars);
+			coffeeShopPickCulprit(button, showDialog, closeDialog, vars, game);
 		} else {
 			showDialog("coffee_shop_culprit_1_dialog");
 		}
@@ -343,7 +402,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		return true;
 	} else if (button == "coffee_shop_culprit_2") {
 		if (vars.picking_culprit) {
-			coffeeShopPickCulprt(button, showDialog, closeDialog, vars);
+			coffeeShopPickCulprit(button, showDialog, closeDialog, vars, game);
 		} else {
 			showDialog("coffee_shop_culprit_2_dialog");
 		}
@@ -351,7 +410,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 	} else if (button == "dialog_coffee_shop_culprit_2_dialog_Continue.") {
 		closeDialog();
 		showDialog("coffee_shop_culprit_2_dialog_2");
-		addElementToScreen(vars.cat_dialog.screen, vars.cat_display_element);
+		addElementToScreen(game.dialogs["coffee_shop_culprit_2_dialog_2"].screen, vars.cat_display_element);
 		return true;
 	} else if (button == "dialog_coffee_shop_culprit_2_dialog_2_Yes.") {
 		closeDialog();
@@ -380,7 +439,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		return true;
 	} else if (button == "coffee_shop_culprit_3") {
 		if (vars.picking_culprit) {
-			coffeeShopPickCulprt(button, showDialog, closeDialog, vars);
+			coffeeShopPickCulprit(button, showDialog, closeDialog, vars, game);
 		} else {
 			showDialog("coffee_shop_culprit_3_dialog");
 		}
@@ -421,7 +480,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 	} else if (button == "dialog_coffee_shop_police_dialog_3_Okay.") {
 		closeDialog();
 		resizeCanvas(1152, 648);
-		resetCoffeeShopVariables(vars);
+		resetCoffeeShopVariables(vars, game, addElementToScreen, removeElementFromScreen);
 		changeMainScreen("coffee_shop_failed");
 		return true;
 	} else if (button == "dialog_coffee_shop_police_dialog_4_Continue.") {
@@ -455,8 +514,11 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		if (score <= 0) score = 1;
 		if (vars.score < score)
 			vars.score = score;
-		vars.score_display_element.text = "You Scored " + vars.score + " Points (out of 30)!";
-		resetCoffeeShopVariables(vars);
+		// Finds the score element puts the score in it.
+		for (var i = 0; i < game.screens["coffee_shop_success"].extras.length; i++)
+			if (game.screens["coffee_shop_success"].extras[i].name == "coffee_shop_success_score")
+				game.screens["coffee_shop_success"].extras[i].text = "You Scored " + vars.score + " Points (out of 30)!";
+		resetCoffeeShopVariables(vars, game, addElementToScreen, removeElementFromScreen);
 		changeMainScreen("coffee_shop_success");
 		if (!vars.wifi_sniffing_video_played) {
 			vars.wifi_sniffing_video_played = true;

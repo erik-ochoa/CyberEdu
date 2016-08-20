@@ -102,7 +102,15 @@ var display = [];
 /* Draws the specified display element */
 function drawDisplayElement (element) {
 	if (element.type == 'image') {
-		g.drawImage(element.image, element.x, element.y);
+		if (element.scale == 1) {
+
+			g.drawImage(element.image, element.x, element.y);
+		} else {
+			g.save();
+			g.scale(element.scale, element.scale);
+			g.drawImage(element.image, element.x / element.scale, element.y / element.scale);
+			g.restore();
+		}
 	} else if (element.type == 'text' || element.type == 'button_text') {
 		g.font = element.font;
 		g.fillStyle = element.font_color;
@@ -272,7 +280,8 @@ var lastKnownMousePosition = {x:0.0, y:0.0}
 /* Groups of commands arrive as an array, to be executed in sequence. 
  * An individual command is an array: the first element is the name, following elements (if any) are the arguments. 
    The following commands are valid:
-	drawImage: (id, x1, y1, layer) - draws an image at the position (x1, y1) in the specified layer.
+	drawImage: (id, x1, y1, layer) - draws an image at the position (x1, y1) in the specified layer
+	drawImage: (id, x1, y1, layer, scale) - draws an image at the position (x1, y1) in the specified layer, and with the specified scale.
 	drawRectangle: (name, x1, y1, x2, y2, layer, fillStyle) - draws a solid Rectangle.
 	drawText: (name, x1, y1, x2, y2, layer, text, font, font_color) - draws text
 	clearImage: () - clears all the images, rectangles, and text (except text associated with buttons) from the display
@@ -300,6 +309,7 @@ socket.on('command', function (array) {
 			var x1 = array[i][2];
 			var y1 = array[i][3];
 			var layer = array[i][4];
+			var scale = (array[i].length > 5 ? array[i][5] : 1);
 			
 			var image = document.getElementById(id);
 
@@ -307,7 +317,7 @@ socket.on('command', function (array) {
 			while (j < display.length && display[j].layer <= layer) {
 				j++;
 			}
-			display.splice(j, 0, {type:'image', id: id, x:x1, y:y1, layer:layer, image:image});
+			display.splice(j, 0, {type:'image', id: id, x:x1, y:y1, layer:layer, scale:scale, image:image});
 			
 			redrawAll();
 			

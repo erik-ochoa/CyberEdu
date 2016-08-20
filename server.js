@@ -10,6 +10,7 @@ var io = socket_io(app);
 
 var SERVER_HOSTNAME = "http://localhost:8011"
 var SERVER_PORT = 8011;
+var EXCEPTION_EMAIL_NOTIFICATIONS_ENABLED = false;
 
 // Include modules here.
 eval(fs.readFileSync(__dirname + '/coffee_shop.js').toString());
@@ -22,6 +23,17 @@ eval(fs.readFileSync(__dirname + '/introduction.js').toString());
 process.on('uncaughtException', function (err) {
 	console.log("Error: An exception has been caught at the top level. The server will continue to run.");
 	console.log(err.stack);
+	
+	if (EXCEPTION_EMAIL_NOTIFICATIONS_ENABLED) {
+		sendEmail("FROM: cyber_edu@umd.edu\r\n" +
+			"TO: jrhansf@terpmail.umd.edu\r\n" +
+			"SUBJECT: Uncaught Exception on cyberedu.umd.edu\r\n" +
+			"MIME-Version: 1.0\r\n" +
+			"Content-Type: text/plain\r\n" +
+			"\r\n" +
+			err.stack
+		);
+	}
 });
 
 var Session = function (cookie, ip, username) {
@@ -244,7 +256,7 @@ Content-Type: image/gif
 Content-Id: <image001>
 Content-Transfer-Encoding: base64
 
-$(base64 /export/software/cyberedu/alpha_v3/images/phone_app_icon_mail.gif)
+(Image in base64 format)
 --boundary2--
 
 --boundary1--
@@ -255,30 +267,96 @@ function sendEmail (content) {
 		var mail_process = child_process.exec('sendmail -t', function (error, stdout, stderr) {
 			if (error) {
 				console.log("sendmail | An error occurred. Error code: " + error);
-				console.log("sendmail | stderr = " + stderr);
 			}
 		});
 	
 		mail_process.stdin.write(content);
 		mail_process.stdin.end();
 	} else {
-		throw new Error ("Invalid or unspecified FROM address in email content.");
+		throw new Error ("Invalid or unspecified FROM address in email content. Email was not sent.");
 	}
+}
+
+/* This function updates the leaderboard page based on the current information in the save files.
+ * DO NOT CALL THIS FUNCTION anywhere in the code, because it sets a timer to run itself again in the future.
+ */
+function updateLeaderboard () {
+	fs.readdir(__dirname + '/saves', function (err, files) {
+		if (err) throw err;
+		
+		/* To define additional leaderboard fields, you need to:
+		 * - Set the field in the leaderboard_row object based on the game object inside the fs.readFile() callback.
+		 * - Add the field to the total score (if desired).
+		 * - Add the field to the leaderboard HTML itself in the writeLeaderboard() function.
+		 */
+		var leaderboard_row = [];
+				
+		// This runs when all the files have been read in
+		function writeLeaderboard () {
+			var outputStream = fs.createWriteStream(__dirname + '/leaderboard.html');
+			
+			leaderboard_row.sort(function (a, b) {
+				// Sorts on total score in descending order.
+				return b.total_score - a.total_score;
+			});
+			
+			outputStream.write('<!DOCTYPE HTML>\r\n<html>\r\n<head>\r\n');
+			outputStream.write('\t<meta charset="UTF-8">\r\n\t<title>CyberEdu Leaderboard</title>\r\n\t<link rel="shortcut icon" href="/favicon.ico"/>\r\n\t<style>\r\n');
+			outputStream.write('\t\ttable, th, td {\r\n\t\t\tborder: 1px solid black;\r\n\t\t}\r\n'); // Creates a border around each cell, and the entire table.
+			outputStream.write('\t\ttable td:last-child {\r\n\t\t\ttext-align: right;\r\n\t\t}\r\n'); // Aligns the text in the total score column to the right.
+			outputStream.write('\t</style>\r\n</head>\r\n<body>\r\n\t<table>\r\n');
+			outputStream.write('\t\t<tr> <th>Name</th> <th>Coffee Shop</th> <th>Apartment</th> <th>Library</th> <th>Total</th> </tr>\r\n');
+			for (var i = 0; i < leaderboard_row.length; i++) {
+				outputStream.write('\t\t<tr> <td> '	+ leaderboard_row[i].player_name + '</td> <td>' 
+				+ leaderboard_row[i].coffee_shop_score + '</td> <td>' 
+				+ leaderboard_row[i].apartment_score + '</td> <td>' 
+				+ leaderboard_row[i].library_score + '</td> <td>' 
+				+ leaderboard_row[i].total_score + '</td> </tr>\r\n');
+			}
+			
+			outputStream.write('\t</table>\r\n');
+			outputStream.write('\t<p>Last Updated: ' + new Date() + '</p>\r\n');
+			outputStream.write('</body>\r\n</html>\r\n');
+			outputStream.end(function () {
+				console.log("system | wrote the leaderboard.");
+			});
+		}
+		
+		var files_processed = 0;
+		
+		for (var i = 0; i < files.length; i++) {
+			/* This is a closure. It ensures that the
+			 * correct value of i is passed into each of the callbacks. */
+			(function (i) {
+				fs.readFile(__dirname + '/saves/' + files[i], function (err, data) {
+					if (err) throw err;
+					
+					var game_object = JSON.parse(data);
+					
+					leaderboard_row[i] = {};
+					leaderboard_row[i].player_name = game_object.player_name;
+					leaderboard_row[i].coffee_shop_score = game_object.coffee_shop_variables.score;
+					leaderboard_row[i].apartment_score = game_object.apartment_variables.score;
+					leaderboard_row[i].library_score = game_object.library_variables.score;
+					
+					leaderboard_row[i].total_score = leaderboard_row[i].coffee_shop_score;
+					
+					files_processed++;
+					if (files_processed == files.length) {
+						writeLeaderboard();
+					}
+				});
+			})(i);
+		}	
+	});
+
+	setTimeout(updateLeaderboard, 3600000); // Every hour.
 }
 
 app.listen(SERVER_PORT);
 setTimeout(clearExpiredSessions, 3600000);
+updateLeaderboard(); // Call this immediately.
 console.log("system | CyberEDU server firing up on port " + SERVER_PORT);
-
-// Test email code.
-console.log("system | Sending a test email");
-fs.readFile(__dirname + "/sample-mail.txt", function (err, data) {
-	if (err) {
-		throw err;
-	} else {
-		sendEmail(data);
-	}
-});
 
 /* Constructors */
 
@@ -309,13 +387,15 @@ var Button = function (name, x1, y1, x2, y2, layer, text, font, font_color) {
 
 };
 
-// The image with the specified ID in the client HTML code, drawn at the specified position
-var Image = function(id, x, y, layer) {
+// The image with the specified ID in the client HTML code, drawn at the specified position.
+// The scale argument is optional, and if provided, it specifies the scale at which the image should be drawn.
+var Image = function(id, x, y, layer, scale) {
 	this.type = 'image';
 	this.id = id;
 	this.x = x;
 	this.y = y;
-	this.layer = layer;
+	this.layer = layer;	
+	this.scale = scale;
 };
 
 // An animated GIF image, drawn at the specified position
@@ -455,7 +535,11 @@ var MAX_DISPLAYED_MAILBOX_ENTRIES = 17;
 /* Pushes the commands needed to draw the display element into the commands argument. */
 function drawDisplayObject (element, commands) {
 	if (element.type == 'image') {
-		commands.push(["drawImage", element.id, element.x, element.y, element.layer]);
+		if (typeof element.scale !== 'undefined') {
+			commands.push(["drawImage", element.id, element.x, element.y, element.layer, element.scale]);
+		} else {
+			commands.push(["drawImage", element.id, element.x, element.y, element.layer]);		
+		}
 	} else if (element.type == 'animation') {
 		commands.push(["drawAnimation", element.id, element.x, element.y, element.layer, element.callbackRequested]);
 	} else if (element.type == 'text') {
@@ -836,7 +920,7 @@ io.on('connection', function (socket) {
 	
 	/* Loads all the additional scenes into the game object. */
 	function loadScenes () {
-		load_coffee_shop (game);
+		load_coffee_shop (game, addElementToScreen, removeElementFromScreen);
 		load_mall(game);
 		load_library (game, addToFileSystem);
 		load_apartment (game);
@@ -1587,7 +1671,7 @@ io.on('connection', function (socket) {
 		
 		// Handle events in the modules, but only if they are loaded
 		if (game.scenes_loaded) {
-			if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.coffee_shop_variables)) {
+			if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, game.coffee_shop_variables, game)) {
 				return;
 			} else if(mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, installPhoneApp, addButtonToScreen, changePhoneScreen, game, game.mall_scene_variables)) {
 				return;
