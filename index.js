@@ -1,4 +1,4 @@
-var SERVER_HOSTNAME = 'http://192.168.0.38:8011';
+var SERVER_HOSTNAME = 'http://localhost:8011';
 var CANVAS_ELEMENT = document.getElementById('view');
 var g = CANVAS_ELEMENT.getContext('2d');
 var MAX_X = 1280;

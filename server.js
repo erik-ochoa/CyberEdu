@@ -8,7 +8,7 @@ var child_process = require('child_process');
 var app = http.createServer(handler);
 var io = socket_io(app);
 
-var SERVER_HOSTNAME = "http://192.168.0.38:8011"
+var SERVER_HOSTNAME = "http://localhost:8011"
 var SERVER_PORT = 8011;
 var EXCEPTION_EMAIL_NOTIFICATIONS_ENABLED = false;
 var STDIN_COMMANDS_ENABLED = true;
@@ -359,11 +359,11 @@ function updateLeaderboard () {
 					
 					leaderboard_row[i] = {};
 					leaderboard_row[i].player_name = game_object.player_name;
-					leaderboard_row[i].coffee_shop_score = game_object.coffee_shop_variables.score;
-					leaderboard_row[i].apartment_score = game_object.apartment_variables.score;
-					leaderboard_row[i].library_score = game_object.library_variables.score;
+					leaderboard_row[i].coffee_shop_score = typeof game_object.coffee_shop_variables === 'undefined' ? 0 : game_object.coffee_shop_variables.score;
+					leaderboard_row[i].apartment_score = typeof game_object.apartment_variables === 'undefined' ? 0 : game_object.apartment_variables.score;
+					leaderboard_row[i].library_score = typeof game_object.library_variables === 'undefined' ? 0 : game_object.library_variables.score;
 					
-					leaderboard_row[i].total_score = leaderboard_row[i].coffee_shop_score;
+					leaderboard_row[i].total_score = leaderboard_row[i].coffee_shop_score + leaderboard_row[i].apartment_score + leaderboard_row[i].library_score;
 					
 					files_processed++;
 					if (files_processed == files.length) {
@@ -695,12 +695,20 @@ function setup_dialog_screen(dialog, canvas, previous_screen) {
 
 	// The display elements of the previous screen will be added to this screen, but the buttons and text fields won't.
 	previous_screen = JSON.parse(JSON.stringify(previous_screen)); // I need to modify the object, so I must deep copy it first
+
+	// Add whatever text was in the buttons/textFields into the display as standalone text objects instead of buttons/text fields.
+	for (i = 0; i < previous_screen.buttons.length; i++) {
+		if (typeof previous_screen.buttons[i].text !== 'undefined') {
+			previous_screen.extras.push(new Text("screen_under_dialog_button_" + previous_screen.buttons[i].name, previous_screen.buttons[i].x1, previous_screen.buttons[i].y1, previous_screen.buttons[i].x2, previous_screen.buttons[i].y2, previous_screen.buttons[i].layer, previous_screen.buttons[i].text, previous_screen.buttons[i].font, previous_screen.buttons[i].font_color));
+		}
+	}
+	for (i = 0; i < previous_screen.textFields.length; i++) {
+		previous_screen.extras.push(new Text("screen_under_dialog_textField_" + previous_screen.textFields[i].name, previous_screen.textFields[i].x1, previous_screen.textFields[i].y1, previous_screen.textFields[i].x2, previous_screen.textFields[i].y2, previous_screen.textFields[i].layer, previous_screen.textFields[i].text, previous_screen.textFields[i].font, previous_screen.textFields[i].font_color));
+	}
 	previous_screen.buttons = [];
 	previous_screen.textFields = [];
 	
 	delete previous_screen.on_screen; // This copy isn't actually on the screen. Causes false alarms for repeated draw calls.
-
-	// A possible future upgrade: add whatever text was in the buttons/textFields into the display as standalone text objects.
 
 	previous_screen.layer -= DIALOG_LAYER; // Need to draw the stuff under the dialog.
 	dialog.screen.extras.push(previous_screen);
@@ -1791,7 +1799,7 @@ io.on('connection', function (socket) {
 		
 		// Handle events in the modules, but only if they are loaded
 		if (game.scenes_loaded) {
-			if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, game.coffee_shop_variables, game)) {
+			if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, markAsComplete, game.coffee_shop_variables, game)) {
 				return;
 			} else if(mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, installPhoneApp, addButtonToScreen, changePhoneScreen, addToTodoList, markAsComplete, removeElementFromScreen, game, game.mall_scene_variables)) {
 				return;

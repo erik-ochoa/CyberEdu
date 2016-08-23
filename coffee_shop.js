@@ -163,8 +163,6 @@ function coffeeShopSetRandomCulprit (vars, game, addElementToScreen, removeEleme
 		}
 	}
 	
-	console.log("Random num : " + random_num);
-	console.log("Second num : " + second_random_num);
 	if (random_num == 1) {
 		vars.culprit = "coffee_shop_culprit_1"
 		
@@ -239,13 +237,20 @@ function coffeeShopShowPartnerDialog (showDialog, closeDialog, vars) {
 		vars_partner_dialog_2_shown = true;	
 		showDialog("coffee_shop_partner_dialog_3");
 	} else if (!vars.partner_dialog_2_shown && vars.spoken_to_customer_2 && vars.spoken_to_customer_3 && vars.spoken_to_customer_4) {
-		showDialog("coffee_shop_partner_dialog_2");
+		showDialog("coffee_shop_partner_dialog_2");		
 	}
 }
 
-function enterCoffeeShop (resizeCanvas, changeMainScreen, showDialog, vars) {
+function coffeeShopCheckCompletionOfSpeakToWitnessesTask(markAsComplete, vars) {
+	if (vars.spoken_to_customer_2 && vars.spoken_to_customer_3 && vars.spoken_to_customer_4) {
+		markAsComplete("coffee_shop_task_speak_to_witnesses", "coffee-shop");
+	}
+}
+
+function enterCoffeeShop (resizeCanvas, changeMainScreen, showDialog, addToTodoList, vars) {
 	resizeCanvas(1188, 681);
 	changeMainScreen("coffee_shop");
+	addToTodoList(new ToDoTask("coffee_shop_task_speak_to_manager", "coffee-shop", "Speak with Manager"));
 	if (!vars.entry_message_shown) {
 		showDialog("coffee_shop_partner_dialog");
 	}
@@ -254,10 +259,13 @@ function enterCoffeeShop (resizeCanvas, changeMainScreen, showDialog, vars) {
 // Returns true if the input event is consumed by this function, false if it does not.
 // Takes the name of the button and whatever other arguments it needs from the server.js in order to work.
 // Here vars is game.coffee_shop_variables as assigned above.
-function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, vars, game) {
+function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, markAsComplete, vars, game) {
 	if (button == "coffee_shop_manager") {
-		if (!vars.spoken_to_manager) {
+		if (!vars.spoken_to_manager) {			
 			showDialog("coffee_shop_manager_dialog");
+			markAsComplete("coffee_shop_task_speak_to_manager", "coffee-shop");
+			addToTodoList(new ToDoTask("coffee_shop_task_speak_to_witnesses", "coffee-shop", "Talk to witnesses (man wearing a top hat, woman wearing a red shirt, woman reading the newspaper)."));
+			addToTodoList(new ToDoTask("coffee_shop_task_speak_to_manager_2", "coffee-shop", "When you've identified the culprit, speak with the manager again."));
 		} else if (vars.picking_culprit) {
 			showDialog("coffee_shop_manager_dialog_6");
 		} else {
@@ -280,12 +288,14 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 	} else if (button == "dialog_coffee_shop_manager_dialog_4_Yes.") {
 		closeDialog();
 		showDialog("coffee_shop_manager_dialog_5");	
+		markAsComplete("coffee_shop_task_speak_to_manager_2", "coffee-shop");
 		return true;
-	} else if (button == "dialog_coffee_shop_manager_dialog_4_Not yet.") {
+	} else if (button == "dialog_coffee_shop_manager_dialog_4_Not yet.") {hop
 		closeDialog();
 		return true;
 	} else if (button == "dialog_coffee_shop_manager_dialog_5_Okay.") {
 		vars.picking_culprit = true;
+		addToTodoList(new ToDoTask ("coffee_shop_task_select_culprit", "coffee-shop", "Select the culprit."));
 		closeDialog();
 		return true;
 	} else if (button == "dialog_coffee_shop_manager_dialog_6_Yes, I know, it was...") {
@@ -299,6 +309,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 	} else if (button == "dialog_coffee_shop_manager_dialog_6_I'm not so sure anymore.") {
 		vars.picking_culprit = false;
 		closeDialog();
+		// TODO: I (JRH) need to un-check the task 'coffee_shop_task_speak_to_manager_2' here, and remove the task 'coffee_shop_task_select_culprit', if that is possible. Or re-think when tasks are checked off.
 		return true;
 	} else if (button == "dialog_coffee_shop_manager_dialog_7_Continue.") {
 		closeDialog();
@@ -335,6 +346,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		closeDialog();
 		vars.spoken_to_customer_2 = true;
 		coffeeShopShowPartnerDialog(showDialog, closeDialog, vars);
+		coffeeShopCheckCompletionOfSpeakToWitnessesTask(markAsComplete, vars);
 		return true;
 	} else if (button == "coffee_shop_customer_3") {
 		if (vars.picking_culprit) {
@@ -351,6 +363,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		closeDialog();
 		vars.spoken_to_customer_3 = true;
 		coffeeShopShowPartnerDialog(showDialog, closeDialog, vars);
+		coffeeShopCheckCompletionOfSpeakToWitnessesTask(markAsComplete, vars);
 		return true;
 	} else if (button == "coffee_shop_customer_4") {
 		if (vars.picking_culprit) {
@@ -367,6 +380,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		closeDialog();
 		vars.spoken_to_customer_4 = true;
 		coffeeShopShowPartnerDialog(showDialog, closeDialog, vars);
+		coffeeShopCheckCompletionOfSpeakToWitnessesTask(markAsComplete, vars);
 		return true;
 	} else if (button == "coffee_shop_customer_5") {
 		if (vars.picking_culprit) {
@@ -467,6 +481,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		return true;
 	} else if (button == "dialog_coffee_shop_player_dialog_Continue.") {
 		closeDialog();
+		markAsComplete("coffee_shop_task_select_culprit", "coffee-shop");
 		showDialog("coffee_shop_manager_dialog_7");
 		return true;
 	} else if (button == "dialog_coffee_shop_police_dialog_Continue.") {
@@ -530,10 +545,10 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		showDialog(vars.after_accused_speaks_show);
 		return true;
 	} else if (button == "go_to_coffee_shop") { // Button on the phone's map app.
-		enterCoffeeShop(resizeCanvas, changeMainScreen, showDialog, vars);
+		enterCoffeeShop(resizeCanvas, changeMainScreen, showDialog, addToTodoList, vars);
 		return false; // Allow the main file to handle this event as well.
 	} else if (button == "coffee_shop_failed_restart") {
-		enterCoffeeShop(resizeCanvas, changeMainScreen, showDialog, vars);
+		enterCoffeeShop(resizeCanvas, changeMainScreen, showDialog, addToTodoList, vars);
 		return true; // This may need to be modified in the future.
 	} else if (button == "coffee_shop_failed_quit") {
 		changeMainScreen("testMainScreen"); // This will definitely need to be modified
