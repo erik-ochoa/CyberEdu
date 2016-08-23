@@ -1,4 +1,4 @@
-var SERVER_HOSTNAME = 'http://localhost:8011';
+var SERVER_HOSTNAME = 'http://192.168.0.38:8011';
 var CANVAS_ELEMENT = document.getElementById('view');
 var g = CANVAS_ELEMENT.getContext('2d');
 var MAX_X = 1280;
@@ -24,7 +24,7 @@ var background_loading_supported = background_loading_supported();
  */
 if (!background_loading_supported) {
 	console.log("Background GIF Parsing unsupported. Loading animations on the main thread. Expect a long load time.");
-	animatedGIFs["animation/dorm_room/transition"] = load_gif_from_url(SERVER_HOSTNAME + "/images/transition_to_cyberworld.gif");
+	//animatedGIFs["animation/dorm_room/transition"] = load_gif_from_url(SERVER_HOSTNAME + "/images/transition_to_cyberworld.gif");
 } else {
 	var loadTransitionToCyberworld = new Worker('gifParser.js');
 	
@@ -318,7 +318,10 @@ socket.on('command', function (array) {
 				j++;
 			}
 			display.splice(j, 0, {type:'image', id: id, x:x1, y:y1, layer:layer, scale:scale, image:image});
-			
+			console.log(CANVAS_ELEMENT);
+			console.log(g);
+			console.log(image);
+			console.log(redrawAll);
 			redrawAll();
 			
 		} else if (command_name == 'clearImage') {

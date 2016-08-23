@@ -20,7 +20,9 @@
 		</style>
 	</head>
 
-	<body>
+	<!-- On certain browsers (Firefox/Chrome), there seems to be a chance that the script runs before the images load, resulting in a blank screen. 
+		By calling redrawAll() when the body is finished, those images will be re-drawn. -->
+	<body onload="redrawAll()">
 		<!-- The primary canvas element, used to display the game graphics -->
 		<canvas id="view" width="1280" height="630" style="border:1px solid #000000; position:relative;" onclick="click_position(event)" onmousemove="rollover_position(event)"></canvas>
 		<p id="text"> </p>
@@ -102,7 +104,7 @@
 		<img id="image/navigation" src="/images/Navigation.jpg" width="0" height="0"/>
 		<img id="image/social" src="/images/Social.jpg" width="0" height="0"/>
 
-		<img id="image/dorm_room" src="/images/dorm_room.jpg" width="0" height="0"/>
+		<img id="image/dorm_room" src="/images/dorm_room.jpg" width="0" height="0" />
 		<img id="image/dorm_room/computer" src="/images/dorm_room_computer.jpg" width="0" height="0"/>
 		
 		<img id="image/phone/icon/email" src="/images/phone_app_icon_mail.gif" width="0" height="0"/>
@@ -129,7 +131,7 @@
 		<script src="/index.js"></script>
 		
 		<!-- Attribution of Responsive Voice. Code copied from their webpage. -->
-		<div><a href="http://responsivevoice.org">ResponsiveVoice-NonCommercial</a> licensed under <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/"><img title="ResponsiveVoice Text To Speech" src="https://responsivevoice.org/wp-content/uploads/2014/08/95x15.png" alt="95x15" width="95" height="15" /></div>
+		<div><a href="http://responsivevoice.org">ResponsiveVoice-NonCommercial</a> licensed under <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/"><img title="ResponsiveVoice Text To Speech" src="https://responsivevoice.org/wp-content/uploads/2014/08/95x15.png" alt="95x15" width="95" height="15" /></a></div>
 
 	</body>
 </html>

@@ -8,9 +8,10 @@ var child_process = require('child_process');
 var app = http.createServer(handler);
 var io = socket_io(app);
 
-var SERVER_HOSTNAME = "http://localhost:8011"
+var SERVER_HOSTNAME = "http://192.168.0.38:8011"
 var SERVER_PORT = 8011;
 var EXCEPTION_EMAIL_NOTIFICATIONS_ENABLED = false;
+var STDIN_COMMANDS_ENABLED = true;
 
 // Include modules here.
 eval(fs.readFileSync(__dirname + '/coffee_shop.js').toString());
@@ -21,8 +22,7 @@ eval(fs.readFileSync(__dirname + '/introduction.js').toString());
 
 // Prevent entire server from crashing in the event a single user causes an error.
 process.on('uncaughtException', function (err) {
-	console.log("Error: An exception has been caught at the top level. The server will continue to run.");
-	console.log(err.stack);
+	writeToServerLog("system | Error: An exception has been caught at the top level. The server will continue to run.\r\n" + err.stack);
 	
 	if (EXCEPTION_EMAIL_NOTIFICATIONS_ENABLED) {
 		sendEmail("FROM: cyber_edu@umd.edu\r\n" +
@@ -35,6 +35,26 @@ process.on('uncaughtException', function (err) {
 		);
 	}
 });
+
+
+if (STDIN_COMMANDS_ENABLED) {
+	// Reads from standard input. Seems to be reading one line at a time.
+	process.stdin.on('data', function(data) {
+		data = data.toString();
+		if (data.indexOf("\r\n") != data.length - 2) {
+			throw new Error ("Assertion Error: stdin read didn't end with CR LF.");
+		} else {
+			var command = data.substring(0, data.length - 2);
+			if (command == "sessions") {
+				console.log(active_sessions);
+			} else if (command == "time") {
+				console.log(Date.now());
+			} else {
+				console.log("Unrecognized command.");
+			}
+		}
+	});
+}
 
 var Session = function (cookie, ip, username) {
 	this.cookie = cookie;
@@ -51,12 +71,14 @@ var Session = function (cookie, ip, username) {
 /* Map of session cookie OR user name -> Session object */
 var active_sessions = {};
 
-/* Helper function to generate a session id */
+/* Helper function to generate a session id.
+ * Ensures generation of an id that isn't already being used.
+ */
 function generateSessionId () {
-	/* Yes, it is technically possible, though unlikely, for this session ID to conflict with
-	 * another session ID that is still active. However, the probably of that event is extremely
-	 * rare, so it is good enough. */
-	return Math.random().toString(36);
+	var id = Math.random().toString(36);
+	while (typeof active_sessions[id] !== 'undefined')
+		id = Math.random().toString(36);
+	return id;
 }
 
 /* Helper function to grab the session cookie out of the cookies received from the HTTP header. */
@@ -85,7 +107,7 @@ function hasExpired (session) {
  * DO NOT CALL THIS METHOD anywhere in the code because it sets up a timer to run itself again in the future.
  */
 function clearExpiredSessions () {
-	console.log("system | Clearing expired sessions. Active sessions are: " + JSON.stringify(active_sessions));
+	writeToServerLog("system | Clearing expired sessions. Active sessions are: " + JSON.stringify(active_sessions));
 	for (item in active_sessions) {
 		if (hasExpired(active_sessions[item])) {
 			delete active_sessions[item];
@@ -97,7 +119,7 @@ function clearExpiredSessions () {
 /* Processes an incoming HTTP request that has been authenticated. */
 function processAuthenticatedRequest(request, response) {
 	var request_url = url.parse(request.url, true);
-	console.log("client: " + request.socket.remoteAddress + " | Responding with the file " + request_url.pathname + ".");
+	writeToServerLog("client: " + request.socket.remoteAddress + " | Responding with the file " + request_url.pathname + ".");
 	
 	if (request_url.pathname == "/") {
 		fs.readFile(__dirname + '/index.html', function (err, data) {
@@ -134,10 +156,10 @@ function processAuthenticatedRequest(request, response) {
 		});
 		*/
 		inputStream.on('error', function (err) {
-			console.log("client : " + request.socket.remoteAddress + " | A ReadStream error occurred.");
-			console.log(err.stack);
-		
+			writeToServerLog("client : " + request.socket.remoteAddress + " | A ReadStream error occurred.");
+
 			response.end();
+			throw err;
 		});
 	}
 }
@@ -145,10 +167,10 @@ function processAuthenticatedRequest(request, response) {
 // Deals with incoming HTTP requests.
 function handler (request, response) {
 	var request_url = url.parse(request.url, true);
-	console.log("client: " + request.socket.remoteAddress + " | HTTP request received for " + request_url.pathname + " with cookies " + request.headers.cookie + " and query parameters " + JSON.stringify(request_url.query));	
+	writeToServerLog("client: " + request.socket.remoteAddress + " | HTTP request received for " + request_url.pathname + " with cookies " + request.headers.cookie + " and query parameters " + JSON.stringify(request_url.query));	
 	var session_cookie = parseSessionCookie(request.headers.cookie);	
 	
-	// For some reason (at least IE and Firefox) do not send the cookies when requesting the favicon. This permits the favicon to be accessed without authentication.
+	// For some reason (at least IE and Firefox) sometimes do not send the cookies when requesting the favicon. This permits the favicon to be accessed without authentication.
 	if (request_url.pathname == "/favicon.ico") {
 		processAuthenticatedRequest(request, response);
 		return;
@@ -161,7 +183,7 @@ function handler (request, response) {
 		
 		if (typeof request_url.query.ticket === 'undefined') {
 			// The user has not started the login process and, needs to be redirected to CAS.
-			console.log("client: " + request.socket.remoteAddress + " | Redirecting user to the CAS server.");
+			writeToServerLog("client: " + request.socket.remoteAddress + " | Redirecting user to the CAS server.");
 			response.setHeader("Location", "https://login.umd.edu/cas/login?service=" + encodeURIComponent(SERVER_HOSTNAME + request_url.pathname));
 			response.writeHead(303);
 			response.end();
@@ -184,12 +206,13 @@ function handler (request, response) {
 							response.writeHead(403);
 							response.end("Login failed.\r\n\r\nReason: You're already logged in.");
 							
-							console.log("client: " + request.socket.remoteAddress + " | failed to login: already logged in.");
+							writeToServerLog("client: " + request.socket.remoteAddress + " | failed to login: already logged in.");
 						} else {
 							// Delete the previous session for this user, if one exists.
+							// This is not session hijacking, since the user has started a new session and has authenticated through CAS.
 							if (typeof active_sessions[username] !== 'undefined') {
 								delete active_sessions[active_sessions[username].cookie];
-								console.log("client: " + request.socket.remoteAddress + " | deleted previous session for " + username + ".");
+								writeToServerLog("client: " + request.socket.remoteAddress + " | deleted previous session for " + username + ".");
 							}
 							
 							// Creates and stores a new session for this user.
@@ -199,27 +222,28 @@ function handler (request, response) {
 							active_sessions[cookie] = new_session;
 							active_sessions[username] = new_session;
 
-							console.log("client: " + request.socket.remoteAddress + " | logged in as " + username + ".");
+							writeToServerLog("client: " + request.socket.remoteAddress + " | logged in as " + username + ".");
 							processAuthenticatedRequest(request, response);	
 						}
 					} else {					
 						response.writeHead(403);
 						response.end("Login failed.\r\n\r\nReason: CAS validation failed. Try deleting ?ticket=" + request_url.query.ticket + " from the URL and try again.");
 						
-						console.log("client: " + request.socket.remoteAddress + " | failed to login: bad CAS ticket.");
+						writeToServerLog("client: " + request.socket.remoteAddress + " | failed to login: bad CAS ticket.");
 					}
 				});
 			});
 			
 			cas_request.on('error', function (err) {
-				console.log("client: " + request.socket.remoteAddress +  " | An error occurred sending the validation request to CAS.");
-				console.log(err.trace);
+				writeToServerLog("client: " + request.socket.remoteAddress +  " | An error occurred sending the validation request to CAS.");
 				
 				response.writeHead(500);
 				response.end("Error communicating with the authentication server.");
+				
+				throw err;
 			});
 			
-			console.log("client: " + request.socket.remoteAddress + " | Sending validation HTTPS request to CAS server");
+			writeToServerLog("client: " + request.socket.remoteAddress + " | Sending validation HTTPS request to CAS server");
 			cas_request.end();
 		}
 	}
@@ -266,7 +290,7 @@ function sendEmail (content) {
 	if (/FROM: cyber_edu@umd\.edu/i.test(content)) {
 		var mail_process = child_process.exec('sendmail -t', function (error, stdout, stderr) {
 			if (error) {
-				console.log("sendmail | An error occurred. Error code: " + error);
+				writeToServerLog("sendmail | An error occurred. Error code: " + error);
 			}
 		});
 	
@@ -318,7 +342,7 @@ function updateLeaderboard () {
 			outputStream.write('\t<p>Last Updated: ' + new Date() + '</p>\r\n');
 			outputStream.write('</body>\r\n</html>\r\n');
 			outputStream.end(function () {
-				console.log("system | wrote the leaderboard.");
+				writeToServerLog("system | wrote the leaderboard.");
 			});
 		}
 		
@@ -353,10 +377,16 @@ function updateLeaderboard () {
 	setTimeout(updateLeaderboard, 3600000); // Every hour.
 }
 
+/* Helper function that writes a line in the server log.
+ */
+function writeToServerLog (string) {
+	console.log(new Date().toUTCString() + " | " + string);
+}
+
 app.listen(SERVER_PORT);
 setTimeout(clearExpiredSessions, 3600000);
 updateLeaderboard(); // Call this immediately.
-console.log("system | CyberEDU server firing up on port " + SERVER_PORT);
+writeToServerLog("system | CyberEDU server firing up on port " + SERVER_PORT);
 
 /* Constructors */
 
@@ -373,7 +403,7 @@ console.log("system | CyberEDU server firing up on port " + SERVER_PORT);
  */
 var Button = function (name, x1, y1, x2, y2, layer, text, font, font_color) {
 	if (typeof text !== 'undefined' && (typeof font === 'undefined' || typeof font_color === 'undefined'))
-		console.log("Illegal call to Button constructor; text provided, but not all optional arguments were provided!");
+		writeToServerLog("Illegal call to Button constructor; text provided, but not all optional arguments were provided!");
 
 	this.name = name;
 	this.x1 = x1;
@@ -548,7 +578,7 @@ function drawDisplayObject (element, commands) {
 		commands.push(["drawRectangle", element.name, element.x, element.y, element.x2, element.y2, element.layer, element.font_color]);
 	} else if (element.type == 'screen') {
 		if (element["on_screen"])
-			console.log("Warning: display element may have been drawn twice: " + JSON.stringify(element));
+			writeToServerLog("Warning: display element may have been drawn twice: " + JSON.stringify(element));
 		drawDisplayObject(translate(element.base, element.x, element.y, element.layer), commands);
 
 		for (var i = 0; i < element.buttons.length; i++) {
@@ -724,11 +754,12 @@ io.on('connection', function (socket) {
 				if (active_sessions[session_cookie].ip_address != socket.handshake.address)
 					reasons += "Your IP address does not match. ";
 				if (active_sessions[session_cookie].connected)
-					reason += "You are already connected to the server. "
+					reasons += "You are already connected to the server or your save file is still being updated. ";
 				if (hasExpired(active_sessions[session_cookie])) 
-					reason += "Your session has expired. (Try refreshing the page.)"
+					reasons += "Your session has expired. (Try refreshing the page.)";
 			}
 		}
+		writeToServerLog("client: " + socket.handshake.address + " | Socket.io connection rejected due to: " + reasons);
 		socket.emit('server-error', "Authentication failure: disconnected from server. \r\n\r\n Reason(s): " + reasons);
 		socket.disconnect();
 		return;
@@ -736,25 +767,32 @@ io.on('connection', function (socket) {
 	
 	/* Mark the session as disconnected and set an expiration timer when a user disconnects. */
 	socket.on('disconnect', function () {
-		active_sessions[session_cookie].connected = false;
+	
 		// The user has five minutes to return before their session expires and they will have to login again.
-		active_sessions[session_cookie].expires = Date.now() + 300000;
-		console.log(username + " | Disconnected.");
+		function endSession () {
+			active_sessions[session_cookie].connected = false;
+			active_sessions[session_cookie].expires = Date.now() + 300000;
+			writeToServerLog(username + " | Disconnected.");
+		}
 		
 		// If the game object is defined, save it.
 		if (typeof game !== 'undefined') {
 			fs.writeFile(save_file, JSON.stringify(game), function (err) {
 				if (err) {
-					console.log("An error occurred trying to write a save file: " + save_file + ". Game state was " + JSON.stringify(game));
-					console.log(err.stack);
+					writeToServerLog(username + " | An error occurred trying to write a save file: " + save_file + ". Game state was " + JSON.stringify(game));
+					throw err;
 				} else {
-					console.log(username + " | Save file written.");
+					writeToServerLog(username + " | Save file written.");
 				}
+				endSession();
 			});
+		} else {
+			writeToServerLog(username + " | Game was undefined, no save written.");
+			endSession();
 		}
 	});
 	
-	console.log(username + " | Connected.");
+	writeToServerLog(username + " | Connected.");
 
 	/* Each user has a game state object, which is stored in a JSON file while they are not playing.
 	 * This object must contain sufficient information to send the commands to present them with the
@@ -800,20 +838,22 @@ io.on('connection', function (socket) {
 				sendClientInitCommands();
 			} else {
 				// Some other error; not good.
-				console.log("An error occurred while reading a save file: " + save_file);
-				console.log(err.stack);
+				socket.emit('server-error', "Unexpected error attempting to load save file. You have been disconnected.");
+				socket.disconnect();
 				
-				socket.emit('server-error', "Unexpected error attempting to load save file.");
+				throw err;
 			}
 		} else {
 			game = JSON.parse(buf.toString());
-			console.log(username + " | Save file read.");
+			writeToServerLog(username + " | Save file read.");
 			sendClientInitCommands();
 		}
 	});
 	
 	/* Creates a fresh game object, for a player who has never played before. */
 	function makeNewGame () {
+		writeToServerLog(username + " | New game created.");
+	
 		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneNotYetActivatedScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false};
 		game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100, 0)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 		game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
@@ -1090,7 +1130,7 @@ io.on('connection', function (socket) {
 		var commands = [];
 		if (typeof game.active_browser !== 'undefined') {
 			clearDisplayObject(game.browsers[game.active_browser].screen, commands);
-			console.log(username + " | Warning: displayBrowser( " + name + ") was called when there was already an active browser, which was " + game.active_browser);
+			writeToServerLog(username + " | Warning: displayBrowser( " + name + ") was called when there was already an active browser, which was " + game.active_browser);
 		}
 
 		if (typeof game.active_dialog !== 'undefined') {
@@ -1147,7 +1187,7 @@ io.on('connection', function (socket) {
 			}
 		}
 
-		if (browser.screen.extras.length != 1) console.log(username + " | Warning: browser object invariants violated: not exactly one extra screen!");
+		if (browser.screen.extras.length != 1) writeToServerLog(username + " | Warning: browser object invariants violated: not exactly one extra screen!");
 
 		// Clear past web page.
 		removeElementFromScreen(browser.screen, browser.screen.extras[0]);
@@ -1185,7 +1225,7 @@ io.on('connection', function (socket) {
 
 	function displayFileSystem (name) {
 		var commands = [];
-		if (typeof game.active_filesystem !== 'undefined') console.log(username + " | Warning: displayFileSystem(" + name + ") was called when there was an active filesystem, " + game.active_filesystem);
+		if (typeof game.active_filesystem !== 'undefined') writeToServerLog(username + " | Warning: displayFileSystem(" + name + ") was called when there was an active filesystem, " + game.active_filesystem);
 
 		if (typeof game.active_dialog !== 'undefined') {
 			game.active_dialog.replace_phone = false;
@@ -1515,7 +1555,7 @@ io.on('connection', function (socket) {
 				removeCount++;
 			}
 		}
-		if (removeCount != 1) console.log(username + " | Warning, removeElementFromScreen removed " + removeCount + " elements. Arguments: screen = " + screen + " element = " + element);
+		if (removeCount != 1) writeToServerLog(username + " | Warning, removeElementFromScreen removed " + removeCount + " elements. Arguments: screen = " + screen + " element = " + element);
 		socket.emit('command', commands);
 	}
 
@@ -1551,7 +1591,7 @@ io.on('connection', function (socket) {
 			}
 		}
 
-		if (removeCount != 1) console.log(username + " | Warning, call to removeButtonFromScreen removed " + removeCount + " buttons. Arguments were screen = " + screen + "button = " + button);
+		if (removeCount != 1) writeToServerLog(username + " | Warning, call to removeButtonFromScreen removed " + removeCount + " buttons. Arguments were screen = " + screen + "button = " + button);
 		socket.emit('command', commands);
 	}
 
@@ -1583,7 +1623,7 @@ io.on('connection', function (socket) {
 			}
 		}
 
-		if (removeCount != 1) console.log(username + " | Warning, call to removeTextInputFieldFromScreen removed " + removeCount + " fields. Arguments were screen = " + screen + "field = " + field);
+		if (removeCount != 1) writeToServerLog(username + " | Warning, call to removeTextInputFieldFromScreen removed " + removeCount + " fields. Arguments were screen = " + screen + "field = " + field);
 		socket.emit('command', commands);
 	}
 
@@ -1634,7 +1674,7 @@ io.on('connection', function (socket) {
 	socket.on('click', function (button) {
 		// Verify that the clicked button is actually on the screen.
 		if (typeof button === 'undefined') {
-			console.log (username + " | Received invalid click event -- no button argument");
+			writeToServerLog(username + " | Received invalid click event -- no button argument");
 			return;
 		} else {
 			var valid = false;
@@ -1664,7 +1704,7 @@ io.on('connection', function (socket) {
 			}
 
 			if (!valid) {
-				console.log(username + " | Received invalid click event -- the button \"" + button + "\" could not be found.");
+				writeToServerLog(username + " | Received invalid click event -- the button \"" + button + "\" could not be found.");
 				return;
 			}
 		}		
@@ -1794,7 +1834,7 @@ io.on('connection', function (socket) {
 			resizeCanvas(1152, 648);
 			changeMainScreen("mall_scene");
 		} else {
-			console.log(username + " | Received unhandled click event: " + button);
+			writeToServerLog(username + " | Received unhandled click event: " + button);
 		}
 	});
 
@@ -1807,7 +1847,7 @@ io.on('connection', function (socket) {
 					game.browsers[game.active_browser].screen.textFields[i].text = value;
 			}
 		} else {
-			console.log(username + " | Received unhandled text-field-edit event with name, value = " + name + ", " + value);
+			writeToServerLog(username + " | Received unhandled text-field-edit event with name, value = " + name + ", " + value);
 		}
 	});
 
@@ -1816,7 +1856,7 @@ io.on('connection', function (socket) {
 			// got to change browser
 			changeBrowserWebPage(game.browsers[game.active_browser], value);
 		} else {
-			console.log(username + " | Received unhandled text-field-enter event with name, value = " + name + ", " + value);
+			writeToServerLog(username + " | Received unhandled text-field-enter event with name, value = " + name + ", " + value);
 		}
 	});
 	
@@ -1824,7 +1864,7 @@ io.on('connection', function (socket) {
 		if (introduction_on_gif_ended(name, showDialog, changeMainScreen)) {
 			return;
 		} else {
-			console.log(username + " | Received unhandled animated-GIF-ended event with name = " + name);
+			writeToServerLog(username + " | Received unhandled animated-GIF-ended event with name = " + name);
 		}
 	});
 	
