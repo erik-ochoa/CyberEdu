@@ -24,7 +24,7 @@ var background_loading_supported = background_loading_supported();
  */
 if (!background_loading_supported) {
 	console.log("Background GIF Parsing unsupported. Loading animations on the main thread. Expect a long load time.");
-	//animatedGIFs["animation/dorm_room/transition"] = load_gif_from_url(SERVER_HOSTNAME + "/images/transition_to_cyberworld.gif");
+	animatedGIFs["animation/dorm_room/transition"] = load_gif_from_url(SERVER_HOSTNAME + "/images/transition_to_cyberworld.gif");
 } else {
 	var loadTransitionToCyberworld = new Worker('gifParser.js');
 	
