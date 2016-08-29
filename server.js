@@ -480,6 +480,36 @@ var Screen = function (x, y, layer, base_element, buttons, textInputFields, extr
 	this.extras = extra_elements;
 };
 
+/* An extension of a regular screen, which is intended to mimic mobile App stores and be used
+ * as the prompt when downloading apps. It has all the fields an ordinary screen has, and therefore 
+ * can be used anywhere that a screen may be. 
+ * Important note: the buttons are named app_purchase_screen_<app_name>_download and app_purchase_screen_<app_name>_cancel.
+ * The cancel button's event is automatically handled, and returns the user to the phone's home screen. */
+var AppPurchaseScreen = function (x, y, layer, app_icon_id, app_name, app_category, app_description) {
+	this.type = 'screen'
+	this.x = x;
+	this.y = y;
+	this.layer = layer;
+	this.base = new Rectangle ("app_purchase_screen_" + app_name + "_base", 0, 0, 173, 291, 0, 'rgba(255, 255, 255, 1)');
+	this.buttons = [new Button ("app_purchase_screen_" + app_name + "_download", 5, 80, 84, 96, 3, "  Download", "10px Times", "rgba(0, 0, 0, 1)"),
+					new Button ("app_purchase_screen_" + app_name + "_cancel", 89, 80, 168, 96, 3, "  Cancel", "10px Times", "rgba(0, 0, 0, 1)")
+	];
+	this.textFields = [];
+	this.extras = [new Image (app_icon_id, 10, 10, 1), 
+					new Text("app_purchase_screen_" + app_name + "_title", 70, 10, 173, 30, 2, app_name, "14px Arial", "rgba(0, 0, 0, 1)"), 
+					new Text("app_purchase_screen_" + app_name + "_category", 70, 30, 173, 50, 2, app_category, "12px Arial", "rgba(0, 0, 0, 1)"),
+					new Text("app_purchase_screen_" + app_name + "_description", 5, 100, 168, 293, 2, app_description, "10px Arial", "rgba(0, 0, 0, 1)"),
+					new Rectangle("app_purchase_screen_" + app_name + "_download_button_background", 5, 80, 84, 96, 2, 'rgba(0, 255, 128, 1)'),
+					new Rectangle("app_purchase_screen_" + app_name + "_cancel_button_background", 89, 80, 168, 96, 2, 'rgba(192, 192, 192, 1)')
+	];
+	/* Stored for possible future access. Although modifying these fields will not effect the screen itself, so
+	 * they are effectively read only. */
+	this.app_icon_id = app_icon_id;
+	this.app_name = app_name;
+	this.app_category = app_category;
+	this.app_description = app_description;
+}
+
 /* An internet browser in game. Each device can have its own object, to preserve common sense.
  * The usage of the browser object's screen field is such that it has one element in the extras list, a screen, @ (0, 70), the webpage*/
 var Browser = function () {
@@ -803,13 +833,13 @@ io.on('connection', function (socket) {
 		// If the game object is defined, save it.
 		if (typeof game !== 'undefined') {
 			fs.writeFile(save_file, JSON.stringify(game), function (err) {
+				endSession();
 				if (err) {
 					writeToServerLog(username + " | An error occurred trying to write a save file: " + save_file + ". Game state was " + JSON.stringify(game));
 					throw err;
 				} else {
 					writeToServerLog(username + " | Save file written.");
 				}
-				endSession();
 			});
 		} else {
 			writeToServerLog(username + " | Game was undefined, no save written.");
@@ -877,6 +907,7 @@ io.on('connection', function (socket) {
 	
 	/* Creates a fresh game object, for a player who has never played before. */
 	function makeNewGame () {
+		//game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneNotYetActivatedScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, toDoList:[], todolist_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false};
 		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneNotYetActivatedScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, toDoList:[], todolist_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false};
 		game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100, 0)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 		game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
@@ -1573,6 +1604,7 @@ io.on('connection', function (socket) {
 
 		game.screens[name].x = game.canvas.x - PHONE_SCREEN_X;
 		game.screens[name].y = game.canvas.y - PHONE_SCREEN_Y;
+		game.screens[name].layer = PHONE_SCREEN_LAYER;
 
 		if (game.phone.visible && game.phone.raised && game.phone.screen_on) {
 			clearDisplayObject(game.screens[game.phone.screen], commands);
@@ -1801,7 +1833,7 @@ io.on('connection', function (socket) {
 		if (game.scenes_loaded) {
 			if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, markAsComplete, game.coffee_shop_variables, game)) {
 				return;
-			} else if(mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, installPhoneApp, addButtonToScreen, changePhoneScreen, addToTodoList, markAsComplete, removeElementFromScreen, game, game.mall_scene_variables)) {
+			} else if(mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, installPhoneApp, addButtonToScreen, changePhoneScreen, addToTodoList, markAsComplete, removeElementFromScreen, showPhone, raisePhone, phoneScreenOn, game, game.mall_scene_variables)) {
 				return;
 			}
 			if (library_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFileSystem, existsInFileSystem, game.library_variables, game.screens["library_success"].extras[1])) {
@@ -1841,7 +1873,11 @@ io.on('connection', function (socket) {
 				return;
 			}
 		}
-
+		
+		if (button.match(/app_purchase_screen_.*_cancel/) != null) {
+			changePhoneScreen("phoneHomeScreen");
+			return;
+		}
 		if (typeof game.active_filesystem !== 'undefined') {
 			var current_folder = get_folder(game.filesystems[game.active_filesystem], game.filesystems[game.active_filesystem].currentDirectory);
 			for (var i = 0; i < current_folder.contents.length; i++) {
@@ -1921,14 +1957,13 @@ io.on('connection', function (socket) {
 		} else if (button == 'go_to_mall') {
 			resizeCanvas(1152, 648);
 			changeMainScreen("mall_scene");
-		} else if(button == 'phone-backto-locations') {
+		} else if (button == 'phone-backto-locations') {
 			changePhoneScreen("phoneTodoListAppScreen");
-		} 
-		else if(button == 'phone-todo-library') {
+		} else if (button == 'phone-todo-library') {
 			changePhoneScreen("phoneTodoLibrary");
-		} else if(button == 'phone-todo-coffee') {
+		} else if (button == 'phone-todo-coffee') {
 			changePhoneScreen("phoneTodoCoffeeShop");
-		} else if(button = 'phone-todo-mall') {
+		} else if (button == 'phone-todo-mall') {
 			changePhoneScreen("phoneTodoMall");
 		} else {
 			writeToServerLog(username + " | Received unhandled click event: " + button);

@@ -57,6 +57,14 @@ function load_mall(game) {
 	game.dialogs["iUmbrella_poster_content"] = new Dialog ("iUmbrella_poster_content", "iUmbrella", "Never be without an umbrella again! When it’s raining open the app and you’ll instantly have an umbrella to cover your head with! Download?", ["Yes.", "No."]);
 
 	game.dialogs["social_hub_employee_dialog"] = new Dialog ("social_hub_employee_dialog", social_employee, "Would you like to leave?", ["Yes.", "No, I'll shop a little more."]);
+	
+	game.screens["discover_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/discover_daily", "Discover Daily", "Social", "Find what music people around you are listening to! Get a list of the songs other Discover Daily users are listening to and even listen along to music with them! Seamlessly jump in jump out songs, tag your favorite parts, rate your favorites!");
+	game.screens["do_something_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/do_something", "Do Something!", "Social", "Find what’s happening near you based on your interests! Discover concerts, shows, movies, and other events near you for you.");
+	game.screens["2spooky_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/2spooky", "2spooky4me", "Social", "Change any picture into a spooky one with one of our hundreds and themes and filters. Including iconic horror characters, scenes and weapons. Try now for free a limited time!");
+	game.screens["final_countdown_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/final_countdown", "Final Countdown", "Productivity", "Never be late for any of your finals again! Find your university and courses and we will make reminders and a countdown timer for each of your finals! Create notifications and reminders as far as 1 month before you take your finals.");
+	game.screens["throw_me_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/throw_me", "Throw Me!", "Productivity", "This app measure the distance you just threw your phone using your phone’s built in accelerometer. Post your distance and compare it with the world.");
+	game.screens["iRead_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/iRead", "iRead", "Productivity", "Point and read! Read any text out loud using OCR technology so you will never have to read again!");
+	game.screens["iUmbrella_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/iUmbrella", "iUmbrella", "Navigation", "Never be without an umbrella again! When it’s raining open the app and you’ll instantly have an umbrella to cover your head with!");
 
 	game.mall_scene_variables = {
 		spoken_to_emma: false,
@@ -75,7 +83,7 @@ function resetMallVariables (vars) {
 
 }
 
-function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, installPhoneApp, addButtonToScreen, changePhoneScreen, addToTodoList, markAsComplete, removeElementFromScreen, game, vars) {
+function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, installPhoneApp, addButtonToScreen, changePhoneScreen, addToTodoList, markAsComplete, removeElementFromScreen, showPhone, raisePhone, phoneScreenOn, game, vars) {
 
 	var PHONE_X = 200;
 	var PHONE_Y_RAISED = 400;
@@ -85,6 +93,14 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 	var PHONE_SCREEN_X = PHONE_X - 13;
 	var PHONE_SCREEN_Y = PHONE_Y_RAISED - 56;
 	var PHONE_SCREEN_LAYER = PHONE_LAYER + 1;
+	
+	// Helper function which turns the user's phone on and switches to a screen.
+	function changeToAndShowPhoneScreen (screen_name) {
+		changePhoneScreen(screen_name);
+		showPhone();
+		raisePhone();
+		phoneScreenOn();
+	}
 
 	if (button == "mall_doors") { 
 		changeMainScreen("mall_inside");
@@ -149,40 +165,31 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		vars.spoken_to_April = true;
 		return true;
 	} else if (button == "discover_poster") {
-		showDialog("discover_poster_content");
+		changeToAndShowPhoneScreen("discover_download_screen");
 		return true;
 	} else if (button == "2spooky_poster") {
-		showDialog("2spooky_poster_content");
+		changeToAndShowPhoneScreen("2spooky_download_screen");
 		return true;
 	} else if (button == "do_something_poster") {
-		showDialog("do_something_poster_content");
+		changeToAndShowPhoneScreen("do_something_download_screen");
 		return true;
-	} else if (button == "dialog_discover_poster_content_No.") {
-		closeDialog();
-		return true;
-	} else if (button == "dialog_discover_poster_content_Yes.") {
-		closeDialog();
+	} else if (button == "app_purchase_screen_Discover Daily_download") {
 		game.screens["phoneDiscoverAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		installPhoneApp( new PhoneApp ("Discover Daily", new Image("image/phone/icon/discover_daily", 0, 0, 0), "phoneDiscoverAppScreen"));
 		addButtonToScreen(game.screens["phoneDiscoverAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Discover Daily", "24px Times", "rgba(255,255,255,1)"));
+		changeToAndShowPhoneScreen("phoneHomeScreen");
 		return true;
-	} else if (button == "dialog_do_something_poster_content_No.") {
-		closeDialog();
-		return true;
-	} else if (button == "dialog_do_something_poster_content_Yes.") {
-		closeDialog();
+	} else if (button == "app_purchase_screen_Do Something!_download") {
 		installPhoneApp( new PhoneApp ("Do Something", new Image("image/phone/icon/do_something", 0, 0, 0), "phoneDoSomethingAppScreen"));
 		game.screens["phoneDoSomethingAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneDoSomethingAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Do Something", "24px Times", "rgba(255,255,255,1)"));
+		changeToAndShowPhoneScreen("phoneHomeScreen");
 		return true;
-	} else if (button == "dialog_2spooky_poster_content_No.") {
-		closeDialog();
-		return true;
-	} else if (button == "dialog_2spooky_poster_content_Yes.") {
-		closeDialog();
-		installPhoneApp( new PhoneApp ("2Spooky4Me", new Image("image/phone/icon/2spooky", 0, 0, 0), "phone2Spooky4MeAppScreen"));
+	} else if (button == "app_purchase_screen_2spooky4me_download") {
+		installPhoneApp(new PhoneApp ("2Spooky4Me", new Image("image/phone/icon/2spooky", 0, 0, 0), "phone2Spooky4MeAppScreen"));
 		game.screens["phone2Spooky4MeAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phone2Spooky4MeAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit 2Spooky", "24px Times", "rgba(255,255,255,1)"));
+		changeToAndShowPhoneScreen("phoneHomeScreen");
 		return true;
 	} else if (button == "dialog_social_store_manager_dialog_1_Continue.") {
 		closeDialog();
@@ -196,55 +203,43 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0), "phoneEmailAppScreen"));
 		return true;
 	} else if (button == "countdown_poster") {
-		showDialog("final_countdown_poster_content");
+		changeToAndShowPhoneScreen("final_countdown_download_screen");
 		return true;
-	} else if (button == "dialog_final_countdown_poster_content_No.") {
-		closeDialog();
-		return true;
-	} else if (button == "dialog_final_countdown_poster_content_Yes.") {
-		closeDialog();
-		installPhoneApp( new PhoneApp ("Final Countdown", new Image("image/phone/icon/final_countdown", 0, 0, 0), "phoneFinalCountdownAppScreen"));
+	} else if (button == "app_purchase_screen_Final Countdown_download") {
+		installPhoneApp(new PhoneApp ("Final Countdown", new Image("image/phone/icon/final_countdown", 0, 0, 0), "phoneFinalCountdownAppScreen"));
 		game.screens["phoneFinalCountdownAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneFinalCountdownAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Final Countdown", "24px Times", "rgba(255,255,255,1)"));
+		changeToAndShowPhoneScreen("phoneHomeScreen");
 		return true;
 	} else if (button == "iread_stand") {
-		showDialog("iread_stand_content");
+		changeToAndShowPhoneScreen("iRead_download_screen");
 		return true;
-	} else if (button == "dialog_iread_stand_content_No.") {
-		closeDialog();
-		return true;
-	} else if (button == "dialog_iread_stand_content_Yes.") {
-		closeDialog();
+	} else if (button == "app_purchase_screen_iRead_download") {
 		installPhoneApp(new PhoneApp ("I-Read", new Image("image/phone/icon/iRead", 0, 0, 0), "phoneI-ReadAppScreen"));
 		game.screens["phoneI-ReadAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneI-ReadAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit I-Read", "24px Times", "rgba(255,255,255,1)"));
+		changeToAndShowPhoneScreen("phoneHomeScreen");
 		return true;
 	} else if (button == "throw_me_poster") {
-		showDialog("throw_me_poster_content");
+		changeToAndShowPhoneScreen("throw_me_download_screen");
 		return true;
-	} else if (button == "dialog_throw_me_poster_content_No.") {
-		closeDialog();
-		return true;
-	} else if (button == "dialog_throw_me_poster_content_Yes.") {
-		closeDialog();
+	} else if (button == "app_purchase_screen_Throw Me!_download") {
 		installPhoneApp(new PhoneApp ("Throw Me", new Image("image/phone/icon/throw_me", 0, 0, 0), "phoneThrowMeAppScreen"));
 		game.screens["phoneThrowMeAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneThrowMeAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Throw Me", "24px Times", "rgba(255,255,255,1)"));
+		changeToAndShowPhoneScreen("phoneHomeScreen");
 		return true;
 	} else if (button == "dialog_navigation_manager_dialog_1_Continue.") {
 		closeDialog();
 		return true;
 	} else if (button == "iumbrella_poster") {
-		showDialog("iUmbrella_poster_content");
+		changeToAndShowPhoneScreen("iUmbrella_download_screen");
 		return true;
-	} else if (button == "dialog_iUmbrella_poster_content_No.") {
-		closeDialog();
-		return true;
-	} else if (button == "dialog_iUmbrella_poster_content_Yes.") {
-		closeDialog();
+	} else if (button == "app_purchase_screen_iUmbrella_download") {
 		installPhoneApp(new PhoneApp ("iUmbrella", new Image("image/phone/icon/iUmbrella", 0, 0, 0), "phoneiUmbrellaAppScreen"));
 		game.screens["phoneiUmbrellaAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneiUmbrellaAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit I-Umbrella", "24px Times", "rgba(255,255,255,1)"));
+		changeToAndShowPhoneScreen("phoneHomeScreen");
 		return true;
 	} else if (button == "social_hub_employee") {
 		showDialog("social_hub_employee_dialog");

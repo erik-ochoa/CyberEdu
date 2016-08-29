@@ -318,10 +318,6 @@ socket.on('command', function (array) {
 				j++;
 			}
 			display.splice(j, 0, {type:'image', id: id, x:x1, y:y1, layer:layer, scale:scale, image:image});
-			console.log(CANVAS_ELEMENT);
-			console.log(g);
-			console.log(image);
-			console.log(redrawAll);
 			redrawAll();
 			
 		} else if (command_name == 'clearImage') {
