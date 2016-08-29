@@ -483,9 +483,10 @@ var Screen = function (x, y, layer, base_element, buttons, textInputFields, extr
 /* An extension of a regular screen, which is intended to mimic mobile App stores and be used
  * as the prompt when downloading apps. It has all the fields an ordinary screen has, and therefore 
  * can be used anywhere that a screen may be. 
+ * The app permissions argument should be a comma-separated string.
  * Important note: the buttons are named app_purchase_screen_<app_name>_download and app_purchase_screen_<app_name>_cancel.
  * The cancel button's event is automatically handled, and returns the user to the phone's home screen. */
-var AppPurchaseScreen = function (x, y, layer, app_icon_id, app_name, app_category, app_description) {
+var AppPurchaseScreen = function (x, y, layer, app_icon_id, app_name, app_category, app_permissions, app_description) {
 	this.type = 'screen'
 	this.x = x;
 	this.y = y;
@@ -498,7 +499,8 @@ var AppPurchaseScreen = function (x, y, layer, app_icon_id, app_name, app_catego
 	this.extras = [new Image (app_icon_id, 10, 10, 1), 
 					new Text("app_purchase_screen_" + app_name + "_title", 70, 10, 173, 30, 2, app_name, "14px Arial", "rgba(0, 0, 0, 1)"), 
 					new Text("app_purchase_screen_" + app_name + "_category", 70, 30, 173, 50, 2, app_category, "12px Arial", "rgba(0, 0, 0, 1)"),
-					new Text("app_purchase_screen_" + app_name + "_description", 5, 100, 168, 293, 2, app_description, "10px Arial", "rgba(0, 0, 0, 1)"),
+					new Text("app_purchase_screen_" + app_name + "_permissions", 5, 100, 168, 118, 2, "Permissions: " + app_permissions, "8px Arial", "rgba(0, 0, 0, 1)"),
+					new Text("app_purchase_screen_" + app_name + "_description", 5, 120, 168, 293, 2, app_description, "10px Arial", "rgba(0, 0, 0, 1)"),
 					new Rectangle("app_purchase_screen_" + app_name + "_download_button_background", 5, 80, 84, 96, 2, 'rgba(0, 255, 128, 1)'),
 					new Rectangle("app_purchase_screen_" + app_name + "_cancel_button_background", 89, 80, 168, 96, 2, 'rgba(192, 192, 192, 1)')
 	];
@@ -907,7 +909,6 @@ io.on('connection', function (socket) {
 	
 	/* Creates a fresh game object, for a player who has never played before. */
 	function makeNewGame () {
-		//game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneNotYetActivatedScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, toDoList:[], todolist_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false};
 		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneNotYetActivatedScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, toDoList:[], todolist_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false};
 		game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100, 0)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 		game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
@@ -1615,13 +1616,43 @@ io.on('connection', function (socket) {
 		socket.emit('command', commands);
 	}
 
-	function installPhoneApp (app) {
+	/* Installs the given app onto the phone. The purchase_screen_name argument is 
+	 * optional. If provided, this function will modify the purchase screen to 
+	 * indicate that the user has the app already installed. */
+	function installPhoneApp (app, purchase_screen_name) {
 		var app_no = game.phone_apps.length;
 		var x = 58*(app_no % 3);
 		var y = 58*Math.floor(app_no / 3);
 
 		addElementToScreen(game.screens["phoneHomeScreen"], new Screen (x, y, 1, app.icon, [new Button (app.name + "_start_button", 0, 0, 56, 56, 0)], [], [])); // An event to handle this button clicked is handled already.
 		game.phone_apps.push(app);
+		
+		if (typeof purchase_screen_name !== 'undefined') {
+			var screen = game.screens[purchase_screen_name];
+			
+			// Remove download button.
+			for (var i = 0; i < screen.buttons.length; i++) {
+				if (screen.buttons[i].name.match(/app_purchase_screen_.*_download/) != null) {
+					removeButtonFromScreen(screen, screen.buttons[i]);
+					i--;
+				}
+			}
+			
+			// Replace download button with text indicating its already installed.
+			addElementToScreen(screen, new Text ("app_purchase_screen_" + app.name + "_already_installed", 5, 80, 84, 96, 3, "Installed", "10px Times", "rgba(64, 64, 64, 1)"));
+			
+			// Change cancel button's text to back.
+			for (var i = 0; i < screen.buttons.length; i++) {
+				if (screen.buttons[i].name.match(/app_purchase_screen_.*_cancel/) != null) {
+					var cancel_button = screen.buttons[i];
+					// Note that the modification must be done in this manner to assure it is re-drawn if the screen happens to be up.
+					removeButtonFromScreen(screen, cancel_button);
+					cancel_button.text = "Back";
+					addButtonToScreen(screen, cancel_button);
+					break; // Must exit the loop to avoid encountering the button again
+				}
+			}
+		}
 	}
 
 	/* Changes the main screen to the screen with the specified name */

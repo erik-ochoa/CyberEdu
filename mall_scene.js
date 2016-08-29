@@ -45,7 +45,7 @@ function load_mall(game) {
 	game.dialogs["inside_female_dialog_4"] = new Dialog ("inside_female_dialog_4", inside_female, "Sure thing, I send you the download link via Bluetooth. The last thing this place needs is another lost person.", ["Continue."]);
 	game.dialogs["inside_female_dialog_5"] = new Dialog ("inside_female_dialog_5", game.player_name, "Thank you miss.", ["Continue."]);
 	game.dialogs["social_store_manager_dialog_1"] = new Dialog ("social_store_manager_dialog_1", social_employee, "Hello and welcome to the Social Hub, where we can find anything and everything that happening around you. Our current notable apps are: 2spooky4me, Daily Discover, and Do Something. If you have any questions feel free to ask me!", ["Continue."]);
-	game.dialogs["discover_poster_content"] = new Dialog ("discover_poster_content", "Discover Daily", "Find what music people around you are listening to! Get a list of the songs other Discover Daily users are listening to and even listen along to music with them! Seamlessly jump in jump out songs, tag your favorite parts, rate your favorites! Download?", ["Yes.", "No."]);
+	game.dialogs["discover_poster_content"] = new Dialog ("discover_poster_content", "Discover Daily", "Find what music people around you are listening to! Get a list of the songs other Discover Daily users are listening to and even listen along to music with them! Seamlessly jump in and out of songs, tag your favorite parts, rate your favorites! Download?", ["Yes.", "No."]);
 	game.dialogs["do_something_poster_content"] = new Dialog ("do_something_poster_content", "Do Something!", "Find what’s happening near you based on your interests! Discover concerts, shows, movies, and other events near you for you. Download?", ["Yes.", "No."]);
 	game.dialogs["2spooky_poster_content"] = new Dialog ("2spooky_poster_content", "2spooky4me Cam", "Change any picture into a spooky one with one of our hundreds and themes and filters. Including iconic horror characters, scenes and weapons. Try now for free a limited time! Download?", ["Yes.", "No."]);
 	game.dialogs["productivity_manager_dialog_1"] = new Dialog ("productivity_manager_dialog_1", productivity_employee, "Hi there and welcome to the productivity section of the mall, where you try to make you a better you. Our current most productive apps are: Final Countdown, Throw Me, and iRead. Today only we are giving all of our customers our top rated email application on the house! Please enjoy and rate the app. Feel free to ask me any question you may have!", ["Continue."]);
@@ -58,13 +58,13 @@ function load_mall(game) {
 
 	game.dialogs["social_hub_employee_dialog"] = new Dialog ("social_hub_employee_dialog", social_employee, "Would you like to leave?", ["Yes.", "No, I'll shop a little more."]);
 	
-	game.screens["discover_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/discover_daily", "Discover Daily", "Social", "Find what music people around you are listening to! Get a list of the songs other Discover Daily users are listening to and even listen along to music with them! Seamlessly jump in jump out songs, tag your favorite parts, rate your favorites!");
-	game.screens["do_something_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/do_something", "Do Something!", "Social", "Find what’s happening near you based on your interests! Discover concerts, shows, movies, and other events near you for you.");
-	game.screens["2spooky_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/2spooky", "2spooky4me", "Social", "Change any picture into a spooky one with one of our hundreds and themes and filters. Including iconic horror characters, scenes and weapons. Try now for free a limited time!");
-	game.screens["final_countdown_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/final_countdown", "Final Countdown", "Productivity", "Never be late for any of your finals again! Find your university and courses and we will make reminders and a countdown timer for each of your finals! Create notifications and reminders as far as 1 month before you take your finals.");
-	game.screens["throw_me_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/throw_me", "Throw Me!", "Productivity", "This app measure the distance you just threw your phone using your phone’s built in accelerometer. Post your distance and compare it with the world.");
-	game.screens["iRead_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/iRead", "iRead", "Productivity", "Point and read! Read any text out loud using OCR technology so you will never have to read again!");
-	game.screens["iUmbrella_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/iUmbrella", "iUmbrella", "Navigation", "Never be without an umbrella again! When it’s raining open the app and you’ll instantly have an umbrella to cover your head with!");
+	game.screens["discover_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/discover_daily", "Discover Daily", "Social", "Network, Bluetooth, Speakers", "Find what music people around you are listening to! Get a list of the songs other Discover Daily users are listening to and even listen along to music with them! Seamlessly jump in jump out songs, tag your favorite parts, rate your favorites!");
+	game.screens["do_something_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/do_something", "Do Something!", "Social", "Network, Maps, GPS", "Find what’s happening near you based on your interests! Discover concerts, shows, movies, and other events near you for you.");
+	game.screens["2spooky_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/2spooky", "2spooky4me", "Social", "Camera, Network", "Change any picture into a spooky one with one of our hundreds and themes and filters. Including iconic horror characters, scenes and weapons. Try now for free a limited time!");
+	game.screens["final_countdown_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/final_countdown", "Final Countdown", "Productivity", "Calendar", "Never be late for any of your finals again! Find your university and courses and we will make reminders and a countdown timer for each of your finals! Create notifications and reminders as far as 1 month before you take your finals.");
+	game.screens["throw_me_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/throw_me", "Throw Me!", "Productivity", "Network, GPS, Position Sensors", "This app measure the distance you just threw your phone using your phone’s built in accelerometer. Post your distance and compare it with the world.");
+	game.screens["iRead_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/iRead", "iRead", "Productivity", "Camera, Speakers, Network", "Point and read! Read any text out loud using OCR technology so you will never have to read again!");
+	game.screens["iUmbrella_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/iUmbrella", "iUmbrella", "Navigation", "Magic", "Never be without an umbrella again! When it’s raining open the app and you’ll instantly have an umbrella to cover your head with!");
 
 	game.mall_scene_variables = {
 		spoken_to_emma: false,
@@ -175,18 +175,18 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "app_purchase_screen_Discover Daily_download") {
 		game.screens["phoneDiscoverAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-		installPhoneApp( new PhoneApp ("Discover Daily", new Image("image/phone/icon/discover_daily", 0, 0, 0), "phoneDiscoverAppScreen"));
+		installPhoneApp( new PhoneApp ("Discover Daily", new Image("image/phone/icon/discover_daily", 0, 0, 0), "phoneDiscoverAppScreen"), "discover_download_screen");
 		addButtonToScreen(game.screens["phoneDiscoverAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Discover Daily", "24px Times", "rgba(255,255,255,1)"));
 		changeToAndShowPhoneScreen("phoneHomeScreen");
 		return true;
 	} else if (button == "app_purchase_screen_Do Something!_download") {
-		installPhoneApp( new PhoneApp ("Do Something", new Image("image/phone/icon/do_something", 0, 0, 0), "phoneDoSomethingAppScreen"));
+		installPhoneApp( new PhoneApp ("Do Something", new Image("image/phone/icon/do_something", 0, 0, 0), "phoneDoSomethingAppScreen"), "do_something_download_screen");
 		game.screens["phoneDoSomethingAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneDoSomethingAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Do Something", "24px Times", "rgba(255,255,255,1)"));
 		changeToAndShowPhoneScreen("phoneHomeScreen");
 		return true;
 	} else if (button == "app_purchase_screen_2spooky4me_download") {
-		installPhoneApp(new PhoneApp ("2Spooky4Me", new Image("image/phone/icon/2spooky", 0, 0, 0), "phone2Spooky4MeAppScreen"));
+		installPhoneApp(new PhoneApp ("2Spooky4Me", new Image("image/phone/icon/2spooky", 0, 0, 0), "phone2Spooky4MeAppScreen"), "2spooky_download_screen");
 		game.screens["phone2Spooky4MeAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phone2Spooky4MeAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit 2Spooky", "24px Times", "rgba(255,255,255,1)"));
 		changeToAndShowPhoneScreen("phoneHomeScreen");
@@ -206,7 +206,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		changeToAndShowPhoneScreen("final_countdown_download_screen");
 		return true;
 	} else if (button == "app_purchase_screen_Final Countdown_download") {
-		installPhoneApp(new PhoneApp ("Final Countdown", new Image("image/phone/icon/final_countdown", 0, 0, 0), "phoneFinalCountdownAppScreen"));
+		installPhoneApp(new PhoneApp ("Final Countdown", new Image("image/phone/icon/final_countdown", 0, 0, 0), "phoneFinalCountdownAppScreen"), "final_countdown_download_screen");
 		game.screens["phoneFinalCountdownAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneFinalCountdownAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Final Countdown", "24px Times", "rgba(255,255,255,1)"));
 		changeToAndShowPhoneScreen("phoneHomeScreen");
@@ -215,7 +215,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		changeToAndShowPhoneScreen("iRead_download_screen");
 		return true;
 	} else if (button == "app_purchase_screen_iRead_download") {
-		installPhoneApp(new PhoneApp ("I-Read", new Image("image/phone/icon/iRead", 0, 0, 0), "phoneI-ReadAppScreen"));
+		installPhoneApp(new PhoneApp ("I-Read", new Image("image/phone/icon/iRead", 0, 0, 0), "phoneI-ReadAppScreen"), "iRead_download_screen");
 		game.screens["phoneI-ReadAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneI-ReadAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit I-Read", "24px Times", "rgba(255,255,255,1)"));
 		changeToAndShowPhoneScreen("phoneHomeScreen");
@@ -224,7 +224,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		changeToAndShowPhoneScreen("throw_me_download_screen");
 		return true;
 	} else if (button == "app_purchase_screen_Throw Me!_download") {
-		installPhoneApp(new PhoneApp ("Throw Me", new Image("image/phone/icon/throw_me", 0, 0, 0), "phoneThrowMeAppScreen"));
+		installPhoneApp(new PhoneApp ("Throw Me", new Image("image/phone/icon/throw_me", 0, 0, 0), "phoneThrowMeAppScreen"), "throw_me_download_screen");
 		game.screens["phoneThrowMeAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneThrowMeAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Throw Me", "24px Times", "rgba(255,255,255,1)"));
 		changeToAndShowPhoneScreen("phoneHomeScreen");
@@ -236,7 +236,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		changeToAndShowPhoneScreen("iUmbrella_download_screen");
 		return true;
 	} else if (button == "app_purchase_screen_iUmbrella_download") {
-		installPhoneApp(new PhoneApp ("iUmbrella", new Image("image/phone/icon/iUmbrella", 0, 0, 0), "phoneiUmbrellaAppScreen"));
+		installPhoneApp(new PhoneApp ("iUmbrella", new Image("image/phone/icon/iUmbrella", 0, 0, 0), "phoneiUmbrellaAppScreen"), "iUmbrella_download_screen");
 		game.screens["phoneiUmbrellaAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneiUmbrellaAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit I-Umbrella", "24px Times", "rgba(255,255,255,1)"));
 		changeToAndShowPhoneScreen("phoneHomeScreen");
