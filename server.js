@@ -927,7 +927,7 @@ io.on('connection', function (socket) {
 		// installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0), "phoneMapAppScreen"));
 		game.screens["phoneMapAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Map", "24px Times", "rgba(255,255,255,1)"));
-		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_player_office", 0, 30, 173, 60, 2, "Go to DIT HQ", "18px Times", "rgba(255,255,255,1)"));
+		//addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_player_office", 0, 30, 173, 60, 2, "Go to DIT HQ", "18px Times", "rgba(255,255,255,1)"));
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, 2, "Go to Coffee Shop", "18px Times", "rgba(255,255,255,1)"));
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,150, 173, 180, 2, "Go to Mall", "18px Times", "rgba(255,255,255,1)"));
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, 2, "Go to Library", "18px Times", "rgba(255,255,255,1)"));
@@ -1871,7 +1871,7 @@ io.on('connection', function (socket) {
 				return;
 			}
 
-			if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables, game.browsers["rout"], displayBrowser, closeBrowser, changeBrowserWebPage, game.screens["apartment_success"].extras[1])) {
+			if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables, game.browsers["rout"], displayBrowser, closeBrowser, changeBrowserWebPage, game.screens["apartment_success"].extras[0])) {
 				return;
 			}
 
@@ -2033,5 +2033,6 @@ io.on('connection', function (socket) {
 	
 	socket.on('hard-reset', function () {
 		makeNewGame();
+		sendClientInitCommands();
 	});
 });

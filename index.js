@@ -7,6 +7,7 @@ var CANVAS_X = CANVAS_ELEMENT.getBoundingClientRect().left;
 var CANVAS_Y = CANVAS_ELEMENT.getBoundingClientRect().top;
 
 var SETTINGS_PAGE = document.getElementById('settings');
+var SETTINGS_BUTTON = document.getElementById('open_settings_button');
 
 // Draw CyberEdu logo while the game is loading
 g.drawImage(document.getElementById("logo"), 45, 138);
@@ -844,9 +845,11 @@ function setMousePointer (posx, posy) {
 function displaySettingsPage () {
 	// Avoid swapping if a video is currently playing!
 	if (CANVAS_ELEMENT.width != 0) {
+		
 		CANVAS_ELEMENT.width = 0;
 		CANVAS_ELEMENT.height = 0;
 		SETTINGS_PAGE.style.display = 'block';
+		SETTINGS_BUTTON.style.display = 'none';
 		
 		// Ensure that the values displayed are correct.
 		music_volume_input_field.value = music_volume;
@@ -860,6 +863,7 @@ function exitSettingsPage () {
 	CANVAS_ELEMENT.height = MAX_Y;
 	CANVAS_X = CANVAS_ELEMENT.getBoundingClientRect().left;
 	CANVAS_Y = CANVAS_ELEMENT.getBoundingClientRect().top;
+	SETTINGS_BUTTON.style.display = 'block';
 	for (var j = 0; j < display.length; j++) {
 		drawDisplayElement(display[j]);
 	}
@@ -901,5 +905,8 @@ function setSpeechVolume (newVolume) {
 }
 
 function hardReset () {
+	display = [];
+	buttons = [];
+	textInputFields = [];
 	socket.emit('hard-reset');
 }

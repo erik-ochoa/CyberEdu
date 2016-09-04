@@ -290,7 +290,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		showDialog("coffee_shop_manager_dialog_5");	
 		markAsComplete("coffee_shop_task_speak_to_manager_2", "coffee-shop");
 		return true;
-	} else if (button == "dialog_coffee_shop_manager_dialog_4_Not yet.") {hop
+	} else if (button == "dialog_coffee_shop_manager_dialog_4_Not yet.") {
 		closeDialog();
 		return true;
 	} else if (button == "dialog_coffee_shop_manager_dialog_5_Okay.") {

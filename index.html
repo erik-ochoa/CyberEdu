@@ -25,6 +25,8 @@
 	<body onload="redrawAll()">
 		<!-- The primary canvas element, used to display the game graphics -->
 		<canvas id="view" width="1280" height="630" style="border:1px solid #000000; position:relative;" onclick="click_position(event)" onmousemove="rollover_position(event)"></canvas>
+		<input id="open_settings_button" type="button" value="Settings" onclick="displaySettingsPage()"></input>
+		<p><a href="/leaderboard.html" target="leaderboard">Leaderboard</a></p>
 		<p id="text"> </p>
 		
 		<!-- Settings page -->
@@ -38,7 +40,7 @@
 			</tr> <tr>
 				<td colspan="2"> <input type="button" value="Return To Game" onclick="exitSettingsPage()"/> </td>
 			</tr> <tr>
-				<td colspan="2"> <input type="button" value="Reset Save File (You Must Disconnect before leaving this screen for it properly take effect.)" onclick="hardReset()" /> </td>
+				<td colspan="2"> <input type="button" value="Reset Save File" onclick="hardReset()" /> </td>
 			</tr>
 		</table>
 		

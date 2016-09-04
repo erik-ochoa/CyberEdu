@@ -564,6 +564,7 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		vars.accusedJacob = true;
 		closeDialog();
 		showDialog("madeline_dialog_10");
+		return true;
 	} else if (button == "dialog_madeline_dialog_9_Jacob.") {
 		vars.firstTry = false;
 		vars.accusedJacob = true;
@@ -602,22 +603,12 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 	} else if (button == "dialog_madeline_dialog_15_Okay.") {
 		closeDialog();
 		resizeCanvas(1153, 648.5);
-		changeMainScreen("apartment_success");
-		var score = (vars.firstTry ? 10 : 0) + (vars.helpBilly ? -5 : 0) + (vars.ratBilly ? 5 : 0) + (vars.matchedPassword ? 10 : 0);
-		vars.score = score;
-		vars.score = 50;
 		
-		// Jonathan Hansford put this code here to show the video. Be careful when making future modifications not to show it twice.
-		if (!vars.wifi_config_video_played) {
-			playVideo("video/wifiConfig");
-			vars.wifi_config_video_played = true;
-		}
-		
-		//if (score != vars.score)
-		//  vars.score = score;
-		//score_text_element.text = "You Scored " + vars.score + " Points (out of 30)!";
-
-		//finishApartment(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo);
+		finishApartment(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo);
+		return true;
+	} else if (button == "apartment_failed_quit") {
+		changeMainScreen("testMainScreen");
+		resizeCanvas(1000, 600);
 		return true;
 	}
 
@@ -627,7 +618,8 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 }
 
 function finishApartment (vars, score_text_element, resizeCanvas, changeMainScreen, playVideo) {
-	var score = (vars.firstTry ? 10 : 0) + (vars.helpBilly ? 5 : 0) + (vars.ratBilly ? 5 : 0) + (vars.matchedPassword ? 10 : 0);
+	// var score = (vars.firstTry ? 10 : 0) + (vars.helpBilly ? 5 : 0) + (vars.ratBilly ? 5 : 0) + (vars.matchedPassword ? 10 : 0) + 5 /* 5 baseline; prevents scoring negative points and brings total to 30. */;
+	var score = 50;
 	if (score > vars.score)
 	  vars.score = score;
 	score_text_element.text = "You Scored " + vars.score + " Points (out of 30)!";
