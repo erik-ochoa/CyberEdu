@@ -38,7 +38,7 @@ function load_coffee_shop (game, addElementToScreen, removeElementFromScreen) {
 	var customer_3_name = "Top Hat";
 	var customer_4_name = "Red Shirt";
 	var customer_5_name = "Pink Shirt";
-	var culprit_1_name = "Gray Hair";
+	var culprit_1_name = "White Shirt";
 	var culprit_2_name = "Black Suit";
 	var culprit_3_name = "Plaid shirt";
 	
@@ -57,7 +57,7 @@ function load_coffee_shop (game, addElementToScreen, removeElementFromScreen) {
 	var ERROR_STRING = "If you see this message, Jonathan Hansford wrote code that didn't work and should be ashamed of it.";
 	
 	game.dialogs["coffee_shop_manager_dialog"] = new Dialog ("coffee_shop_manager_dialog", game.player_name, "Hello ma'am. We're the detectives you called for. Do you have any leads?", ["Continue."]);
-	game.dialogs["coffee_shop_manager_dialog_2"] = new Dialog ("coffee_shop_manager_dialog_2", manager_name, "The guy in the top hat, the woman in the red shirt, and the woman in a gray shirt reading the newspaper all told me that they got robbed sometime after they left here.", ["Continue."], manager_voice);
+	game.dialogs["coffee_shop_manager_dialog_2"] = new Dialog ("coffee_shop_manager_dialog_2", manager_name, "The guy in the top hat, the woman in the red shirt, and the woman in a gray shirt reading the newspaper all told me that they had financial information stolen from them sometime after they left here.", ["Continue."], manager_voice);
 	game.dialogs["coffee_shop_manager_dialog_3"] = new Dialog ("coffee_shop_manager_dialog_3", game.partner_name, "Let's go talk to the victims, " + game.player_name, ["Okay."]);
 	game.dialogs["coffee_shop_manager_dialog_4"] = new Dialog ("coffee_shop_manager_dialog_4", manager_name, "Do you know who did it?", ["Yes.", "Not yet."], manager_voice);
 	game.dialogs["coffee_shop_manager_dialog_5"] = new Dialog ("coffee_shop_manager_dialog_5", "", "Click on the person responsible for these crimes!", ["Okay."]);
@@ -86,7 +86,7 @@ function load_coffee_shop (game, addElementToScreen, removeElementFromScreen) {
 	game.dialogs["coffee_shop_customer_5_dialog_2"] = new Dialog ("coffee_shop_customer_5_dialog_2", customer_5_name, "No. I don't usually come here. I didn't realize there was criminal activity going on here. Maybe I should leave.", ["Okay."], customer_5_voice);
 
 	game.dialogs["coffee_shop_culprit_1_dialog"] = new Dialog ("coffee_shop_culprit_1_dialog", game.player_name, "Hello, I'm investigating robberies that have been occurring here recently. Have you heard anything about them?", ["Continue."]);
-	game.dialogs["coffee_shop_culprit_1_dialog_2"] = new Dialog ("coffee_shop_culprit_1_dialog_2", culprit_1_name, "No, I've never been robbed here. I'm not using the internet. I've come here for inspiration to attempt to start writing a book.", ["Okay."], culprit_1_voice);
+	game.dialogs["coffee_shop_culprit_1_dialog_2"] = new Dialog ("coffee_shop_culprit_1_dialog_2", culprit_1_name, "No, I've never been robbed here. I'm not using the Wi-Fi. I've come here for inspiration to attempt to start writing a book.", ["Okay."], culprit_1_voice);
 	
 	game.dialogs["coffee_shop_culprit_2_dialog"] = new Dialog ("coffee_shop_culprit_2_dialog", game.player_name, "I'm investigating the robberies here. Do you have any information about them?", ["Continue."]);
 	game.dialogs["coffee_shop_culprit_2_dialog_2"] = new Dialog ("coffee_shop_culprit_2_dialog_2", culprit_2_name, "No. I'm just looking at cat pictures on the internet. Isn't this the cutest cat you ever saw?", ["Yes.", "No.", "Maybe."], culprit_2_voice);
@@ -551,8 +551,8 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		enterCoffeeShop(resizeCanvas, changeMainScreen, showDialog, addToTodoList, vars);
 		return true; // This may need to be modified in the future.
 	} else if (button == "coffee_shop_failed_quit") {
-		changeMainScreen("testMainScreen"); // This will definitely need to be modified
-		resizeCanvas(1000, 600);
+		changeMainScreen("player_office");
+		resizeCanvas(1308, 837);
 		return true;
 	} else
 		return false;

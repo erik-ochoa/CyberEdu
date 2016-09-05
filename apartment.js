@@ -607,8 +607,8 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		finishApartment(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo);
 		return true;
 	} else if (button == "apartment_failed_quit") {
-		changeMainScreen("testMainScreen");
-		resizeCanvas(1000, 600);
+		changeMainScreen("player_office");
+		resizeCanvas(1308, 837);
 		return true;
 	}
 

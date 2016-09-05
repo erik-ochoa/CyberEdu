@@ -118,7 +118,13 @@ function drawDisplayElement (element) {
 		// The active text field has a cursor
 		if (activeTextInputField != null && element.type == 'button_text' && activeTextInputField.name == element.button_name) {
 			drawText(element.text + '|', element.x, element.y, element.x2, element.y2);
+		} else if (element.type == 'button_text' && (typeof element.help_text !== 'undefined' && element.help_text != null) && element.text == '' && (activeTextInputField == null || activeTextInputField.name != element.button_name)) {
+			// Draws help text on an empty text field that has help text and is not selected.
+			console.log("Calling drawText on element " + element.button_name);
+			console.log(JSON.stringify(element));
+			drawText(element.help_text, element.x, element.y, element.x2, element.y2);
 		} else {
+			console.log("Calling drawText on element ");
 			drawText(element.text, element.x, element.y, element.x2, element.y2);		
 		}
 	} else if (element.type == 'rectangle') {
@@ -528,6 +534,7 @@ socket.on('command', function (array) {
 			var text = array[i][7];
 			var font = array[i][8];
 			var font_color = array[i][9];
+			var help_text = array[i][10];
 
 			// Add to the text input fields list.
 			textInputFields.push({name:name, x1:x1, y1:y1, x2:x2, y2:y2, layer:layer});
@@ -536,7 +543,7 @@ socket.on('command', function (array) {
 			while (j < display.length && display[j].layer <= layer) {
 				j++;
 			}
-			display.splice(j, 0, {type:'button_text', x:x1, y:y1, x2:x2, y2:y2, layer:layer, text:text, font:font, font_color:font_color, button_name:name});
+			display.splice(j, 0, {type:'button_text', x:x1, y:y1, x2:x2, y2:y2, layer:layer, text:text, help_text:help_text, font:font, font_color:font_color, button_name:name});
 			
 			redrawAll();
 		} else if (command_name == 'deleteTextInputField') {

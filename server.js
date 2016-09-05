@@ -19,6 +19,7 @@ eval(fs.readFileSync(__dirname + '/mall_scene.js').toString());
 eval(fs.readFileSync(__dirname + '/library.js').toString());
 eval(fs.readFileSync(__dirname + '/apartment.js').toString());
 eval(fs.readFileSync(__dirname + '/introduction.js').toString());
+eval(fs.readFileSync(__dirname + '/police_station.js').toString());
 
 // Prevent entire server from crashing in the event a single user causes an error.
 process.on('uncaughtException', function (err) {
@@ -397,11 +398,12 @@ writeToServerLog("system | CyberEDU server firing up on port " + SERVER_PORT);
 
 /* An invisible, rectangular button. Optionally may have associated text.
  * The first five arguments (name through y2) are required.
- * The last four (text through layer) are optional, but if text is provided, all must be provided.
+ * The three (text through font_color) are optional, but if text is provided, all must be provided.
+ * The last (help_text) has meaning only for text field objects. It defines the text to show if the input field is blank and not selected.
  *
  * This constructor is also used to build text input fields. In that case, all input arguments are required.
  */
-var Button = function (name, x1, y1, x2, y2, layer, text, font, font_color) {
+var Button = function (name, x1, y1, x2, y2, layer, text, font, font_color, help_text) {
 	if (typeof text !== 'undefined' && (typeof font === 'undefined' || typeof font_color === 'undefined'))
 		writeToServerLog("Illegal call to Button constructor; text provided, but not all optional arguments were provided!");
 
@@ -414,6 +416,7 @@ var Button = function (name, x1, y1, x2, y2, layer, text, font, font_color) {
 	this.text = text;
 	this.font = font;
 	this.font_color = font_color;
+	this.help_text = help_text;
 
 };
 
@@ -486,21 +489,23 @@ var Screen = function (x, y, layer, base_element, buttons, textInputFields, extr
  * The app permissions argument should be a comma-separated string.
  * Important note: the buttons are named app_purchase_screen_<app_name>_download and app_purchase_screen_<app_name>_cancel.
  * The cancel button's event is automatically handled, and returns the user to the phone's home screen. */
-var AppPurchaseScreen = function (x, y, layer, app_icon_id, app_name, app_category, app_permissions, app_description) {
+var AppPurchaseScreen = function (x, y, layer, app_icon_id, app_name, app_category, app_developer, download_count, app_permissions, app_description) {
 	this.type = 'screen'
 	this.x = x;
 	this.y = y;
 	this.layer = layer;
 	this.base = new Rectangle ("app_purchase_screen_" + app_name + "_base", 0, 0, 173, 291, 0, 'rgba(255, 255, 255, 1)');
-	this.buttons = [new Button ("app_purchase_screen_" + app_name + "_download", 5, 80, 84, 96, 3, "  Download", "10px Times", "rgba(0, 0, 0, 1)"),
-					new Button ("app_purchase_screen_" + app_name + "_cancel", 89, 80, 168, 96, 3, "  Cancel", "10px Times", "rgba(0, 0, 0, 1)")
+	this.buttons = [new Button ("app_purchase_screen_" + app_name + "_download", 5, 80, 84, 96, 3, "  Download", "11px Times", "rgba(0, 0, 0, 1)"),
+					new Button ("app_purchase_screen_" + app_name + "_cancel", 89, 80, 168, 96, 3, "  Cancel", "11px Times", "rgba(0, 0, 0, 1)")
 	];
 	this.textFields = [];
 	this.extras = [new Image (app_icon_id, 10, 10, 1), 
 					new Text("app_purchase_screen_" + app_name + "_title", 70, 10, 173, 30, 2, app_name, "14px Arial", "rgba(0, 0, 0, 1)"), 
-					new Text("app_purchase_screen_" + app_name + "_category", 70, 30, 173, 50, 2, app_category, "12px Arial", "rgba(0, 0, 0, 1)"),
-					new Text("app_purchase_screen_" + app_name + "_permissions", 5, 100, 168, 118, 2, "Permissions: " + app_permissions, "8px Arial", "rgba(0, 0, 0, 1)"),
-					new Text("app_purchase_screen_" + app_name + "_description", 5, 120, 168, 293, 2, app_description, "10px Arial", "rgba(0, 0, 0, 1)"),
+					new Text("app_purchase_screen_" + app_name + "_category", 70, 30, 173, 45, 2, app_category, "12px Arial", "rgba(0, 0, 0, 1)"),
+					new Text("app_purchase_screen_" + app_name + "_developer", 70, 45, 173, 60, 2, "By " + app_developer, "12px Arial", "rgba(0, 0, 0, 1)"),
+					new Text("app_purchase_screen_" + app_name + "_downloads", 70, 60, 173, 75, 2, "Downloads: " + download_count.toString(), "11px Times", "rgba(0, 0, 0, 1)"),
+					new Text("app_purchase_screen_" + app_name + "_permissions", 5, 105, 168, 123, 2, "Permissions: " + app_permissions, "11px Arial", "rgba(0, 0, 0, 1)"),
+					new Text("app_purchase_screen_" + app_name + "_description", 5, 125, 168, 293, 2, app_description, "12px Arial", "rgba(0, 0, 0, 1)"),
 					new Rectangle("app_purchase_screen_" + app_name + "_download_button_background", 5, 80, 84, 96, 2, 'rgba(0, 255, 128, 1)'),
 					new Rectangle("app_purchase_screen_" + app_name + "_cancel_button_background", 89, 80, 168, 96, 2, 'rgba(192, 192, 192, 1)')
 	];
@@ -639,7 +644,7 @@ function drawDisplayObject (element, commands) {
 		}
 
 		for (var i = 0; i < element.textFields.length; i++) {
-			commands.push(["addTextInputField", element.textFields[i].name, element.textFields[i].x1 + element.x, element.textFields[i].y1 + element.y, element.textFields[i].x2 + element.x, element.textFields[i].y2 + element.y, element.layer + element.textFields[i].layer, element.textFields[i].text, element.textFields[i].font, element.textFields[i].font_color]);
+			commands.push(["addTextInputField", element.textFields[i].name, element.textFields[i].x1 + element.x, element.textFields[i].y1 + element.y, element.textFields[i].x2 + element.x, element.textFields[i].y2 + element.y, element.layer + element.textFields[i].layer, element.textFields[i].text, element.textFields[i].font, element.textFields[i].font_color, element.textFields[i].help_text]);
 		}
 
 		for (var i = 0; i < element.extras.length; i++) {
@@ -913,7 +918,6 @@ io.on('connection', function (socket) {
 		game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100, 0)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 		game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 		game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-		game.screens["player_office"] = new Screen(0, 0, 0, new Image("image/police_station/player_office", 0, 0, 0), [], [] ,[]);
 
 		// Note that all phone applications should have an exit button; however, may be placed anywhere on the screen, not necessarily at (0,0).
 		// installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0), "phoneEmailAppScreen"));
@@ -927,7 +931,7 @@ io.on('connection', function (socket) {
 		// installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0), "phoneMapAppScreen"));
 		game.screens["phoneMapAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Map", "24px Times", "rgba(255,255,255,1)"));
-		//addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_player_office", 0, 30, 173, 60, 2, "Go to DIT HQ", "18px Times", "rgba(255,255,255,1)"));
+		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_office_lobby", 0, 30, 173, 60, 2, "Go to DIT HQ", "18px Times", "rgba(255,255,255,1)"));
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, 2, "Go to Coffee Shop", "18px Times", "rgba(255,255,255,1)"));
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,150, 173, 180, 2, "Go to Mall", "18px Times", "rgba(255,255,255,1)"));
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, 2, "Go to Library", "18px Times", "rgba(255,255,255,1)"));
@@ -1037,6 +1041,7 @@ io.on('connection', function (socket) {
 		load_library (game, addToFileSystem);
 		load_apartment (game);
 		load_introduction_part2(game);
+		load_police_station(game);
 		game.scenes_loaded = true;
 	}
 
@@ -1751,7 +1756,7 @@ io.on('connection', function (socket) {
 	function addTextInputFieldToScreen (screen, field) {
 		var commands = [];
 		if (screen["on_screen"]) {
-			commands.push(["addTextInputField", field.name, screen.x + field.x1, screen.y + field.y1, screen.x + field.x2, screen.y + field.y2, screen.layer + field.layer, field.text, field.font, field.font_color]);
+			commands.push(["addTextInputField", field.name, screen.x + field.x1, screen.y + field.y1, screen.x + field.x2, screen.y + field.y2, screen.layer + field.layer, field.text, field.font, field.font_color, field.help_text]);
 		}
 
 		screen.textFields.push(field);
@@ -1874,6 +1879,10 @@ io.on('connection', function (socket) {
 			if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables, game.browsers["rout"], displayBrowser, closeBrowser, changeBrowserWebPage, game.screens["apartment_success"].extras[0])) {
 				return;
 			}
+			
+			if (police_station_onclick(button, changeMainScreen)) {
+				return;
+			}
 
 		}
 
@@ -1974,9 +1983,9 @@ io.on('connection', function (socket) {
 			//Handled in library.js file.
 		} else if (button == 'go_to_apartment') {
 			//Handled in apartment.js file.
-		} else if (button == 'go_to_player_office') {
-			resizeCanvas(1308, 837);
-			changeMainScreen("player_office");
+		} else if (button == 'go_to_office_lobby') {
+			resizeCanvas(1152, 648);
+			changeMainScreen("office_lobby");
 		} else if (button == 'phone-exit-app') {
 			changePhoneScreen("phoneHomeScreen");
 		} else if (button == 'phone-email-scroll-up') {

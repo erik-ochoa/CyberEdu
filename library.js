@@ -403,7 +403,8 @@ function library_onclick (button, showDialog, closeDialog, changeMainScreen, res
 
 	return true;
   } else if (button == "library_quit") {
-	changeMainScreen("testMainScreen");
+	changeMainScreen("player_office");
+	resizeCanvas(1308, 837);
 	return true;
   }
 
