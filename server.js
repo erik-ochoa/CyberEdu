@@ -784,12 +784,12 @@ function get_current_screen (filesystem) {
 // mailbox_index is the index of the specified message within the mailbox.
 function email_message_screen (message, mailbox_index, canvas) {
 	var screen = new Screen(canvas.x - PHONE_SCREEN_X, canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0),
-	[new Button("Email_start_button", 0, 0, 173, 30, 1, "Back", "24px Times", "rgba(255,255,255,1)"),
-		new Button("Email_delete_button_" + mailbox_index, 143, 31, 173, 60, 1, "X", "19px Times", "rgba(255,255,255,1)")
+	[new Button("Email_start_button", 0, 0, 173, 30, 1, "Back", "24px Times", "rgba(0,0,0,1)"),
+		new Button("Email_delete_button_" + mailbox_index, 143, 31, 173, 60, 1, "X", "19px Times", "rgba(0,0,0,1)")
 	], [],
-	[new Text ("message_screen_sender", 0, 30, 173, 45, 1, "From: " + message.sender, "12px Arial", "rgba(255,255,255,1)"),
-		new Text("message_screen_subject", 0, 45, 173, 60, 1, "Subject: " + message.subject, "12px Arial", "rgba(255,255,255,1)"),
-		new Text ("message_screen_body", 0, 60, 173, 291, 1, message.message, "11px Times", "rgba(255,255,255,1)")
+	[new Text ("message_screen_sender", 0, 30, 173, 45, 1, "From: " + message.sender, "12px Arial", "rgba(0,0,0,1)"),
+		new Text("message_screen_subject", 0, 45, 173, 60, 1, "Subject: " + message.subject, "12px Arial", "rgba(0,0,0,1)"),
+		new Text ("message_screen_body", 0, 60, 173, 291, 1, message.message, "11px Times", "rgba(0,0,0,1)")
 	]);
 
 	return screen;
@@ -922,33 +922,33 @@ io.on('connection', function (socket) {
 		// Note that all phone applications should have an exit button; however, may be placed anywhere on the screen, not necessarily at (0,0).
 		// installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0), "phoneEmailAppScreen"));
 		game.screens["phoneEmailAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-		addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Email", "24px Times", "rgba(255,255,255,1)"));
-		addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-up", 145, 115, 170, 140, 2, "/\\", "24px Times", "rgba(255,255,255,1)"));
-		addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-down", 145, 150, 170, 175, 2, "\\/", "24px Times", "rgba(255,255,255,1)"));
+		addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Email", "24px Times", "rgba(0,0,0,1)"));
+		addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-up", 145, 115, 170, 140, 2, "/\\", "24px Times", "rgba(0,0,0,1)"));
+		addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-down", 145, 150, 170, 175, 2, "\\/", "24px Times", "rgba(0,0,0,1)"));
 
 		// Phone Map application -- add new locations to the game through this.
 
 		// installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0), "phoneMapAppScreen"));
 		game.screens["phoneMapAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Map", "24px Times", "rgba(255,255,255,1)"));
-		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_office_lobby", 0, 30, 173, 60, 2, "Go to DIT HQ", "18px Times", "rgba(255,255,255,1)"));
-		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, 2, "Go to Coffee Shop", "18px Times", "rgba(255,255,255,1)"));
-		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,150, 173, 180, 2, "Go to Mall", "18px Times", "rgba(255,255,255,1)"));
-		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, 2, "Go to Library", "18px Times", "rgba(255,255,255,1)"));
-		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(255,255,255,1)"));
+		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Map", "24px Times", "rgba(0,0,0,1)"));
+		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_office_lobby", 0, 30, 173, 60, 2, "Go to DIT HQ", "18px Times", "rgba(0,0,0,1)"));
+		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, 2, "Go to Coffee Shop", "18px Times", "rgba(0,0,0,1)"));
+		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,150, 173, 180, 2, "Go to Mall", "18px Times", "rgba(0,0,0,1)"));
+		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, 2, "Go to Library", "18px Times", "rgba(0,0,0,1)"));
+		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(0,0,0,1)"));
 
 		game.screens["phoneTodoListAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-		installPhoneApp( new PhoneApp ("To-Do", new Text("ToDo_app_icon", 0, 0, 32, 32, 0, "To-Do", "10px Georgia", "rgba(255,255,255,1)"), "phoneTodoListAppScreen"));
-		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit To-Do List", "24px Times", "rgba(255,255,255,1)", 2));
-		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-mall", 0, 30, 173, 60, 2, "Mall", "24px Times", "rgba(255,255,255,1)", 2));
-		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-coffee", 0, 60, 173, 90, 2, "Coffee Shop", "24px Times", "rgba(255,255,255,1)", 2));
-		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-library", 0, 90, 173, 120, 2, "Library", "24px Times", "rgba(255,255,255,1)", 2));
+		installPhoneApp( new PhoneApp ("To-Do", new Text("ToDo_app_icon", 0, 0, 32, 32, 0, "To-Do", "10px Georgia", "rgba(0,0,0,1)"), "phoneTodoListAppScreen"));
+		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit To-Do List", "24px Times", "rgba(0,0,0,1)", 2));
+		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-mall", 0, 30, 173, 60, 2, "Mall", "24px Times", "rgba(0,0,0,1)", 2));
+		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-coffee", 0, 60, 173, 90, 2, "Coffee Shop", "24px Times", "rgba(0,0,0,1)", 2));
+		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-library", 0, 90, 173, 120, 2, "Library", "24px Times", "rgba(0,0,0,1)", 2));
 		game.screens["phoneTodoLibrary"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		game.screens["phoneTodoMall"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		game.screens["phoneTodoCoffeeShop"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-		addButtonToScreen(game.screens["phoneTodoLibrary"], new Button("phone-backto-locations", 0, 0, 173, 30, 2, "Back", "24px Times", "rgba(255,255,255,1)", 2));
-		addButtonToScreen(game.screens["phoneTodoMall"], new Button("phone-backto-locations", 0, 0, 173, 30, 2, "Back", "24px Times", "rgba(255,255,255,1)", 2));
-		addButtonToScreen(game.screens["phoneTodoCoffeeShop"], new Button("phone-backto-locations", 0, 0, 173, 30, 2, "Back", "24px Times", "rgba(255,255,255,1)", 2));
+		addButtonToScreen(game.screens["phoneTodoLibrary"], new Button("phone-backto-locations", 0, 0, 173, 30, 2, "Back", "24px Times", "rgba(0,0,0,1)", 2));
+		addButtonToScreen(game.screens["phoneTodoMall"], new Button("phone-backto-locations", 0, 0, 173, 30, 2, "Back", "24px Times", "rgba(0,0,0,1)", 2));
+		addButtonToScreen(game.screens["phoneTodoCoffeeShop"], new Button("phone-backto-locations", 0, 0, 173, 30, 2, "Back", "24px Times", "rgba(0,0,0,1)", 2));
 
 		game.browsers["testBrowser"] = new Browser();
 
@@ -1410,34 +1410,21 @@ io.on('connection', function (socket) {
 		}
 	}
 
-	/* Adds the specified message to the player's inbox */
-	function addToMailbox (message) {
-		var email_no = game.mailbox.length;
-		game.mailbox.push(message);
-		if (0 <= email_no - game.mailbox_displayed_index && email_no - game.mailbox_displayed_index < MAX_DISPLAYED_MAILBOX_ENTRIES) {
-			var x = 0;
-			var y = yPositionOfEmailNo(email_no);
-			var message_screen = createMessageScreen(email_no);
-			addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);
-		}
-
-	}
-
 	function addToTodoList (task) {
 		for(var ctr = 0; ctr < game.toDoList.length; ctr++) {
 			if(task.locationOfTask == game.toDoList[ctr].name) {
 				if(task.locationOfTask == 'library' && game.toDoList[ctr].tasks.length < MAX_TODO_LIST_TASKS) {
-					task.text = new Text (task.name, 0, game.toDoList[ctr].position, 173, 261,2, task.task, "16px Times", "rgba(255,255,255,1)");
+					task.text = new Text (task.name, 0, game.toDoList[ctr].position, 173, 261,2, task.task, "16px Times", "rgba(0,0,01)");
 					game.toDoList[ctr].tasks.push(task);
 					addElementToScreen(game.screens["phoneTodoLibrary"], task.text);
 					game.toDoList[ctr].position = game.toDoList[ctr].position + 36;
 				}else if (task.locationOfTask == 'mall' && game.toDoList[ctr].tasks.length < MAX_TODO_LIST_TASKS) {
 					game.toDoList[ctr].tasks.push(task);
-					task.text = new Text (task.name, 0, game.toDoList[ctr].position, 173, 261 , 2, task.task, "16px Times", "rgba(255,255,255,1)");
+					task.text = new Text (task.name, 0, game.toDoList[ctr].position, 173, 261 , 2, task.task, "16px Times", "rgba(0,0,0,1)");
 					addElementToScreen(game.screens["phoneTodoMall"], task.text);
 					game.toDoList[ctr].position = game.toDoList[ctr].position + 36;
 				}else if(task.locationOfTask == 'coffee-shop' && game.toDoList[ctr].tasks.length < MAX_TODO_LIST_TASKS) {
-					task.text = new Text (task.name, 0, game.toDoList[ctr].position, 173, 261, 2, task.task, "16px Times", "rgba(255,255,255,1)");
+					task.text = new Text (task.name, 0, game.toDoList[ctr].position, 173, 261, 2, task.task, "16px Times", "rgba(0,0,0,1)");
 					addElementToScreen(game.screens["phoneTodoCoffeeShop"], task.text);
 					game.toDoList[ctr].tasks.push(task);
 					game.toDoList[ctr].position = game.toDoList[ctr].position + 36;
@@ -1453,7 +1440,7 @@ io.on('connection', function (socket) {
 				for(var i = 0; i < game.toDoList[ctr].tasks.length; i++) {
 					if(game.toDoList[ctr].tasks[i].name == taskName) {
 						game.toDoList[ctr].tasks[i].completed = true;
-						game.toDoList[ctr].tasks[i].text.font_color = "rgba(192,192,192,1)";
+						game.toDoList[ctr].tasks[i].text.font_color = "rgba(64,64,64,1)";
 						if(location == 'mall') {
 							removeElementFromScreen(game.screens["phoneTodoMall"], game.toDoList[ctr].tasks[i].text);
 							addElementToScreen(game.screens["phoneTodoMall"], game.toDoList[ctr].tasks[i].text);
@@ -1469,6 +1456,19 @@ io.on('connection', function (socket) {
 
 			}
 		}
+	}
+	
+	/* Adds the specified message to the player's inbox */
+	function addToMailbox (message) {
+		var email_no = game.mailbox.length;
+		game.mailbox.push(message);
+		if (0 <= email_no - game.mailbox_displayed_index && email_no - game.mailbox_displayed_index < MAX_DISPLAYED_MAILBOX_ENTRIES) {
+			var x = 0;
+			var y = yPositionOfEmailNo(email_no);
+			var message_screen = createMessageScreen(email_no);
+			addElementToScreen(game.screens["phoneEmailAppScreen"], message_screen);
+		}
+
 	}
 
 	/* Deletes the item in the player's mailbox at the specified index */
@@ -1544,7 +1544,7 @@ io.on('connection', function (socket) {
 	// Helper function which creates a message screen for a given message
 	function createMessageScreen (email_no) {
 		var message = game.mailbox[email_no];
-		var message_screen = new Screen (0, yPositionOfEmailNo(email_no), 1, new Rectangle("inbox_" + email_no + "_background", 0, 0, 143, 15, 0, "rgba(255,255,255," + (message.unread ? 1 : 0.2) + ")"),
+		var message_screen = new Screen (0, yPositionOfEmailNo(email_no), 1, new Rectangle("inbox_" + email_no + "_background", 0, 0, 143, 15, 0, "rgba(192,192,192," + (message.unread ? 1 : 0.2) + ")"),
 			/*Buttons */[new Button("inbox_" + email_no + "_button", 0, 0, 143, 14, 0)], [],
 			/*Elements */ [new Text ("inbox_" + email_no + "_sender", 0, 0, 40, 15, 1, message.sender, "11px Arial", "rgba(0,0,0,1)"), new Text("inbox_" + email_no + "_subject", 50, 0, 143, 15, 1, message.subject, "11px Arial", "rgba(0,0,0,1)")]
 		);
