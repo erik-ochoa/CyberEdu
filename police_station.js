@@ -15,7 +15,7 @@ function load_police_station (game) {
 	], [] ,[]);
 }
 
-function police_station_onclick (button, changeMainScreen) {
+function police_station_onclick (button, changeMainScreen, resizeCanvas) {
 	if (button == "police_station_door3") {
 		changeMainScreen("player_office");
 		resizeCanvas(1308, 837);

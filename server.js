@@ -117,52 +117,125 @@ function clearExpiredSessions () {
 	setTimeout(clearExpiredSessions, 3600000); // This runs every hour.
 }
 
+/* Guesses the MIME type of a given file based on its file extension. */
+function guessMimeType(filename) {
+	var split = filename.split('.');
+	var extension = split[split.length - 1];
+	
+	if (extension == "html") {
+		return "text/html";
+	} else if (extension == "js") {
+		return "application/javascript";
+	} else if (extension == "css") {
+		return "text/css";
+	} else if (extension == "gif") {
+		return "image/gif";
+	} else if (extension == "jpg") {
+		return "image/jpeg";
+	} else if (extension == "png") {
+		return "image/png";
+	} else if (extension == "ico") {
+		return "image/x-icon";
+	} else if (extension == "mp3") {
+		return "audio/mpeg";
+	} else if (extension == "mp4") {
+		return "video/mp4";
+	} else if (extension == "wmv") {
+		return "video/x-ms-wmv";
+	} else {
+		writeToServerLog("system | Warning: MIME type for " + filename + " could not be guessed.");
+		return "text/plain";
+	}
+}
+
 /* Processes an incoming HTTP request that has been authenticated. */
 function processAuthenticatedRequest(request, response) {
 	var request_url = url.parse(request.url, true);
 	writeToServerLog("client: " + request.socket.remoteAddress + " | Responding with the file " + request_url.pathname + ".");
 	
+	var file;
 	if (request_url.pathname == "/") {
-		fs.readFile(__dirname + '/index.html', function (err, data) {
-			if (err) {
-				response.writeHead(500);
-				response.end("Error loading index.html");
-			} else {
-				response.writeHead(200);
-				response.end(data);
-			}
-		});
-	} /* else {
-		fs.readFile(__dirname + request_url.pathname, function (err, data) {
-			if (err) {
-				response.writeHead(500);
-				response.end("Error loading " + request_url.pathname);
-			} else {
-				response.writeHead(200);
-				response.end(data);
-			}
-		});
-	} */ else {
-		var inputStream = fs.createReadStream(__dirname + request_url.pathname);
-		
-		response.writeHead(200);
-		inputStream.pipe(response);
-		/*
-		inputStream.on('data', function (chunk) {
-			response.write(chunk);
-		});
-		
-		inputStream.on('end', function () {
-			response.end();
-		});
-		*/
-		inputStream.on('error', function (err) {
-			writeToServerLog("client : " + request.socket.remoteAddress + " | A ReadStream error occurred.");
-
-			response.end();
-			throw err;
-		});
+		file = __dirname + '/index.html';
+	} else {
+		file = __dirname + request_url.pathname;
 	}
+
+	// Commented out code in this block handles HTTP range requests.  Doing so seems to cause problems with Internet Explorer.
+	fs.stat(file, function (err, stats) {
+		if (err) {
+			response.writeHead(500);
+			response.end("Error loading " + file);
+		} else /*if (typeof request.headers.range === 'undefined') */ {
+			var inputStream = fs.createReadStream(file);
+		
+			//response.setHeader('Accept-Ranges', 'bytes');
+			response.setHeader('Content-Length', stats.size);
+			response.setHeader('Content-Type', guessMimeType(file));
+			response.writeHead(200);
+			
+			inputStream.on('open', function () {
+				inputStream.pipe(response);
+			});
+			
+			inputStream.on('error', function (err) { 
+				writeToServerLog("client : " + request.socket.remoteAddress + " | A ReadStream error occurred."); 
+				response.end(); 
+				throw err; 
+			});  
+		} /* else {
+			// Must serve the requested range of the file only.
+			var range = request.headers.range;
+			
+			if (range.substring(0,6) != "bytes=") {
+				response.writeHead(416);
+				response.end();
+				writeToServerLog("system | Encountered an HTTP range it couldn't parse: " + range);
+			} else {
+				console.log(range);
+				var rangeParts = range.substring(6).split("-");			
+				var start;
+				var end;
+				
+				if (rangeParts.length == 0 || rangeParts.length > 2) {
+					response.writeHead(416);
+					response.end(); // Something is wrong with the range.
+					writeToServerLog("system | Encountered an HTTP range it couldn't parse: " + range);
+				} else {
+					if (rangeParts.length == 1 || rangeParts[1] == "") {
+						start = parseInt(rangeParts[0]);
+						end = stats.size - 1;
+					} else {
+						start = parseInt(rangeParts[0]);
+						end = parseInt(rangeParts[1]);
+					}					
+					if (start > end || start > stats.size || start < 0 || end < 0 || end > stats.size) {
+						response.writeHead(416); // Range is out of bounds.
+						response.end();
+						writeToServerLog("system | Encountered an HTTP range out of bounds: " + range + " file length was : " + stats.size);
+					} else {					
+						response.setHeader('Accept-Ranges', 'bytes');
+						response.setHeader('Content-Length', end - start + 1);
+						response.setHeader('Content-Type', guessMimeType(file));
+						response.setHeader('Range', "bytes " + start + "-" + end + "/" + stats.size);
+						response.writeHead(206);
+						
+						var inputStream = fs.createReadStream(file, {start: start, end: end});
+						inputStream.on('open', function () {
+							inputStream.pipe(response);
+							console.log('input stream successfully piped in range request.');
+							console.log('start = ' + start + ' end = ' + end);
+						});
+						
+						inputStream.on('error', function (err) {
+							writeToServerLog("client : " + request.socket.remoteAddress + " | A ReadStream error occurred."); 
+							response.end(); 
+							throw err; 
+						});
+					}
+				}
+			}
+		}*/
+	});
 }
 
 // Deals with incoming HTTP requests.
@@ -1880,7 +1953,7 @@ io.on('connection', function (socket) {
 				return;
 			}
 			
-			if (police_station_onclick(button, changeMainScreen)) {
+			if (police_station_onclick(button, changeMainScreen, resizeCanvas)) {
 				return;
 			}
 

@@ -120,8 +120,6 @@ function drawDisplayElement (element) {
 			drawText(element.text + '|', element.x, element.y, element.x2, element.y2);
 		} else if (element.type == 'button_text' && (typeof element.help_text !== 'undefined' && element.help_text != null) && element.text == '' && (activeTextInputField == null || activeTextInputField.name != element.button_name)) {
 			// Draws help text on an empty text field that has help text and is not selected.
-			console.log("Calling drawText on element " + element.button_name);
-			console.log(JSON.stringify(element));
 			drawText(element.help_text, element.x, element.y, element.x2, element.y2);
 		} else {
 			console.log("Calling drawText on element ");
@@ -502,9 +500,14 @@ socket.on('command', function (array) {
 			video_element.width = 960;
 			video_element.height = 540;
 			video_element.onended = returnToGame;
-			video_element.onabort = returnToGame;
-			video_element.onerror = returnToGame;
-			video_element.play();
+			video_element.onabort = function () { returnToGame(); alert('Video download was aborted for an unknown reason.'); }
+			video_element.onerror = function (error_event) { returnToGame(); alert('An error occurred playing the video: ' + JSON.stringify(error_event)); }
+			
+			if (video_element.readyState == 4) {
+				video_element.play();
+			} else {
+				video_element.oncanplaythrough = video_element.play;
+			}
 			
 		} else if (command_name == 'resizeCanvas') {
 			var x = array[i][1];
