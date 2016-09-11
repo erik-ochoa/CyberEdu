@@ -122,7 +122,6 @@ function drawDisplayElement (element) {
 			// Draws help text on an empty text field that has help text and is not selected.
 			drawText(element.help_text, element.x, element.y, element.x2, element.y2);
 		} else {
-			console.log("Calling drawText on element ");
 			drawText(element.text, element.x, element.y, element.x2, element.y2);		
 		}
 	} else if (element.type == 'rectangle') {

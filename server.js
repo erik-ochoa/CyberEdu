@@ -559,6 +559,7 @@ var Screen = function (x, y, layer, base_element, buttons, textInputFields, extr
 /* An extension of a regular screen, which is intended to mimic mobile App stores and be used
  * as the prompt when downloading apps. It has all the fields an ordinary screen has, and therefore 
  * can be used anywhere that a screen may be. 
+ * The download_count argument should be an integer
  * The app permissions argument should be a comma-separated string.
  * Important note: the buttons are named app_purchase_screen_<app_name>_download and app_purchase_screen_<app_name>_cancel.
  * The cancel button's event is automatically handled, and returns the user to the phone's home screen. */
@@ -568,6 +569,10 @@ var AppPurchaseScreen = function (x, y, layer, app_icon_id, app_name, app_catego
 	this.y = y;
 	this.layer = layer;
 	this.base = new Rectangle ("app_purchase_screen_" + app_name + "_base", 0, 0, 173, 291, 0, 'rgba(255, 255, 255, 1)');
+	
+	/* Modification warning: the definition of the download button must be identical in the uninstallPhoneApp function, 
+	* and in the installPhoneApp function, the _already_installed text element should be created in the same position. 
+	*/
 	this.buttons = [new Button ("app_purchase_screen_" + app_name + "_download", 5, 80, 84, 96, 3, "  Download", "11px Times", "rgba(0, 0, 0, 1)"),
 					new Button ("app_purchase_screen_" + app_name + "_cancel", 89, 80, 168, 96, 3, "  Cancel", "11px Times", "rgba(0, 0, 0, 1)")
 	];
@@ -587,6 +592,9 @@ var AppPurchaseScreen = function (x, y, layer, app_icon_id, app_name, app_catego
 	this.app_icon_id = app_icon_id;
 	this.app_name = app_name;
 	this.app_category = app_category;
+	this.app_developer = app_developer;
+	this.download_count = download_count;
+	this.app_permissions = app_permissions;
 	this.app_description = app_description;
 }
 
@@ -644,11 +652,13 @@ var EmailMessage = function (subject, sender, message, attachments) {
 /*  Name: the name of this app
 	Icon: 32x32 display element @ position (0,0) in layer 0, for use as the icon of this app.
 	Screen_name: The name of the main screen of this app (where the user goes when they start it).
+	Purchase_screen_name: The name of the download screen for this app (note that this is required).
 */
-var PhoneApp = function (name, icon, screen_name) {
+var PhoneApp = function (name, icon, screen_name, purchase_screen_name) {
 	this.name = name;
 	this.icon = icon;
 	this.screen_name = screen_name;
+	this.purchase_screen_name = purchase_screen_name;
 }
 
 var ToDoTask = function(name, locationOfTask, task) {
@@ -991,6 +1001,17 @@ io.on('connection', function (socket) {
 		game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100, 0)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 		game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 		game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
+		
+		// Note that this screen is defined before its application, because all the other installPhoneApp calls depend on it
+		game.screens["phoneSettingsUninstallPage"] = new Screen (game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
+		addButtonToScreen(game.screens["phoneSettingsUninstallPage"], new Button("phone-uninstall-back", 0, 0, 173, 20, 2, "Back", "16px Times", "rgba(0,0,0,1)"));
+		
+		game.dialogs["invalidUninstallDialog"] = new Dialog ("invalidUninstallDialog", "", "You can't uninstall that app!", ["Close."]);
+		
+		installPhoneApp(new PhoneApp("Settings", new Rectangle ("settings_app_placeholder", 0, 0, 56, 56, 0, 'rgba(0, 192, 192,1)'), "phoneSettingsAppScreen"));
+		game.screens["phoneSettingsAppScreen"] = new Screen (game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
+		addButtonToScreen(game.screens["phoneSettingsAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Settings", "24px Times", "rgba(0,0,0,1)"));
+		addButtonToScreen(game.screens["phoneSettingsAppScreen"], new Button("phone-settings-uninstall-page", 0, 30, 173, 50, 2, "Uninstall Apps", "16px Times", "rgba(0,0,0,1)"));
 
 		// Note that all phone applications should have an exit button; however, may be placed anywhere on the screen, not necessarily at (0,0).
 		// installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0), "phoneEmailAppScreen"));
@@ -1011,7 +1032,7 @@ io.on('connection', function (socket) {
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(0,0,0,1)"));
 
 		game.screens["phoneTodoListAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-		installPhoneApp( new PhoneApp ("To-Do", new Text("ToDo_app_icon", 0, 0, 32, 32, 0, "To-Do", "10px Georgia", "rgba(0,0,0,1)"), "phoneTodoListAppScreen"));
+		installPhoneApp( new PhoneApp ("To-Do", new Image ("image/phone/icon/todo", 0, 0, 0, 56.0/233.0), "phoneTodoListAppScreen"));
 		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit To-Do List", "24px Times", "rgba(0,0,0,1)", 2));
 		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-mall", 0, 30, 173, 60, 2, "Mall", "24px Times", "rgba(0,0,0,1)", 2));
 		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-coffee", 0, 60, 173, 90, 2, "Coffee Shop", "24px Times", "rgba(0,0,0,1)", 2));
@@ -1694,30 +1715,38 @@ io.on('connection', function (socket) {
 		socket.emit('command', commands);
 	}
 
+	/* Helper function to compute the (x, y) location of an app given its number.
+	 * A two element array is returned, of the form [x, y]. */
+	function positionOfAppNo (app_no) {
+		return [58*(app_no % 3), 58*Math.floor(app_no / 3)];
+	}
+	
 	/* Installs the given app onto the phone. The purchase_screen_name argument is 
 	 * optional. If provided, this function will modify the purchase screen to 
 	 * indicate that the user has the app already installed. */
-	function installPhoneApp (app, purchase_screen_name) {
+	function installPhoneApp (app) {
 		var app_no = game.phone_apps.length;
-		var x = 58*(app_no % 3);
-		var y = 58*Math.floor(app_no / 3);
+		var app_position = positionOfAppNo(app_no);
+		var x = app_position[0];
+		var y = app_position[1];
 
 		addElementToScreen(game.screens["phoneHomeScreen"], new Screen (x, y, 1, app.icon, [new Button (app.name + "_start_button", 0, 0, 56, 56, 0)], [], [])); // An event to handle this button clicked is handled already.
+		addButtonToScreen(game.screens["phoneSettingsUninstallPage"], new Button (app.name + "_uninstall_button", 0, 20*(app_no + 1), 173, 20*(app_no + 2), 2, "Uninstall " + app.name, "16px Times", "rgba(0, 0, 0, 1)"));
 		game.phone_apps.push(app);
 		
-		if (typeof purchase_screen_name !== 'undefined') {
-			var screen = game.screens[purchase_screen_name];
+		if (typeof app.purchase_screen_name !== 'undefined') {
+			var screen = game.screens[app.purchase_screen_name];
 			
 			// Remove download button.
 			for (var i = 0; i < screen.buttons.length; i++) {
-				if (screen.buttons[i].name.match(/app_purchase_screen_.*_download/) != null) {
+				if (screen.buttons[i].name == "app_purchase_screen_" + app.name + "_download") {
 					removeButtonFromScreen(screen, screen.buttons[i]);
 					i--;
 				}
 			}
 			
 			// Replace download button with text indicating its already installed.
-			addElementToScreen(screen, new Text ("app_purchase_screen_" + app.name + "_already_installed", 5, 80, 84, 96, 3, "Installed", "10px Times", "rgba(64, 64, 64, 1)"));
+			addElementToScreen(screen, new Text ("app_purchase_screen_" + app.name + "_already_installed", 5, 80, 84, 96, 3, "Installed", "11px Times", "rgba(64, 64, 64, 1)"));
 			
 			// Change cancel button's text to back.
 			for (var i = 0; i < screen.buttons.length; i++) {
@@ -1728,6 +1757,89 @@ io.on('connection', function (socket) {
 					cancel_button.text = "Back";
 					addButtonToScreen(screen, cancel_button);
 					break; // Must exit the loop to avoid encountering the button again
+				}
+			}
+		}
+	}
+	
+	/* Removes the specified app from the phone. */
+	function uninstallPhoneApp(app) {
+		var app_no;
+		for (var i = 0; i < game.phone_apps.length; i++) {
+			if (game.phone_apps[i] == app)
+				app_no = i;
+		}
+		
+		game.phone_apps.splice(app_no, 1); // Get rid of this app.
+
+		for (var i = 0; i < game.screens["phoneHomeScreen"].extras.length; i++) {
+			if (game.screens["phoneHomeScreen"].extras[i].type == 'screen' && game.screens["phoneHomeScreen"].extras[i].buttons[0].name == app.name + "_start_button") {
+				removeElementFromScreen(game.screens["phoneHomeScreen"], game.screens["phoneHomeScreen"].extras[i]); // Get rid of its start button.
+				i--;
+			}
+		}
+		
+		// Mark the app as downloadable once again.
+		if (typeof app.purchase_screen_name !== 'undefined') {
+			var screen = game.screens[app.purchase_screen_name];
+		
+			// Delete the text element that indicates the app is installed.
+			for (var i = 0; i < screen.extras.length; i++) {
+				if (screen.extras[i].name == "app_purchase_screen_" + app.name + "_already_installed") {
+					removeElementFromScreen(screen, screen.extras[i]);
+					i--;
+				}
+			}
+			
+			// Add the downloadable button back
+			addButtonToScreen(screen, new Button ("app_purchase_screen_" + app.name + "_download", 5, 80, 84, 96, 3, "  Download", "11px Times", "rgba(0, 0, 0, 1)"));
+		
+			// Change cancel button's text back to cancel (from back)
+			for (var i = 0; i < screen.buttons.length; i++) {
+				if (screen.buttons[i].name == "app_purchase_screen_" + app.name + "_cancel") {
+					var cancel_button = screen.buttons[i];
+					// Note that the modification must be done in this manner to assure it is re-drawn if the screen happens to be up.
+					removeButtonFromScreen(screen, cancel_button);
+					cancel_button.text = "Cancel";
+					addButtonToScreen(screen, cancel_button);
+					break; // Must exit the loop to avoid encountering the button again
+				}
+			}
+		}
+		
+		// Get rid of the app in the uninstall page.
+		for (var i = 0; i < game.screens["phoneSettingsUninstallPage"].buttons.length; i++) {
+			if (game.screens["phoneSettingsUninstallPage"].buttons[i].name == app.name + "_uninstall_button") {
+				removeButtonFromScreen(game.screens["phoneSettingsUninstallPage"], game.screens["phoneSettingsUninstallPage"].buttons[i]);
+			}
+		}
+		
+		// Re-position apps that came after the uninstalled one in the list to their new locations on the HomeScreen.		
+		// Note that app_no is now the index of the first app that came after the app that was just uninstalled.
+		for (var i = app_no; i < game.phone_apps.length; i++) {			
+			for (var j = 0; j < game.screens["phoneHomeScreen"].extras.length; j++) {
+				if (game.screens["phoneHomeScreen"].extras[j].type == 'screen' && game.screens["phoneHomeScreen"].extras[j].buttons[0].name == game.phone_apps[i].name + "_start_button") {				
+					var app_start_button_screen = game.screens["phoneHomeScreen"].extras[j];
+					removeElementFromScreen(game.screens["phoneHomeScreen"], app_start_button_screen);
+					var new_position = positionOfAppNo(i);
+					
+					app_start_button_screen.x = new_position[0];
+					app_start_button_screen.y = new_position[1];
+					
+					addElementToScreen(game.screens["phoneHomeScreen"], app_start_button_screen);
+					break; // Need to bail out, or else we could encounter this screen again in the loop.
+				}
+			}
+			
+			// Repositions the uninstall button
+			for (var j = 0; j < game.screens["phoneSettingsUninstallPage"].buttons.length; j++) {
+				if (game.screens["phoneSettingsUninstallPage"].buttons[j].name == game.phone_apps[i].name + "_uninstall_button") {
+					var button = game.screens["phoneSettingsUninstallPage"].buttons[j];
+					removeButtonFromScreen(game.screens["phoneSettingsUninstallPage"], button);
+					button.y1 -= 20;
+					button.y2 -= 20;
+					addButtonToScreen(game.screens["phoneSettingsUninstallPage"], button);
+					break;
 				}
 			}
 		}
@@ -1794,7 +1906,7 @@ io.on('connection', function (socket) {
 		var commands = [];
 		if (screen["on_screen"]) {
 			if (button.text) {
-				commands.push(["addButton", button.name, screen.x + button.x1, screen.y + button.y1, screen.x + button.x2, screen.y + button.y2, screen.layer + button.layer, button.text, button.font, button.font_color, button.layer]);
+				commands.push(["addButton", button.name, screen.x + button.x1, screen.y + button.y1, screen.x + button.x2, screen.y + button.y2, screen.layer + button.layer, button.text, button.font, button.font_color]);
 			} else {
 				commands.push(["addButton", button.name, screen.x + button.x1, screen.y + button.y1, screen.x + button.x2, screen.y + button.y2, screen.layer + button.layer]);
 			}
@@ -1967,6 +2079,13 @@ io.on('connection', function (socket) {
 			if (button == game.phone_apps[i].name + "_start_button") {
 				changePhoneScreen(game.phone_apps[i].screen_name);
 				return;
+			} else if (button == game.phone_apps[i].name + "_uninstall_button") {
+				// Make some apps impossible to uninstall
+				if (game.phone_apps[i].name == "Map" || game.phone_apps[i].name == "Email" || game.phone_apps[i].name == "Settings") { 
+					showDialog("invalidUninstallDialog");
+				} else {
+					uninstallPhoneApp(game.phone_apps[i]);
+				} return;
 			}
 		}
 		for (var i = 0; i < game.mailbox.length; i++) {
@@ -2078,6 +2197,12 @@ io.on('connection', function (socket) {
 			changePhoneScreen("phoneTodoCoffeeShop");
 		} else if (button == 'phone-todo-mall') {
 			changePhoneScreen("phoneTodoMall");
+		} else if (button == 'phone-settings-uninstall-page') {
+			changePhoneScreen("phoneSettingsUninstallPage");
+		} else if (button == 'phone-uninstall-back') {
+			changePhoneScreen("phoneSettingsAppScreen");
+		} else if (button == 'dialog_invalidUninstallDialog_Close.') {
+			closeDialog();
 		} else {
 			writeToServerLog(username + " | Received unhandled click event: " + button);
 		}
