@@ -24,7 +24,7 @@
 		</style>
 	</head>
 
-	<!-- On certain browsers (Firefox/Chrome), there seems to be a chance that the script runs before the images load, resulting in a blank screen. 
+	<!-- On certain browsers (Firefox/Chrome), there seems to be a chance that the script runs before the images load, resulting in a blank screen.
 		By calling redrawAll() when the body is finished, those images will be re-drawn. -->
 	<body onload="redrawAll()">
 		<!-- The primary canvas element, used to display the game graphics -->
@@ -32,14 +32,14 @@
 		<input id="open_settings_button" type="button" value="Settings" onclick="displaySettingsPage()"></input>
 		<p><a href="/leaderboard.html" target="leaderboard">Leaderboard</a></p>
 		<p id="text"> </p>
-		
+
 		<!-- Settings page -->
 		<table id="settings" style="display:none;">
 			<tr>
-				<td> Music Volume (0 - 100): </td> 
+				<td> Music Volume (0 - 100): </td>
 				<td> <input id="settings/music_volume" type="range" name="Music Volume" min="0" max="100" value="100" onchange="setMusicVolume()"/> </td>
-			</tr> <tr> 
-				<td> Voice Volume (0 - 100): </td> 
+			</tr> <tr>
+				<td> Voice Volume (0 - 100): </td>
 				<td> <input id="settings/voice_volume" type="range" name="Voice Volume" min="0" max="100" value="100" onchange="setVoiceVolume()"/> </td>
 			</tr> <tr>
 				<td colspan="2"> <input type="button" value="Return To Game" onclick="exitSettingsPage()"/> </td>
@@ -47,7 +47,7 @@
 				<td colspan="2"> <input type="button" value="Reset Save File" onclick="hardReset()" /> </td>
 			</tr>
 		</table>
-		
+
 		<!-- The entire CyberEdu logo (the favicon is only the C) -->
 		<img id="logo" src="/images/cyberEduLogo.png" width="0" height="0"/>
 
@@ -64,9 +64,9 @@
 		</video>
 
 		<video id="video/piracy" width="0" height="0">
-			<source src="/video/Piracy1.0.mp4" type="video/mp4"/>            
+			<source src="/video/Piracy1.0.mp4" type="video/mp4"/>
 		</video>
-		
+
 		<video id="video/wifiConfig" width="0" height="0">
 			<source src="/video/WiFi.mp4" type="video/mp4"/>
 		</video>
@@ -78,7 +78,9 @@
 		<img id="image/phone/screen/off" src="/images/phone_screen_off.gif" width="0" height="0"/>
 		<img id="image/phone/screen/on" src="/images/phone_screen_on.gif" width="0" height="0"/>
 		<img id="image/filesystem/blank" src="/images/computer_file_system.png" width="0" height="0"/>
-		
+
+		<img id="image/introemail" src="/images/introemail.png" width="0" height="0"/>
+
 		<img id="image/coffeeshop" src="/images/CafeJrh.jpg" width="0" height="0"/>
 		<img id="image/electronics-01" src="/images/Electronics-01.png" width="0" height="0"/>
 		<img id="image/electronics-02" src="/images/Electronics-02.png" width="0" height="0"/>
@@ -112,7 +114,7 @@
 
 		<img id="image/dorm_room" src="/images/dorm_room.jpg" width="0" height="0" />
 		<img id="image/dorm_room/computer" src="/images/dorm_room_computer.jpg" width="0" height="0"/>
-		
+
 		<img id="image/phone/icon/email" src="/images/phone_app_icon_mail.gif" width="0" height="0"/>
 		<img id="image/phone/icon/map" src="/images/MAPS.png" width="0" height="0" />
 		<img id="image/phone/icon/todo" src="/images/to_do-01.png" width="0" height="0" />
@@ -125,7 +127,7 @@
 		<img id="image/phone/icon/quick_shop" src="/images/Quick_Shop.png" width="0" height="0" />
 		<img id="image/phone/icon/throw_me" src="/images/Throw_Me.png" width="0" height="0" />
 		<img id="image/phone/icon/2spooky" src="/images/2Spooky.png" width="0" height="0"/>
-		
+
 		<img id="image/police_station/office_lobby" src="/images/lobby.jpg" width="0" height="0" />
 		<img id="image/police_station/player_office" src="/images/office.png" width="0" height="0" />
 
@@ -138,7 +140,7 @@
 		<script src="/gifParser.js"></script>
 		<script src="/socket.io/socket.io.js"></script>
 		<script src="/index.js"></script>
-		
+
 		<!-- Attribution of Responsive Voice. Code copied from their webpage. -->
 		<div><a href="http://responsivevoice.org">ResponsiveVoice-NonCommercial</a> licensed under <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/"><img title="ResponsiveVoice Text To Speech" src="https://responsivevoice.org/wp-content/uploads/2014/08/95x15.png" alt="95x15" width="95" height="15" /></a></div>
 
