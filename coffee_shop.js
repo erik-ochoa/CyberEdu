@@ -259,7 +259,7 @@ function enterCoffeeShop (resizeCanvas, changeMainScreen, showDialog, addToTodoL
 // Returns true if the input event is consumed by this function, false if it does not.
 // Takes the name of the button and whatever other arguments it needs from the server.js in order to work.
 // Here vars is game.coffee_shop_variables as assigned above.
-function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, markAsComplete, vars, game) {
+function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, markAsComplete, checkForGameCompletion, vars, game) {
 	if (button == "coffee_shop_manager") {
 		if (!vars.spoken_to_manager) {			
 			showDialog("coffee_shop_manager_dialog");
@@ -535,6 +535,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 				game.screens["coffee_shop_success"].extras[i].text = "You Scored " + vars.score + " Points (out of 30)!";
 		resetCoffeeShopVariables(vars, game, addElementToScreen, removeElementFromScreen);
 		changeMainScreen("coffee_shop_success");
+		checkForGameCompletion();
 		if (!vars.wifi_sniffing_video_played) {
 			vars.wifi_sniffing_video_played = true;
 			playVideo("video/wifiSniffing");

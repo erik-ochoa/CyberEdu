@@ -1130,6 +1130,13 @@ io.on('connection', function (socket) {
 	
 	/* Loads all the additional scenes into the game object. */
 	function loadScenes () {
+		game.screens["gameCompleteScreen"] = new Screen (0, 0, 0, new Image ("image/mission/complete", 0, 0, 0), [], [], [
+			new Text ("game_complete_coffee_shop_score", 0, 0, 1000, 50, 1, "Coffee Shop: ", "30px Arial", "rgba(255, 255, 255, 1)"), 
+			new Text ("game_complete_library_score", 0, 50, 1000, 100, 1, "Library: ", "30px Arial", "rgba(255, 255, 255, 1)"), 
+			new Text ("game_complete_apartment_score", 0, 100, 1000, 150, 1, "Apartment: ", "30px Arial", "rgba(255, 255, 255, 1)"),
+			new Text ("game_complete_total_score", 0, 150, 1000, 200, 1, "Total Score: ", "30px Arial", "rgba(255, 255, 255, 1)")
+		]);
+	
 		load_coffee_shop (game, addElementToScreen, removeElementFromScreen);
 		load_mall(game);
 		load_library (game, addToFileSystem);
@@ -1995,6 +2002,33 @@ io.on('connection', function (socket) {
 
 		socket.emit('command', commands);
 	}
+	
+	/* Function checks to see if the user has completed the game. If so, will show the game complete screen. */
+	function checkForGameCompletion () {
+		var total_score = game.coffee_shop_variables.score + game.library_variables.score + game.apartment_variables.score;
+		// Update text entries on the game complete screen
+		for (var i = 0; i < game.screens["gameCompleteScreen"].extras.length; i++) {
+			var text_score_element = game.screens["gameCompleteScreen"].extras[i];
+			// If this isn't a text element, skip over it
+			if (text_score_element.type == 'text') {
+				if (text_score_element.name == 'game_complete_coffee_shop_score') {
+					text_score_element.text = "Coffee Shop: " + game.coffee_shop_variables.score + " / 30";
+				} else if (text_score_element.name == 'game_complete_library_score') {
+					text_score_element.text = "Library: " + game.library_variables.score + " / 30";
+				} else if (text_score_element.name == 'game_complete_apartment_score') {
+					text_score_element.text = "Apartment: " + game.apartment_variables.score + " / 50";
+				} else if (text_score_element.name == 'game_complete_total_score') {
+					text_score_element.text = "Total Score: " + total_score + " / 110";
+				}
+			}
+		}
+		
+		if (game.coffee_shop_variables.score > 0 && game.library_variables.score > 0 && game.apartment_variables.score > 0) {
+			// Game is indeed complete.
+			resizeCanvas(1152, 648);
+			changeMainScreen("gameCompleteScreen");
+		}
+	}
 
 	// Helper function to verify that a button is on a screen. Takes the screen object and a button name
 	// Returns true if the screen does indeed contain the button.
@@ -2052,16 +2086,16 @@ io.on('connection', function (socket) {
 		
 		// Handle events in the modules, but only if they are loaded
 		if (game.scenes_loaded) {
-			if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, markAsComplete, game.coffee_shop_variables, game)) {
+			if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, markAsComplete, checkForGameCompletion, game.coffee_shop_variables, game)) {
 				return;
 			} else if(mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, installPhoneApp, addButtonToScreen, changePhoneScreen, addToTodoList, markAsComplete, removeElementFromScreen, showPhone, raisePhone, phoneScreenOn, game, game.mall_scene_variables)) {
 				return;
 			}
-			if (library_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFileSystem, existsInFileSystem, game.library_variables, game.screens["library_success"].extras[1])) {
+			if (library_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFileSystem, existsInFileSystem, checkForGameCompletion, game.library_variables, game.screens["library_success"].extras[1])) {
 				return;
 			}
 
-			if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables, game.browsers["rout"], displayBrowser, closeBrowser, changeBrowserWebPage, game.screens["apartment_success"].extras[0])) {
+			if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables, game.browsers["rout"], displayBrowser, closeBrowser, changeBrowserWebPage, checkForGameCompletion, game.screens["apartment_success"].extras[0])) {
 				return;
 			}
 			

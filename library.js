@@ -130,7 +130,7 @@ function enterLibrary (resizeCanvas, changeMainScreen, showDialog, vars) {
   }
 }
 
-function finishLibrary (vars, score_text_element, resizeCanvas, changeMainScreen, playVideo) {
+function finishLibrary (vars, score_text_element, resizeCanvas, changeMainScreen, playVideo, checkForGameCompletion) {
 	var score = (vars.usb1 ? 10 : 0) + (vars.usb2 ? 10 : 0) + (vars.fixed_virus ? 10 : 0);
 	if (score > vars.score)
 	  vars.score = score;
@@ -141,9 +141,10 @@ function finishLibrary (vars, score_text_element, resizeCanvas, changeMainScreen
 	  playVideo("video/malware");
 	  vars.video_shown = true;
 	}
+	checkForGameCompletion();
 }
 
-function library_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFilesystem, existsInFileSystem, vars, score_text_element) {
+function library_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFilesystem, existsInFileSystem, checkForGameCompletion, vars, score_text_element) {
   if (button == "librarian") {
     changeMainScreen("librarian");
 	if (!vars.librarian_start_dialog_shown) {
@@ -363,7 +364,7 @@ function library_onclick (button, showDialog, closeDialog, changeMainScreen, res
   else if (button == "dialog_finish3_dialog_No you should call the Division of IT to fix it.") {
     closeDialog();
    
-	finishLibrary(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo);
+	finishLibrary(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo, checkForGameCompletion);
     return true;
   } else if (button == "dialog_librarian_dialog_2_No, not yet." || button == "dialog_librarian_dialog_3_No, not yet.") {
     closeDialog();
@@ -389,7 +390,7 @@ function library_onclick (button, showDialog, closeDialog, changeMainScreen, res
 	closeDialog();
 	closeFilesystem();
 	
-	finishLibrary(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo);
+	finishLibrary(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo, checkForGameCompletion);
 	
 	return true;
   } else if (button == "dialog_library_still_fixing_computer_I'm still working on it.") {
@@ -399,7 +400,7 @@ function library_onclick (button, showDialog, closeDialog, changeMainScreen, res
     closeDialog();
 	closeFilesystem();
 	
-	finishLibrary(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo);
+	finishLibrary(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo, checkForGameCompletion);
 
 	return true;
   } else if (button == "library_quit") {

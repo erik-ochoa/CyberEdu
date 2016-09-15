@@ -174,7 +174,7 @@ function pickCulprit (accused, showDialog, closeDialog, vars) {
 // Returns true if the input event is consumed by this function, false if it does not.
 // Takes the name of the button and whatever other arguments it needs from the server.js in order to work.
 // Here vars is game.apartment_variables as assigned above.
-function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, vars, browser, displayBrowser, closeBrowser, changeBrowserWebPage, score_text_element) {
+function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, vars, browser, displayBrowser, closeBrowser, changeBrowserWebPage, checkForGameCompletion, score_text_element) {
 	if (button == "go_to_apartment") { // Button on the phone's map app.
 		resizeCanvas(1153, 648.5);
 		changeMainScreen("apartment");
@@ -604,7 +604,7 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		closeDialog();
 		resizeCanvas(1153, 648.5);
 		
-		finishApartment(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo);
+		finishApartment(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo, checkForGameCompletion);
 		return true;
 	} else if (button == "apartment_failed_quit") {
 		changeMainScreen("player_office");
@@ -617,7 +617,7 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 	}
 }
 
-function finishApartment (vars, score_text_element, resizeCanvas, changeMainScreen, playVideo) {
+function finishApartment (vars, score_text_element, resizeCanvas, changeMainScreen, playVideo, checkForGameCompletion) {
 	// var score = (vars.firstTry ? 10 : 0) + (vars.helpBilly ? 5 : 0) + (vars.ratBilly ? 5 : 0) + (vars.matchedPassword ? 10 : 0) + 5 /* 5 baseline; prevents scoring negative points and brings total to 30. */;
 	var score = 50;
 	if (score > vars.score)
@@ -629,4 +629,5 @@ function finishApartment (vars, score_text_element, resizeCanvas, changeMainScre
 	  playVideo("video/wifiConfig");
 	  vars.wifi_config_video_played = true;
 	}
+	checkForGameCompletion();
 }
