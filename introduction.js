@@ -41,7 +41,7 @@ function load_introduction_part2 (game) {
 	game.dialogs["introduction_phone_dialog_5"] = new Dialog ("introduction_phone_dialog_5", "Voice", "Your brand new phone!", ["Next."]);
 	game.dialogs["introduction_phone_dialog_6"] = new Dialog ("introduction_phone_dialog_6", game.player_name, "How is this possible?! Let me out of here!!!", ["Next."]);
 	game.dialogs["introduction_phone_dialog_7"] = new Dialog ("introduction_phone_dialog_7", "Phone", "Hmm. If you think I'm going to let you ruin my hardware, you're wrong. You'll have to find your own way out.", ["Next."]);
-	game.dialogs["introduction_phone_dialog_8"] = new Dialog ("introduction_phone_dialog_8", game.player_name, "But why can you just ruin my life! I'm a live human, a living being, and you're just a phone.", ["Next."]);
+	game.dialogs["introduction_phone_dialog_8"] = new Dialog ("introduction_phone_dialog_8", game.player_name, "What?! You can't do that! I'm a living being, and you're just a phone.", ["Next."]);
 	game.dialogs["introduction_phone_dialog_9"] = new Dialog ("introduction_phone_dialog_9", "Phone", "Well good luck then. Try not to get lost - there is quite a big world in there.", ["Continue."]);
 }
 
@@ -77,6 +77,7 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 	} else if (button == "dialog_introduction_get_my_apps_Let's go!") {
 		closeDialog();
 		closeBrowser(false);
+		changeMainScreen("intro_email");
 		return true;
 	} else if (button == "confirmation" || button == "caps_confirmation") {
 		changeMainScreen("introduction_computer");

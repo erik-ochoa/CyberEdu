@@ -14,14 +14,16 @@ function load_mall(game) {
 		], [], []);
 	game.screens["Navigation_Store"] = new Screen (0, 0, 0, new Image ("image/navigation", 0, 0, 0), [
 		new Button ("exit_store", 721, 248, 908, 468, 0),
-		new Button ("iumbrella_poster", 181, 216, 295, 412, 0)
+		new Button ("iumbrella_poster", 181, 216, 295, 412, 0),
+		new Button ("map_stand", 880, 380, 988, 475, 1)
 		], [], []);
 	game.screens["Social_Hub"] = new Screen (0, 0, 0, new Image ("image/social", 0, 0, 0), [
 		new Button ("exit_store", 1.5, 540, 578, 643, 0),
-		new Button ("discover_poster", 310, 35, 546, 446, 0),
-		new Button ("do_something_poster", 582, 33, 816, 446, 0),
-		new Button ("2spooky_poster", 855, 34, 999, 446, 0),
-		new Button ("social_hub_employee", 190, 182, 296, 367, 0)
+		new Button ("camera_poster", 325, 89, 500, 400, 0),
+		new Button ("discover_poster", 528, 89, 703, 400, 0),
+		new Button ("do_something_poster", 730, 37, 906, 399, 0),
+		new Button ("2spooky_poster", 932, 87, 1109, 399, 0),
+		new Button ("social_hub_employee", 170, 185, 322, 367, 0)
 		], [], []);
 
 	game.background_music["mall_inside"] = "audio/mall";
@@ -58,6 +60,8 @@ function load_mall(game) {
 
 	game.dialogs["social_hub_employee_dialog"] = new Dialog ("social_hub_employee_dialog", social_employee, "Would you like to leave?", ["Yes.", "No, I'll shop a little more."]);
 	
+	game.screens["map_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/map", "Map", "Navigation", "Infinity", 752589, "Maps, GPS", "Find your way throughout the world, so you can visit other places with this map application.");
+	game.screens["camera_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/camera", "Camera", "Social", "Banana", 859140, "Camera", "Take and view pictures with this simple, no strings-attached camera app.");
 	game.screens["discover_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/discover_daily", "Discover Daily", "Social", "Picosoft", 15738, "Network, Bluetooth, Speakers", "Find what music people around you are listening to! Get a list of the songs other Discover Daily users are listening to and even listen along to music with them! Seamlessly jump in jump out songs, tag your favorite parts, rate your favorites!");
 	game.screens["do_something_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/do_something", "Do Something!", "Social", "Infinity", 125789, "Network, Maps, GPS", "Find what’s happening near you based on your interests! Discover concerts, shows, movies, and other events near you for you.");
 	game.screens["2spooky_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/2spooky", "2Spooky4Me", "Social", "Banana", 258240, "Camera, Network", "Change any picture into a spooky one with one of our hundreds and themes and filters. Including iconic horror characters, scenes and weapons. Try now for free a limited time!");
@@ -161,8 +165,11 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "dialog_inside_female_dialog_5_Continue.") {
 		closeDialog();
-		installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0, 56.0/57.0), "phoneMapAppScreen"));
+		installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0, 56.0/57.0), "phoneMapAppScreen", "map_download_screen"));
 		vars.spoken_to_April = true;
+		return true;
+	} else if (button == "camera_poster") {
+		changeToAndShowPhoneScreen("camera_download_screen");
 		return true;
 	} else if (button == "discover_poster") {
 		changeToAndShowPhoneScreen("discover_download_screen");
@@ -172,6 +179,12 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "do_something_poster") {
 		changeToAndShowPhoneScreen("do_something_download_screen");
+		return true;
+	} else if (button == "app_purchase_screen_Camera_download") {
+		game.screens["phoneCameraAppScreen"] = new Screen (game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
+		installPhoneApp(new PhoneApp ("Camera", new Image ("image/phone/icon/camera", 0, 0, 0), "phoneCameraAppScreen", "camera_download_screen"));
+		addButtonToScreen(game.screens["phoneCameraAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Camera", "24px Times", "rgba(0, 0, 0, 1)"));
+		changeToAndShowPhoneScreen("phoneHomeScreen");
 		return true;
 	} else if (button == "app_purchase_screen_Discover Daily_download") {
 		game.screens["phoneDiscoverAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
@@ -200,7 +213,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "dialog_productivity_manager_dialog_2_continue.") {
 		closeDialog();
-		installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0), "phoneEmailAppScreen"));
+		installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0, 56.0/57.0), "phoneEmailAppScreen"));
 		return true;
 	} else if (button == "countdown_poster") {
 		changeToAndShowPhoneScreen("final_countdown_download_screen");
@@ -239,6 +252,13 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		installPhoneApp(new PhoneApp ("iUmbrella", new Image("image/phone/icon/iUmbrella", 0, 0, 0), "phoneiUmbrellaAppScreen", "iUmbrella_download_screen"));
 		game.screens["phoneiUmbrellaAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneiUmbrellaAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit I-Umbrella", "24px Times", "rgba(0,0,0,1)"));
+		changeToAndShowPhoneScreen("phoneHomeScreen");
+		return true;
+	} else if (button == "map_stand") {
+		changeToAndShowPhoneScreen("map_download_screen");
+		return true;
+	} else if (button == "app_purchase_screen_Map_download") {
+		installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0, 56.0/57.0), "phoneMapAppScreen", "map_download_screen"));
 		changeToAndShowPhoneScreen("phoneHomeScreen");
 		return true;
 	} else if (button == "social_hub_employee") {

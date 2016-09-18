@@ -1008,7 +1008,7 @@ io.on('connection', function (socket) {
 		
 		game.dialogs["invalidUninstallDialog"] = new Dialog ("invalidUninstallDialog", "", "You can't uninstall that app!", ["Close."]);
 		
-		installPhoneApp(new PhoneApp("Settings", new Rectangle ("settings_app_placeholder", 0, 0, 56, 56, 0, 'rgba(0, 192, 192,1)'), "phoneSettingsAppScreen"));
+		installPhoneApp(new PhoneApp("Settings", new Image("image/phone/icon/settings", 0, 0, 0, 56.0/57.0), "phoneSettingsAppScreen"));
 		game.screens["phoneSettingsAppScreen"] = new Screen (game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneSettingsAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Settings", "24px Times", "rgba(0,0,0,1)"));
 		addButtonToScreen(game.screens["phoneSettingsAppScreen"], new Button("phone-settings-uninstall-page", 0, 30, 173, 50, 2, "Uninstall Apps", "16px Times", "rgba(0,0,0,1)"));
@@ -1032,7 +1032,7 @@ io.on('connection', function (socket) {
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(0,0,0,1)"));
 
 		game.screens["phoneTodoListAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-		installPhoneApp( new PhoneApp ("To-Do", new Image ("image/phone/icon/todo", 0, 0, 0, 56.0/233.0), "phoneTodoListAppScreen"));
+		installPhoneApp( new PhoneApp ("To-Do", new Image ("image/phone/icon/todo", 0, 0, 0, 56.0/57.0), "phoneTodoListAppScreen"));
 		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit To-Do List", "24px Times", "rgba(0,0,0,1)", 2));
 		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-mall", 0, 30, 173, 60, 2, "Mall", "24px Times", "rgba(0,0,0,1)", 2));
 		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-coffee", 0, 60, 173, 90, 2, "Coffee Shop", "24px Times", "rgba(0,0,0,1)", 2));
