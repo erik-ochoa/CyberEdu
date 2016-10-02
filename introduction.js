@@ -45,7 +45,7 @@ function load_introduction_part2 (game) {
 	game.dialogs["introduction_phone_dialog_9"] = new Dialog ("introduction_phone_dialog_9", "Phone", "Well good luck then. Try not to get lost - there is quite a big world in there.", ["Continue."]);
 }
 
-function introduction_onclick (button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, browser, vars) {
+function introduction_onclick (button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, hidePhone, showPhone, browser, vars) {
 	if (button == "introduction_dorm_room_computer") {
 		changeMainScreen("introduction_computer");
 		return true;
@@ -86,6 +86,7 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 		closeDialog();
 		loadScenes();
 		resizeCanvas(1152, 648);
+		hidePhone(); // Hiding the phone for the duration of the animated GIF and dialog following it.
 		changeMainScreen("introduction_transition"); // This will play the transition animated gif, dialog will begin once it terminates.
 		return true;
 	} else if (button == "dialog_introduction_phone_dialog_2_Next.") {
@@ -119,6 +120,7 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 	} else if (button == "dialog_introduction_phone_dialog_9_Continue.") {
 		closeDialog();
 		changePhoneScreen("phoneHomeScreen");
+		showPhone();
 		changeMainScreen("mall_scene");
 		return true;
 	}

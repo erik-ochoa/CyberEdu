@@ -12,6 +12,7 @@ var SERVER_HOSTNAME = "http://localhost:8011"
 var SERVER_PORT = 8011;
 var EXCEPTION_EMAIL_NOTIFICATIONS_ENABLED = false;
 var STDIN_COMMANDS_ENABLED = true;
+var SURVEY_URL = "http://goo.gl/forms/D3BDtNGoFQEYKKL02"
 
 // Include modules here.
 eval(fs.readFileSync(__dirname + '/coffee_shop.js').toString());
@@ -1032,7 +1033,7 @@ io.on('connection', function (socket) {
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(0,0,0,1)"));
 
 		game.screens["phoneTodoListAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-		installPhoneApp( new PhoneApp ("To-Do", new Image ("image/phone/icon/todo", 0, 0, 0, 56.0/57.0), "phoneTodoListAppScreen"));
+		// installPhoneApp( new PhoneApp ("To-Do", new Image ("image/phone/icon/todo", 0, 0, 0, 56.0/57.0), "phoneTodoListAppScreen"));
 		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit To-Do List", "24px Times", "rgba(0,0,0,1)", 2));
 		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-mall", 0, 30, 173, 60, 2, "Mall", "24px Times", "rgba(0,0,0,1)", 2));
 		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-coffee", 0, 60, 173, 90, 2, "Coffee Shop", "24px Times", "rgba(0,0,0,1)", 2));
@@ -1130,11 +1131,14 @@ io.on('connection', function (socket) {
 	
 	/* Loads all the additional scenes into the game object. */
 	function loadScenes () {
-		game.screens["gameCompleteScreen"] = new Screen (0, 0, 0, new Image ("image/mission/complete", 0, 0, 0), [], [], [
+		game.screens["gameCompleteScreen"] = new Screen (0, 0, 0, new Image ("image/mission/complete", 0, 0, 0), [
+			new Button ("game_complete_take_survey", 400, 400, 800, 600, 2, "Take Our Survey", "40px Arial", "rgba(255, 255, 255, 1)")
+		], [], [
 			new Text ("game_complete_coffee_shop_score", 0, 0, 1000, 50, 1, "Coffee Shop: ", "30px Arial", "rgba(255, 255, 255, 1)"), 
 			new Text ("game_complete_library_score", 0, 50, 1000, 100, 1, "Library: ", "30px Arial", "rgba(255, 255, 255, 1)"), 
 			new Text ("game_complete_apartment_score", 0, 100, 1000, 150, 1, "Apartment: ", "30px Arial", "rgba(255, 255, 255, 1)"),
-			new Text ("game_complete_total_score", 0, 150, 1000, 200, 1, "Total Score: ", "30px Arial", "rgba(255, 255, 255, 1)")
+			new Text ("game_complete_total_score", 0, 150, 1000, 200, 1, "Total Score: ", "30px Arial", "rgba(255, 255, 255, 1)"),
+			new Rectangle ("game_complete_take_survey_backing_rectangle", 400, 400, 800, 600, 1, "rgba(255, 255, 255, 0.5)")
 		]);
 	
 		load_coffee_shop (game, addElementToScreen, removeElementFromScreen);
@@ -2052,6 +2056,7 @@ io.on('connection', function (socket) {
 			writeToServerLog(username + " | Received invalid click event -- no button argument");
 			return;
 		} else {
+			writeToServerLog(username + " | clicked on " + button);
 			var valid = false;
 			if (typeof game.active_dialog !== 'undefined') {
 				valid = verifyScreen(game.dialogs[game.active_dialog.name].screen, button);
@@ -2105,7 +2110,7 @@ io.on('connection', function (socket) {
 
 		}
 
-		if (introduction_onclick(button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, game.browsers["introduction_computer_browser"], game.introduction_variables)) {
+		if (introduction_onclick(button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, hidePhone, showPhone, game.browsers["introduction_computer_browser"], game.introduction_variables)) {
 			return;
 		}
 
@@ -2237,12 +2242,15 @@ io.on('connection', function (socket) {
 			changePhoneScreen("phoneSettingsAppScreen");
 		} else if (button == 'dialog_invalidUninstallDialog_Close.') {
 			closeDialog();
+		} else if (button == 'game_complete_take_survey') {
+			socket.emit('command', [["changeWebpage", SURVEY_URL]]);
 		} else {
 			writeToServerLog(username + " | Received unhandled click event: " + button);
 		}
 	});
 
 	socket.on('text-field-edit', function(name, value) {
+		writeToServerLog(username + " | edited a text field: " + name + ", " + value);
 		if (introduction_text_field_edit (name, value, game)) {
 			return;
 		} else if (name == 'browser-bar' && typeof game.active_browser !== 'undefined') {
@@ -2256,6 +2264,7 @@ io.on('connection', function (socket) {
 	});
 
 	socket.on('text-field-enter', function (name, value) {
+		writeToServerLog(username + " |Pressed enter in a text field. name, value = " + name + ", " + value);
 		if (name == 'browser-bar' && typeof game.active_browser !== 'undefined') {
 			// got to change browser
 			changeBrowserWebPage(game.browsers[game.active_browser], value);
@@ -2264,7 +2273,8 @@ io.on('connection', function (socket) {
 		}
 	});
 	
-	socket.on('animation-ended', function (name) {		
+	socket.on('animation-ended', function (name) {
+		writeToServerLog(username + " | Received animation ended event: " + name);
 		if (introduction_on_gif_ended(name, showDialog, changeMainScreen)) {
 			return;
 		} else {
@@ -2273,6 +2283,7 @@ io.on('connection', function (socket) {
 	});
 	
 	socket.on('hard-reset', function () {
+		writeToServerLog(username + " | Performed a save file reset.");
 		makeNewGame();
 		sendClientInitCommands();
 	});

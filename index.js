@@ -207,7 +207,7 @@ function createAnimationElement (id, x1, y1, layer, request_end_notification) {
 	
 	var j = 0;
 	// Scan to where this element belongs and insert it.
-	while (display[j].layer <= layer) {
+	while (j < display.length && display[j].layer <= layer) {
 		j++;
 	}
 	
@@ -414,7 +414,13 @@ socket.on('command', function (array) {
 			}	
 		} else if (command_name == 'playSound') {
 			var id = array[i][1];
-			document.getElementById(id).play();
+			var sound_element = document.getElementById(id);
+			
+			if (sound_element.readyState == 4) {
+				sound_element.play();
+			} else {
+				sound_element.oncanplaythrough = sound_element.play;
+			}
 		} else if (command_name == 'stopSound') {
 			var id = array[i][1];
 			document.getElementById(id).pause();
@@ -646,6 +652,10 @@ socket.on('command', function (array) {
 			}
 			
 			redrawAll();
+		} else if (command_name == 'changeWebpage') {
+			var address = array[i][1];
+			
+			window.location.href = address;
 		} else {
 			console.log("Received unknown command: " + command_name);
 		}

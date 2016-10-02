@@ -7,8 +7,8 @@ function load_police_station (game) {
 	], [], [
 		new Text ("police_station_nameplate1", 44, 233, 123, 253, 2, "P.D. Chief", "16px Arial", "rgba(0, 0, 0, 1)"),
 		new Text ("police_station_nameplate2", 190, 233, 266, 253, 2, game.partner_name, "16px Arial", "rgba(0, 0, 0, 1)"),
-		new Text ("police_station_nameplate3", 334, 233, 411, 253, 2, game.player_name, "16px Arial", "rgba(0, 0, 0, 1)"),
-		new Image ("image/police_station/office_lobby/glass_wall", 0, 0, 3)
+		new Text ("police_station_nameplate3", 334, 233, 411, 253, 2, game.player_name, "16px Arial", "rgba(0, 0, 0, 1)")//,
+		//new Image ("image/police_station/office_lobby/glass_wall", 0, 0, 3)
 	]);
 	
 	game.screens["player_office"] = new Screen(0, 0, 0, new Image("image/police_station/player_office", 0, 0, 0), [

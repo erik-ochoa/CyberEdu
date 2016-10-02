@@ -8,9 +8,11 @@ function load_mall(game) {
 		], [], []);
 	game.screens["Productivity_Store"] = new Screen (0, 0, 0, new Image ("image/productivity", 0, 0, 0), [
 		new Button ("exit_store", 650, 131, 801, 363, 0),
-		new Button ("iread_stand", 822, 185, 977, 544, 0),
+		new Button ("iread_stand", 805, 230, 938, 596, 1),
 		new Button ("countdown_poster", 0.5, 111, 77,338, 0),
-		new Button ("throw_me_poster", 142, 130, 226, 304, 0)
+		new Button ("throw_me_poster", 142, 130, 226, 304, 0),
+		new Button ("email_poster", 928, 183, 996, 326, 0),
+		new Button ("todo_poster", 1030, 170, 1114, 346)
 		], [], []);
 	game.screens["Navigation_Store"] = new Screen (0, 0, 0, new Image ("image/navigation", 0, 0, 0), [
 		new Button ("exit_store", 721, 248, 908, 468, 0),
@@ -69,6 +71,8 @@ function load_mall(game) {
 	game.screens["throw_me_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/throw_me", "Throw Me!", "Productivity", "Infinity", 84634, "Network, GPS, Position Sensors", "This app measure the distance you just threw your phone using your phone’s built in accelerometer. Post your distance and compare it with the world.");
 	game.screens["iRead_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/iRead", "iRead", "Productivity", "Picosoft", 6752, "Camera, Speakers, Network", "Point and read! Read any text out loud using OCR technology so you will never have to read again!");
 	game.screens["iUmbrella_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/iUmbrella", "iUmbrella", "Navigation", "Banana", 12472, "Magic", "Never be without an umbrella again! When it’s raining open the app and you’ll instantly have an umbrella to cover your head with!");
+	game.screens["email_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/email", "Email", "Productivity", "Infinity", 851591, "Network", "Receive email with this basic email application.");
+	game.screens["todo_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/todo", "To-Do", "Productivity", "Banana", 80796, "Calendar", "Keep track of your objectives automatically. Open this app to see a list of your objectives in each area.");
 
 	game.mall_scene_variables = {
 		spoken_to_emma: false,
@@ -165,7 +169,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "dialog_inside_female_dialog_5_Continue.") {
 		closeDialog();
-		installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0, 56.0/57.0), "phoneMapAppScreen", "map_download_screen"));
+		changeToAndShowPhoneScreen("map_download_screen");
 		vars.spoken_to_April = true;
 		return true;
 	} else if (button == "camera_poster") {
@@ -213,7 +217,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "dialog_productivity_manager_dialog_2_continue.") {
 		closeDialog();
-		installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0, 56.0/57.0), "phoneEmailAppScreen"));
+		changeToAndShowPhoneScreen("email_download_screen");
 		return true;
 	} else if (button == "countdown_poster") {
 		changeToAndShowPhoneScreen("final_countdown_download_screen");
@@ -241,6 +245,18 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		game.screens["phoneThrowMeAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneThrowMeAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Throw Me", "24px Times", "rgba(0,0,0,1)"));
 		changeToAndShowPhoneScreen("phoneHomeScreen");
+		return true;
+	} else if (button == "email_poster") {
+		changeToAndShowPhoneScreen("email_download_screen");
+		return true;
+	} else if (button == "app_purchase_screen_Email_download") {
+		installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0, 56.0/57.0), "phoneEmailAppScreen", "email_download_screen"));
+		return true;
+	} else if (button == "todo_poster") {
+		changeToAndShowPhoneScreen("todo_download_screen");
+		return true;
+	} else if (button == "app_purchase_screen_To-Do_download") {
+		installPhoneApp(new PhoneApp ("To-Do", new Image ("image/phone/icon/todo", 0, 0, 0, 56.0/57.0), "phoneTodoListAppScreen", "todo_download_screen"));
 		return true;
 	} else if (button == "dialog_navigation_manager_dialog_1_Continue.") {
 		closeDialog();
