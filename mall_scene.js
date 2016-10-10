@@ -7,7 +7,7 @@ function load_mall(game) {
 		new Button ("social_space", 1085, 280, 1152, 455, 0)
 		], [], []);
 	game.screens["Productivity_Store"] = new Screen (0, 0, 0, new Image ("image/productivity", 0, 0, 0), [
-		new Button ("exit_store", 650, 131, 801, 363, 0),
+		new Button ("exit_productivity", 650, 131, 801, 363, 0),
 		new Button ("iread_stand", 805, 230, 938, 596, 1),
 		new Button ("countdown_poster", 0.5, 111, 77,338, 0),
 		new Button ("throw_me_poster", 142, 130, 226, 304, 0),
@@ -28,6 +28,11 @@ function load_mall(game) {
 		new Button ("social_hub_employee", 170, 185, 322, 367, 0)
 		], [], []);
 
+	game.screens["Spoof"] = new Screen (0, 0, 0, new Image ("image/email_spoof", 0, 0, 0), [
+		new Button ("infinity_email", 191, 205, 300, 235, 0),
+		new Button ("limitless_email", 752, 205, 860, 235, 0)
+		], [], []);
+
 	game.background_music["mall_inside"] = "audio/mall";
 	game.background_music["Productivity_Store"] = "audio/mall";
 	game.background_music["Navigation_Store"] = "audio/mall";
@@ -43,17 +48,22 @@ function load_mall(game) {
 	var navigation_employee = "Natalie";
 	var navigation_male = "Justin";
 
+	game.dialogs["map_talk_1"] = new Dialog ("map_talk_1", game.player_name, "Maybe I should download it directly from the Navigation store instead.", ["Continue."]);
+	game.dialogs["map_talk_2"] = new Dialog ("map_talk_2", game.player_name, "Oh wait, Emma sent me the Map app via Bluetooth. I should decide to download it or not.", ["Continue."]);
+	game.dialogs["map_talk_3"] = new Dialog ("map_talk_3", game.player_name, "I should check out all these stores before I try to use this Map app.", ["Continue."]);
+	game.dialogs["todo_talk"] = new Dialog ("todo_talk", game.player_name, "Aren't they giving out the To-Do list app for free?", ["Continue."]);
+
 	game.dialogs["inside_female_dialog_1"] = new Dialog ("inside_female_dialog_1", inside_female, "Now lets see where I am, don't want to get lost again like last time. Where was that map app again?", ["Continue."]);
 	game.dialogs["inside_female_dialog_2"] = new Dialog ("inside_female_dialog_2", game.player_name, "Hm, that lady over there just mentioned something about a map of this place. Might come in handy later, I should ask her about it.", ["Continue."]);
 	game.dialogs["inside_female_dialog_3"] = new Dialog ("inside_female_dialog_3", game.player_name, "Excuse me miss, I overheard you talking about a map app for this mall. Would you mind telling me where I can download it?", ["Continue."]);
-	game.dialogs["inside_female_dialog_4"] = new Dialog ("inside_female_dialog_4", inside_female, "Sure thing, I send you the download link via Bluetooth. The last thing this place needs is another lost person.", ["Continue."]);
+	game.dialogs["inside_female_dialog_4"] = new Dialog ("inside_female_dialog_4", inside_female, "Sure thing, I'll send you the download link via Bluetooth. The last thing this place needs is another lost person.", ["Continue."]);
 	game.dialogs["inside_female_dialog_5"] = new Dialog ("inside_female_dialog_5", game.player_name, "Thank you miss.", ["Continue."]);
 	game.dialogs["social_store_manager_dialog_1"] = new Dialog ("social_store_manager_dialog_1", social_employee, "Hello and welcome to the Social Hub, where we can find anything and everything that happening around you. Our current notable apps are: 2spooky4me, Daily Discover, and Do Something. If you have any questions feel free to ask me!", ["Continue."]);
 	game.dialogs["discover_poster_content"] = new Dialog ("discover_poster_content", "Discover Daily", "Find what music people around you are listening to! Get a list of the songs other Discover Daily users are listening to and even listen along to music with them! Seamlessly jump in and out of songs, tag your favorite parts, rate your favorites! Download?", ["Yes.", "No."]);
 	game.dialogs["do_something_poster_content"] = new Dialog ("do_something_poster_content", "Do Something!", "Find what’s happening near you based on your interests! Discover concerts, shows, movies, and other events near you for you. Download?", ["Yes.", "No."]);
 	game.dialogs["2spooky_poster_content"] = new Dialog ("2spooky_poster_content", "2spooky4me Cam", "Change any picture into a spooky one with one of our hundreds and themes and filters. Including iconic horror characters, scenes and weapons. Try now for free a limited time! Download?", ["Yes.", "No."]);
-	game.dialogs["productivity_manager_dialog_1"] = new Dialog ("productivity_manager_dialog_1", productivity_employee, "Hi there and welcome to the productivity section of the mall, where you try to make you a better you. Our current most productive apps are: Final Countdown, Throw Me, and iRead. Today only we are giving all of our customers our top rated email application on the house! Please enjoy and rate the app. Feel free to ask me any question you may have!", ["Continue."]);
-	game.dialogs["productivity_manager_dialog_2"] = new Dialog ("productivity_manager_dialog_2", game.player_name, "Thank you. Where would I be without an email app.", ["continue."]);
+	game.dialogs["productivity_manager_dialog_1"] = new Dialog ("productivity_manager_dialog_1", productivity_employee, "Welcome to the productivity section of the mall -- where you try to make you a better you. Our most productive apps today are: Final Countdown, Throw Me, and iRead. We are also giving away highly coveted email apps on the house! Be sure to download the To-Do app as well!", ["Continue."]);
+	game.dialogs["productivity_manager_dialog_2"] = new Dialog ("productivity_manager_dialog_2", game.player_name, "Thank you. Where would I be without an email app... now which should I download?", ["Continue."]);
 	game.dialogs["final_countdown_poster_content"] = new Dialog ("final_countdown_poster_content", "Final Countdown!", "Never be late for any of your finals again! Find your university and courses and we will make reminders and a countdown timer for each of your finals! Create notifications and reminders as far as 1 month before you take your finals. Download?", ["Yes.", "No."]);
 	game.dialogs["throw_me_poster_content"] = new Dialog ("throw_me_poster_content", "Throw Me!", "This app measure the distance you just threw your phone using your phone’s built in accelerometer. Post your distance and compare it with the world. Download?", ["Yes.", "No."]);
 	game.dialogs["iread_stand_content"] = new Dialog ("iread_stand_content", "iRead", "Point and read! Read any text out loud using OCR technology so you will never have to read again!", ["Yes.", "No."]);
@@ -61,7 +71,7 @@ function load_mall(game) {
 	game.dialogs["iUmbrella_poster_content"] = new Dialog ("iUmbrella_poster_content", "iUmbrella", "Never be without an umbrella again! When it’s raining open the app and you’ll instantly have an umbrella to cover your head with! Download?", ["Yes.", "No."]);
 
 	game.dialogs["social_hub_employee_dialog"] = new Dialog ("social_hub_employee_dialog", social_employee, "Would you like to leave?", ["Yes.", "No, I'll shop a little more."]);
-	
+
 	game.screens["map_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/map", "Map", "Navigation", "Infinity", 752589, "Maps, GPS", "Find your way throughout the world, so you can visit other places with this map application.");
 	game.screens["camera_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/camera", "Camera", "Social", "Banana", 859140, "Camera", "Take and view pictures with this simple, no strings-attached camera app.");
 	game.screens["discover_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/discover_daily", "Discover Daily", "Social", "Picosoft", 15738, "Network, Bluetooth, Speakers", "Find what music people around you are listening to! Get a list of the songs other Discover Daily users are listening to and even listen along to music with them! Seamlessly jump in jump out songs, tag your favorite parts, rate your favorites!");
@@ -72,6 +82,7 @@ function load_mall(game) {
 	game.screens["iRead_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/iRead", "iRead", "Productivity", "Picosoft", 6752, "Camera, Speakers, Network", "Point and read! Read any text out loud using OCR technology so you will never have to read again!");
 	game.screens["iUmbrella_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/iUmbrella", "iUmbrella", "Navigation", "Banana", 12472, "Magic", "Never be without an umbrella again! When it’s raining open the app and you’ll instantly have an umbrella to cover your head with!");
 	game.screens["email_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/email", "Email", "Productivity", "Infinity", 851591, "Network", "Receive email with this basic email application.");
+	game.screens["email_download_screen_2"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/email", "Email", "Productivity", "Limitless", 5349, "Network, Read Contacts, Send SMS, GPS, Storage", "Access email with this premium application.");
 	game.screens["todo_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/todo", "To-Do", "Productivity", "Banana", 80796, "Calendar", "Keep track of your objectives automatically. Open this app to see a list of your objectives in each area.");
 
 	game.mall_scene_variables = {
@@ -79,6 +90,10 @@ function load_mall(game) {
 		entry_to_social_hub: false,
 		entry_to_productivity: false,
 		entry_to_navigation: false,
+		downloaded_from_emma: false,
+		did_not_trust_emma: false,
+		downloaded_spoof: false,
+		made_decision_on_map: false,
 		list_of_people: {inside_female:inside_female, social_employee:social_employee, social_male:social_male, social_female:social_female, productivity_employee:productivity_employee, productivity_female:productivity_female, navigation_employee:navigation_employee, navigation_male:navigation_male}
 	};
 }
@@ -88,6 +103,10 @@ function resetMallVariables (vars) {
 	vars.entry_to_social_hub = false;
 	vars.entry_to_productivity = false;
 	vars.entry_to_navigation = false;
+	vars.did_not_trust_emma = false;
+	vars.made_decision_on_map = false;
+	vars.downloaded_spoof = false;
+	vars.downloaded_from_emma = false;
 
 }
 
@@ -101,7 +120,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 	var PHONE_SCREEN_X = PHONE_X - 13;
 	var PHONE_SCREEN_Y = PHONE_Y_RAISED - 56;
 	var PHONE_SCREEN_LAYER = PHONE_LAYER + 1;
-	
+
 	// Helper function which turns the user's phone on and switches to a screen.
 	function changeToAndShowPhoneScreen (screen_name) {
 		changePhoneScreen(screen_name);
@@ -110,13 +129,12 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		phoneScreenOn();
 	}
 
-	if (button == "mall_doors") { 
+	if (button == "mall_doors") {
 		changeMainScreen("mall_inside");
 		if (!vars.spoken_to_emma) {
 			showDialog("inside_female_dialog_1");
 			vars.spoken_to_emma = true;
 	}
-
 		game.toDoList.push(new sceneTasks("mall"));
 		game.toDoList.push(new sceneTasks("library"));
 		game.toDoList.push(new sceneTasks("coffee-shop"));
@@ -127,7 +145,14 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		addToTodoList(new ToDoTask("task5", "mall", "The office is one of the gretaest shows ever"));
 		markAsComplete("task1","mall");
 		return true;
-	} else if (button == "productivity_store") {
+	} else if ((button == "productivity_store" || button == "navigation_store" || button == "social_space") && !vars.made_decision_on_map) {
+		showDialog("map_talk_2");
+		return true;
+	} else if (button == "dialog_map_talk_2_Continue.") {
+		closeDialog();
+		vars.made_decision_on_map = true;
+		return true;
+	} else if (button == "productivity_store" && vars.made_decision_on_map) {
 		changeMainScreen("Productivity_Store");
 		if (!vars.entry_to_productivity) {
 			showDialog("productivity_manager_dialog_1");
@@ -137,14 +162,20 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 	} else if (button == "exit_store") {
 		changeMainScreen("mall_inside");
 		return true;
-	} else if (button == "navigation_store") {
+	} else if (button == "exit_productivity" && !vars.downloaded_todo) {
+		showDialog("todo_talk");
+		return true;
+	} else if (button == "dialog_todo_talk_Continue.") {
+		closeDialog();
+		return true;
+	} else if (button == "navigation_store" && vars.made_decision_on_map) {
 		changeMainScreen("Navigation_Store");
 		if(!vars.entry_to_navigation) {
 			showDialog("navigation_manager_dialog_1");
 			vars.entry_to_navigation = true;
 		}
 		return true;
-	} else if (button == "social_space") {
+	} else if (button == "social_space" && vars.made_decision_on_map) {
 		changeMainScreen("Social_Hub");
 		if(!vars.entry_to_social_hub) {
 			showDialog("social_store_manager_dialog_1");
@@ -215,14 +246,33 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		closeDialog();
 		showDialog("productivity_manager_dialog_2");
 		return true;
-	} else if (button == "dialog_productivity_manager_dialog_2_continue.") {
+	} else if (button == "dialog_productivity_manager_dialog_2_Continue.") {
 		closeDialog();
-		changeToAndShowPhoneScreen("email_download_screen");
+		//changeToAndShowPhoneScreen("email_download_screen");
+		changeMainScreen("Spoof");
+		return true;
+	} else if (button == "infinity_email") {
+		installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0, 56.0/57.0), "phoneEmailAppScreen", "email_download_screen"));
+		changeMainScreen("Productivity_Store");
+		return true;
+	} else if (button == "limitless_email") {
+		vars.downloaded_spoof = true;
+		installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0, 56.0/57.0), "phoneEmailAppScreen", "email_download_screen_2"));
+		changeMainScreen("Productivity_Store");
 		return true;
 	} else if (button == "countdown_poster") {
 		changeToAndShowPhoneScreen("final_countdown_download_screen");
 		return true;
-	} else if (button == "app_purchase_screen_Final Countdown_download") {
+	} else if (button == "app_purchase_screen_Map_cancel" && !vars.entry_to_navigation) {
+		 	showDialog("map_talk_1");
+			vars.made_decision_on_map = true;
+			return true;
+	} else if (button == "dialog_map_talk_1_Continue.") {
+			closeDialog();
+			changeToAndShowPhoneScreen("phoneHomeScreen");
+			vars.did_not_trust_emma = true;
+			return true;
+	}	else if (button == "app_purchase_screen_Final Countdown_download") {
 		installPhoneApp(new PhoneApp ("Final Countdown", new Image("image/phone/icon/final_countdown", 0, 0, 0), "phoneFinalCountdownAppScreen", "final_countdown_download_screen"));
 		game.screens["phoneFinalCountdownAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneFinalCountdownAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Final Countdown", "24px Times", "rgba(0,0,0,1)"));
@@ -246,8 +296,11 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		addButtonToScreen(game.screens["phoneThrowMeAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Throw Me", "24px Times", "rgba(0,0,0,1)"));
 		changeToAndShowPhoneScreen("phoneHomeScreen");
 		return true;
-	} else if (button == "email_poster") {
+	} else if (button == "email_poster" && !vars.downloaded_spoof) {
 		changeToAndShowPhoneScreen("email_download_screen");
+		return true;
+	} else if (button == "email_poster" && vars.downloaded_spoof) {
+		changeToAndShowPhoneScreen("email_download_screen_2");
 		return true;
 	} else if (button == "app_purchase_screen_Email_download") {
 		installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0, 56.0/57.0), "phoneEmailAppScreen", "email_download_screen"));
@@ -256,6 +309,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		changeToAndShowPhoneScreen("todo_download_screen");
 		return true;
 	} else if (button == "app_purchase_screen_To-Do_download") {
+		vars.downloaded_todo = true;
 		installPhoneApp(new PhoneApp ("To-Do", new Image ("image/phone/icon/todo", 0, 0, 0, 56.0/57.0), "phoneTodoListAppScreen", "todo_download_screen"));
 		return true;
 	} else if (button == "dialog_navigation_manager_dialog_1_Continue.") {
@@ -273,9 +327,19 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 	} else if (button == "map_stand") {
 		changeToAndShowPhoneScreen("map_download_screen");
 		return true;
-	} else if (button == "app_purchase_screen_Map_download") {
+	} else if (button == "app_purchase_screen_Map_download" && !vars.entry_to_navigation) {
+		vars.made_decision_on_map = true;
 		installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0, 56.0/57.0), "phoneMapAppScreen", "map_download_screen"));
 		changeToAndShowPhoneScreen("phoneHomeScreen");
+		showDialog("map_talk_3");
+		return true;
+	} else if (button == "app_purchase_screen_Map_download" && vars.entry_to_navigation) {
+		installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0, 56.0/57.0), "phoneMapAppScreen", "map_download_screen"));
+		changeToAndShowPhoneScreen("phoneHomeScreen");
+		showDialog("map_talk_3");
+		return true;
+	} else if (button == "dialog_map_talk_3_Continue.") {
+		closeDialog();
 		return true;
 	} else if (button == "social_hub_employee") {
 		showDialog("social_hub_employee_dialog");
@@ -290,4 +354,3 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 	}
 
 }
-
