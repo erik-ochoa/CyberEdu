@@ -1,35 +1,62 @@
 function load_introduction (game, PHONE_SCREEN_LAYER) {
 	game.screens["introduction_dorm_room"] = new Screen (0, 0, 0, new Image ("image/dorm_room", 0, 0, 0), [new Button ("introduction_dorm_room_computer", 824, 211, 964, 340, 0)], [], [/*Extras*/])
-	
+
 	game.screens["introduction_computer"] = new Screen (0, 0, 0, new Image ("image/dorm_room/computer", 0, 0, 0), [
 		new Button ("introduction_computer_monitor", 435, 172, 664, 302, 0),
 		new Button ("introduction_computer_monitor", 682, 228, 829, 460, 0)
 	], [], []);
-	
+
 	game.screens["introduction_transition"] = new Screen (0, 0, 0, new Animation ("animation/dorm_room/transition", 0, 0, 0, true), [], [], []);
-	
+
 	game.screens["introduction_outside_mall"] = new Screen (0, 0, 0, new Image ("image/mallexterior", 0, 0, 0), [], [] ,[]);
 
 	game.screens["intro_email"] = new Screen (0, 0, 0, new Image ("image/introemail", 0, 0,0),
 	[new Button ("confirmation", 350, 133, 710, 163, 2, "Online Registration Confirmation", "24px Arial", "rgba(0,0,0,1)"),
 	new Button ("caps_confirmation", 350, 184, 800, 210, 2, "CONFIRM NEW ACCOUNT IMMEDIATELY", "22px Arial", "rgba(0,0,0,1)"),
 	], [], []);
-	
+
+	game.screens["good_email"] = new Screen(0, 0, 0, new Image ("image/emailbody", 0 , 0 , 0, 0.35),
+	[new Button ("good_link", 285, 320, 980, 350, 1, "http://login.cyberphone/register/confirmation?", "20px Arial", "rgba(6,69,173,1)"),
+	new Button ("good_inbox", 25, 95, 160, 130, 1)], [],
+	[new Text ("good_subject", 285, 100, 645, 130, 1, "Online Registration Confirmation", "24px Arial", "rgba(0,0,0,1)"),
+	new Text ("good_dear", 285, 150, 645, 180, 1, "Welcome!", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("good_please", 285, 195, 980, 225, 1, "Please confirm your account registration.", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("good_aup", 285, 240, 980, 270, 1, "To accept the terms of the Acceptable Use Policy and Agreement and to", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("good_aup_2", 285, 275, 980, 305, 1, "validate your account, please click the link below.", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("good_disregard", 285, 365, 980, 395, 1, "Thank you for choosing CyberPhone as your provider!", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("good_disregard_2", 285, 410, 980, 440, 1, "-CyberPhone Team", "20px Arial", "rgba(0,0,0,1)")
+	]);
+
+	game.screens["bad_email"] = new Screen(0, 0, 0, new Image ("image/emailbody", 0 , 0 , 0, 0.35),
+	[new Button ("bad_link", 285, 515, 980, 545, 1, "http://cyberphonies.registration.confirmation.com", "20px Arial", "rgba(6,69,173,1)"),
+	new Button ("bad_inbox", 25, 95, 160, 130, 1)], [],
+	[new Text ("bad_subject", 285, 100, 735, 130, 1, "CONFIRM NEW ACCOUNT IMMEDIATELY", "22px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_dear", 285, 150, 645, 180, 1, "Dear Friend,", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_please", 285, 195, 980, 225, 1, "Please confirm your account registration. If you do not complete", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_please_2", 285, 230, 980, 260, 1, "this within 24 hours, your phone will be inactive and will", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_please_3", 285, 265, 980, 295, 1, "require a full factory reset.", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_aup", 285, 310, 980, 340, 1, "You can reply with an email containing the information below or", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_aup_2", 285, 345, 980, 375, 1, "click the link at the bottom of this email.", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_aup_2", 285, 390, 980, 420, 1, "Required: Name, Email, Password, Phone PIN", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_disregard", 285, 435, 980, 465, 1, "Thank you for choosing CyberPhones", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_disregard_2", 285, 470, 980, 500, 1, "Customer Registration Advisor -CyberPhone Team", "20px Arial", "rgba(0,0,0,1)")
+	]);
+
 	game.dialogs["introduction_dialog"] = new Dialog ("introduction_dialog", "", "I just got this new phone, I need to get on my computer and activate it so I can use it.", ["Begin."]);
-	game.dialogs["introduction_get_my_apps"] = new Dialog ("introduction_get_my_apps", "", "Sweet, now I can get all my apps on this phone!", ["Let's go!"]);
+	game.dialogs["introduction_get_my_apps"] = new Dialog ("introduction_get_my_apps", "", "Sweet, now I can get all my apps on this phone! Now I just have to verify my account.", ["Let's go!"]);
 	game.dialogs["introduction_phone_dialog_1"] = new Dialog ("introduction_phone_dialog_1", "Voice", "So you think you can just use the App Store?! Downloading happily every after? You have much to learn.", ["Continue."]);
-	
+
 	game.browsers["introduction_computer_browser"] = new Browser ();
-	
+
 	game.webpages["1"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_1_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"), [new Button ("introduction_name_entry_finish_button", 100, 200, 200, 300, 2, "Next >", "18px Arial", "rgba(0,0,0,1)")], [new Button ("introduction_name_text_entry", 100, 130, 500, 200, 3, "", "24px Arial", "rgba(64,64,64,1)", "Your name here...")], [new Text ("introduction_registration_enter_name", 100, 100, 500, 150, 1, "What's your name?", "24px Arial", "rgba(0,0,0,1)"), new Rectangle("introduction_name_text_entry_outline_1", 98, 128, 502, 202, 1, "rgba(0, 0, 0, 1)"), new Rectangle("introduction_name_text_entry_outline_2", 100, 130, 500, 200, 2, "rgba(255, 255, 255, 1)")]);
 	game.webpages["2"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_2_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"), [new Button ("introduction_partner_name_entry_finish_button", 100, 200, 200, 300, 2, "Next >", "18px Arial", "rgba(0,0,0,1)")], [new Button ("introduction_partner_name_text_entry", 100, 130, 500, 200, 3, "", "24px Arial", "rgba(64,64,64,1)", "Best friend's name here...")], [new Text ("introduction_registration_enter_partner_name", 100, 100, 500, 150, 1, "What's your best friend's name?", "24px Arial", "rgba(0,0,0,1)"), new Rectangle("introduction_partner_name_text_entry_outline_1",  98, 128, 502, 202, 1, "rgba(0, 0, 0, 1)"), new Rectangle("introduction_partner_name_text_entry_outline_2", 100, 130, 500, 200, 2, "rgba(255, 255, 255, 1)")]);
 	game.webpages["3"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_3_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"), [], [], [new Text ("introduction_done_registration", 30, 50, 200, 500, 1, "Finished registration! You may now exit the browser.", "18px Arial", "rgba(0,0,0,1)")]);
-	
+
 	// Phone screens.
 	game.screens["phoneAppStoreButtonScreen"] = new Screen (0, 0, PHONE_SCREEN_LAYER, new Rectangle("phoneAppStoreButtonScreenBackground", 0, 0, 173, 291, 0, "rgba(255,255,255,1)"), [new Button ("introduction_app_store_button", 10, 10, 163, 281, 2, "Visit the APP Store!", "18px Georgia", "rgba(0,0,0,1)")], [], []);
 	game.screens["phoneNotYetActivatedScreen"] = new Screen (0, 0, PHONE_SCREEN_LAYER, new Rectangle("phoneNotYetActivatedScreenBackground", 0, 0, 173, 291, 0, "rgba(255,255,255,1)"), [], [], [new Text ("phone_not_yet_activated_message", 10, 10, 173, 291, 1, "Not yet activated. To place phone calls, send messages, or install apps, please register your phone online.", "10px Georgia", "rgba(0,0,0,1)")]);
-	
-	game.introduction_variables = {  
+
+	game.introduction_variables = {
 		finished_registration:false
 	};
 }
@@ -77,10 +104,24 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 	} else if (button == "dialog_introduction_get_my_apps_Let's go!") {
 		closeDialog();
 		closeBrowser(false);
+		hidePhone();
 		changeMainScreen("intro_email");
 		return true;
-	} else if (button == "confirmation" || button == "caps_confirmation") {
-		changeMainScreen("introduction_computer");
+	} else if (button == "confirmation" ) {
+		changeMainScreen("good_email");
+		hidePhone();
+		return true;
+	} else if (button == "caps_confirmation" )  {
+		changeMainScreen("bad_email");
+		hidePhone();
+		return true;
+	} else if (button == "bad_link" || button == "good_link") {
+		showDialog("introduction_phone_dialog_1");
+		hidePhone();
+		return true;
+	} else if (button == "bad_inbox" || button == "good_inbox") {
+		changeMainScreen("intro_email");
+		hidePhone();
 		return true;
 	} else if (button == "dialog_introduction_phone_dialog_1_Continue.") {
 		closeDialog();
@@ -124,7 +165,7 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 		changeMainScreen("mall_scene");
 		return true;
 	}
-	
+
 	else {
 		return false;
 	}
@@ -150,4 +191,4 @@ function introduction_on_gif_ended (name, showDialog, changeMainScreen) {
 	} else {
 		return false;
 	}
-} 
+}
