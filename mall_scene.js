@@ -162,6 +162,9 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 	} else if (button == "exit_store") {
 		changeMainScreen("mall_inside");
 		return true;
+	} else if (button == "exit_productivity" && vars.downloaded_todo) {
+		changeMainScreen("mall_inside");
+		return true;
 	} else if (button == "exit_productivity" && !vars.downloaded_todo) {
 		showDialog("todo_talk");
 		return true;
