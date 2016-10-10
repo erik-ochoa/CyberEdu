@@ -14,6 +14,9 @@ function load_introduction (game, PHONE_SCREEN_LAYER) {
 	[new Button ("confirmation", 350, 133, 710, 163, 2, "Online Registration Confirmation", "24px Arial", "rgba(0,0,0,1)"),
 	new Button ("caps_confirmation", 350, 184, 800, 210, 2, "CONFIRM NEW ACCOUNT IMMEDIATELY", "22px Arial", "rgba(0,0,0,1)"),
 	], [], []);
+
+	game.screens["good_email"] = new Screen(0, 0, 0, new Image ("image/emailbody", 0 , 0 , 0, 0.4), [], [new Text ("email_text", 200, 133, 500, 163, 2, "Dear" + game.player_name + "hi", "24px Arial", "rgba(0,0,0,1)"),], []);
+	game.screens["bad_email"] = new Screen(0,0,0, new Image ("image/emailbody", 0 , 0 , 0, 0, 0.3), [], [], []);
 	
 	game.dialogs["introduction_dialog"] = new Dialog ("introduction_dialog", "", "I just got this new phone, I need to get on my computer and activate it so I can use it.", ["Begin."]);
 	game.dialogs["introduction_get_my_apps"] = new Dialog ("introduction_get_my_apps", "", "Sweet, now I can get all my apps on this phone!", ["Let's go!"]);
@@ -79,8 +82,11 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 		closeBrowser(false);
 		changeMainScreen("intro_email");
 		return true;
-	} else if (button == "confirmation" || button == "caps_confirmation") {
-		changeMainScreen("introduction_computer");
+	} else if (button == "confirmation" ) {
+		changeMainScreen("good_email");
+		return true;
+	} else if (button == "caps_confirmation" )  {
+		changeMainScreen("bad_email");
 		return true;
 	} else if (button == "dialog_introduction_phone_dialog_1_Continue.") {
 		closeDialog();
