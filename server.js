@@ -641,13 +641,17 @@ var FileSystem = function () {
 
 /* A message in the player's email inbox.
 Subject, sender, and message are strings. attachments is an array of strings.
+
+The last argument, location_to_unlock, is optional, and is a string. If provided, it specifies that when this email is read, unlockLocation will be called to unlock that location.
 */
-var EmailMessage = function (subject, sender, message, attachments) {
+var EmailMessage = function (subject, sender, message, attachments, location_to_unlock) {
 	this.subject = subject;
 	this.sender = sender;
 	this.message = message;
 	this.attachments = attachments;
 	this.unread = true;
+	
+	this.location_to_unlock = location_to_unlock;
 }
 
 /*  Name: the name of this app
@@ -972,6 +976,8 @@ io.on('connection', function (socket) {
 	 *  active_filesystem: The name of the active computer filesystem.
 	 *  player_name: The name of the player.
 	 *  partner_name: The name of the partner.
+	 *	scenes_loaded: A boolean, true if the scenes have been loaded (which happens during the introduction scene).
+	 *	locked_locations: A string array, representing the locations that the player has not yet unlocked.
 	 */
 	var game;
 	
@@ -998,7 +1004,7 @@ io.on('connection', function (socket) {
 	
 	/* Creates a fresh game object, for a player who has never played before. */
 	function makeNewGame () {
-		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneNotYetActivatedScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, toDoList:[], todolist_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false};
+		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneNotYetActivatedScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, toDoList:[], todolist_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false, locked_locations:["mall", "police_station", "coffee_shop", "library", "apartment"]};
 		game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100, 0)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 		game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 		game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
@@ -1021,16 +1027,11 @@ io.on('connection', function (socket) {
 		addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-up", 145, 115, 170, 140, 2, "/\\", "24px Times", "rgba(0,0,0,1)"));
 		addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-email-scroll-down", 145, 150, 170, 175, 2, "\\/", "24px Times", "rgba(0,0,0,1)"));
 
-		// Phone Map application -- add new locations to the game through this.
-
+		// Phone Map application -- To add a new location to the game, use the unlockLocation and add to the game.locked_locations list.
 		// installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0), "phoneMapAppScreen"));
 		game.screens["phoneMapAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Map", "24px Times", "rgba(0,0,0,1)"));
-		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_office_lobby", 0, 30, 173, 60, 2, "Go to DIT HQ", "18px Times", "rgba(0,0,0,1)"));
-		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, 2, "Go to Coffee Shop", "18px Times", "rgba(0,0,0,1)"));
-		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,150, 173, 180, 2, "Go to Mall", "18px Times", "rgba(0,0,0,1)"));
-		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, 2, "Go to Library", "18px Times", "rgba(0,0,0,1)"));
-		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(0,0,0,1)"));
+
 
 		game.screens["phoneTodoListAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		// installPhoneApp( new PhoneApp ("To-Do", new Image ("image/phone/icon/todo", 0, 0, 0, 56.0/57.0), "phoneTodoListAppScreen"));
@@ -1054,15 +1055,6 @@ io.on('connection', function (socket) {
 		game.filesystems["testFilesystem"] = new FileSystem();
 		addToFileSystem(game.filesystems["testFilesystem"], "", "test.txt");
 		addToFileSystem(game.filesystems["testFilesystem"], "", new Folder ("test_dir", ["a.txt", "b.txt"]));
-
-		addToMailbox(new EmailMessage ("Testing", "Jonathan", "Hello, this is a test of the email system", []));
-		addToMailbox(new EmailMessage ("Testing 2", "Jonathan", "", []));
-		addToMailbox(new EmailMessage ("Testing 3", "Jonathan", "", []));
-		for (var i = 4; i <= 27; i++) {
-			addToMailbox(new EmailMessage("Testing " + i, "Jonathan", "", []));
-		}
-
-
 
 		// Load the introduction scene into the game state object.
 		load_introduction (game, PHONE_SCREEN_LAYER);
@@ -1148,7 +1140,63 @@ io.on('connection', function (socket) {
 		load_introduction_part2(game);
 		load_police_station(game);
 		game.scenes_loaded = true;
+		
+		unlockLocation("mall");
+		
+		// Temporary code - unlocks all the missions.
+		sendMissionEmail("police_station");
+		sendMissionEmail("coffee_shop");
+		sendMissionEmail("apartment");
+		sendMissionEmail("library");
 	}
+	
+	/* This function makes the specified location click-able on the player's map. 
+	 * Valid locations are "mall", "police_station", "coffee_shop", "library", and "apartment". 
+	 */
+	function unlockLocation (location) {
+		var location_to_unlock;
+		
+		for (var i = 0; i < game.locked_locations.length; i++) {
+			if (game.locked_locations[i] == location) {
+				location_to_unlock = game.locked_locations[i];
+				game.locked_locations.splice(i, 1);
+			}
+		}		
+			
+		if (typeof location_to_unlock !== 'undefined') {
+			if (location_to_unlock == "mall") {
+				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,150, 173, 180, 2, "Go to Mall", "18px Times", "rgba(0,0,0,1)"));
+			} else if (location_to_unlock == "coffee_shop") {
+				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, 2, "Go to Coffee Shop", "18px Times", "rgba(0,0,0,1)"));
+			} else if (location_to_unlock == "library") {
+				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, 2, "Go to Library", "18px Times", "rgba(0,0,0,1)"));	
+			} else if (location_to_unlock == "apartment") {
+				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(0,0,0,1)"));
+			} else if (location_to_unlock == "police_station") {
+				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_office_lobby", 0, 30, 173, 60, 2, "Go to DIT HQ", "18px Times", "rgba(0,0,0,1)"));
+			} else {
+				writeToServerLog(username + " | Unlock not handled for " + location_to_unlock);
+			}
+		} else {
+			writeToServerLog(username + " | An invalid call to unlockLocation(" + location +  ") occurred.");
+		}
+	}
+	
+	/* Sends the player an email which describes their mission in the specified location.
+	 */
+	function sendMissionEmail(location) {
+		if (location == "coffee_shop") {
+			addToMailbox(new EmailMessage ("Robberies at the Coffee Shop", "Coffee Shop Manager", "Hello, I am the manager of the local Starbuck’s, and recently, we have had a problem with a few of our customers getting robbed. We have never had this problem before, and some of our everyday customers have stopped coming. We won’t be able to stay open if this continues. Please figure out who the robber is!", [], "coffee_shop"));
+		} else if (location == "library") {
+			addToMailbox(new EmailMessage ("Computer Problems in the Library", "Librarian", "Hello, I am the manager of the local Starbuck’s, and recently, we have had a problem with a few of our customers getting robbed. We have never had this problem before, and some of our everyday customers have stopped coming. We won’t be able to stay open if this continues. Please figure out who the robber is!", [], "library"));
+		} else if (location == "apartment") {
+			addToMailbox(new EmailMessage ("I've been framed! Please help...", "Madeline", "Hey, yesterday I was contacted by the Music Protection Association, claiming that I had downloaded $1000 worth of songs illegally. I have watched Youtube videos of songs that I do not own, but I haven’t downloaded them. I swear somebody else is responsible. I don’t have the time or the money to go to court over this, can you please figure out who? I live in the apartments across the street from the shopping center.", [], "apartment"));
+		} else if (location == "police_station") {
+			addToMailbox(new EmailMessage("P.I. Application", "Police Station Receptionist", "Congratulations new detective, your application was reviewed and you have become an official licensed private investigator. Now that you have the equipment you need, come to the police station to pick up your badge.", [], "police_station"));
+		} else {
+			writeToServerLog(username + " | Invalid call to sendMissionEmail(" + location + ").");
+		} 
+	} 
 
 	/* Changes the canvas size to the specified arguments */
 	function resizeCanvas (newX, newY) {
@@ -1608,6 +1656,10 @@ io.on('connection', function (socket) {
 	function markAsRead (email_no) {
 		if (game.mailbox[email_no].unread) {
 			game.mailbox[email_no].unread = false;
+			
+			// Unlock the location associated with reading this message, if appropriate.
+			if (typeof game.mailbox[email_no].location_to_unlock !== 'undefined')
+				unlockLocation(game.mailbox[email_no].location_to_unlock);
 
 			// Check if the message being marked is actually on the screen
 			if (0 <= email_no - game.mailbox_displayed_index && email_no - game.mailbox_displayed_index < MAX_DISPLAYED_MAILBOX_ENTRIES) {
@@ -2264,7 +2316,7 @@ io.on('connection', function (socket) {
 	});
 
 	socket.on('text-field-enter', function (name, value) {
-		writeToServerLog(username + " |Pressed enter in a text field. name, value = " + name + ", " + value);
+		writeToServerLog(username + " | Pressed enter in a text field. name, value = " + name + ", " + value);
 		if (name == 'browser-bar' && typeof game.active_browser !== 'undefined') {
 			// got to change browser
 			changeBrowserWebPage(game.browsers[game.active_browser], value);

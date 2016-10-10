@@ -741,7 +741,7 @@ document.onkeyup = function (e) {
 /* Called when the user clicks a position on the canvas. The server is sent an event for any buttons pressed. */
 function click_position(event) {
 	// Compatibility Code taken from http://www.quirksmode.org/js/events_properties.html
-	var e = event || window.event;
+/*	var e = event || window.event;
 	var posx = 0;
 	var posy = 0;
 	if (e.pageX || e.pageY) {
@@ -755,8 +755,13 @@ function click_position(event) {
 			+ document.documentElement.scrollTop;
 	}
 	posx -= CANVAS_X;
-	posy -= CANVAS_Y;
+	posy -= CANVAS_Y; */
 	// End compatibility code, posx & posy contain the clicked position
+	
+	// This code seems to work. Tested in Firefox and IE10
+	var e = event || window.event;
+	var posx = e.offsetX;
+	var posy = e.offsetY;
 	
 	if (game_paused_for_loading) return;
 	
@@ -809,7 +814,7 @@ function click_position(event) {
 
 function rollover_position(event) {
 	// Compatibility Code taken from http://www.quirksmode.org/js/events_properties.html
-	var e = typeof event === 'undefined' ? window.event : event;
+	/*var e = typeof event === 'undefined' ? window.event : event;
 	var posx = 0;
 	var posy = 0;
 	if (e.pageX || e.pageY) {
@@ -823,8 +828,13 @@ function rollover_position(event) {
 			+ document.documentElement.scrollTop;
 	}
 	posx -= CANVAS_X;
-	posy -= CANVAS_Y;
+	posy -= CANVAS_Y; */
 	// End compatibility code, posx & posy contain the clicked position
+	
+	var e = event || window.event;
+	var posx = e.offsetX;
+	var posy = e.offsetY;
+	
 	setMousePointer(posx, posy);
 	
 	document.getElementById("text").innerHTML = "X: " + posx + ", Y: " + posy;
