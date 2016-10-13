@@ -44,7 +44,8 @@ function load_introduction (game, PHONE_SCREEN_LAYER) {
 
 	game.dialogs["introduction_dialog"] = new Dialog ("introduction_dialog", "", "I just got this new phone, I need to get on my computer and activate it so I can use it.", ["Begin."]);
 	game.dialogs["introduction_get_my_apps"] = new Dialog ("introduction_get_my_apps", "", "Sweet, now I can get all my apps on this phone! Now I just have to verify my account.", ["Let's go!"]);
-	game.dialogs["introduction_phone_dialog_1"] = new Dialog ("introduction_phone_dialog_1", "Voice", "So you think you can just use the App Store?! Downloading happily every after? You have much to learn.", ["Continue."]);
+	game.dialogs["introduction_phone_dialog_1a"] = new Dialog ("introduction_phone_dialog_1a", "Voice", "So you think you can just use the App Store?! Downloading happily every after? After you just fell for that totally obvious phishing scam, you have much to learn.", ["Continue."]);
+	game.dialogs["introduction_phone_dialog_1b"] = new Dialog ("introduction_phone_dialog_1b", "Voice", "You're not the worst. At least you avoided that totally obvious phishing scam. But you probably still have much to learn. I'm not going to let you just use the app store.", ["Continue."]);
 
 	game.browsers["introduction_computer_browser"] = new Browser ();
 
@@ -115,15 +116,19 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 		changeMainScreen("bad_email");
 		hidePhone();
 		return true;
-	} else if (button == "bad_link" || button == "good_link") {
-		showDialog("introduction_phone_dialog_1");
+	} else if (button == "bad_link") {
+		showDialog("introduction_phone_dialog_1a");
 		hidePhone();
+		return true;
+	} else if (button == "good_link") {
+		showDialog("introduction_phone_dialog_1b");
+		hidePhone;
 		return true;
 	} else if (button == "bad_inbox" || button == "good_inbox") {
 		changeMainScreen("intro_email");
 		hidePhone();
 		return true;
-	} else if (button == "dialog_introduction_phone_dialog_1_Continue.") {
+	} else if (button == "dialog_introduction_phone_dialog_1a_Continue." || button == "dialog_introduction_phone_dialog_1b_Continue.") {
 		closeDialog();
 		loadScenes();
 		resizeCanvas(1152, 648);

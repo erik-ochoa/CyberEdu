@@ -71,6 +71,8 @@ function load_mall(game) {
 	game.dialogs["iUmbrella_poster_content"] = new Dialog ("iUmbrella_poster_content", "iUmbrella", "Never be without an umbrella again! When it’s raining open the app and you’ll instantly have an umbrella to cover your head with! Download?", ["Yes.", "No."]);
 
 	game.dialogs["social_hub_employee_dialog"] = new Dialog ("social_hub_employee_dialog", social_employee, "Would you like to leave?", ["Yes.", "No, I'll shop a little more."]);
+	
+	game.dialogs["check_email_dialog"] = new Dialog ("check_email_dialog", game.player_name, "Why don't I check my email?", ["Okay."]);
 
 	game.screens["map_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/map", "Map", "Navigation", "Infinity", 752589, "Maps, GPS", "Find your way throughout the world, so you can visit other places with this map application.");
 	game.screens["camera_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/camera", "Camera", "Social", "Banana", 859140, "Camera", "Take and view pictures with this simple, no strings-attached camera app.");
@@ -94,6 +96,7 @@ function load_mall(game) {
 		did_not_trust_emma: false,
 		downloaded_spoof: false,
 		made_decision_on_map: false,
+		app_security_video_played: false,
 		list_of_people: {inside_female:inside_female, social_employee:social_employee, social_male:social_male, social_female:social_female, productivity_employee:productivity_employee, productivity_female:productivity_female, navigation_employee:navigation_employee, navigation_male:navigation_male}
 	};
 }
@@ -257,11 +260,25 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 	} else if (button == "infinity_email") {
 		installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0, 56.0/57.0), "phoneEmailAppScreen", "email_download_screen"));
 		changeMainScreen("Productivity_Store");
+		showDialog("check_email_dialog");
+
+		// Play the video in each of these cases.
+		if (!vars.app_security_video_played) {
+			playVideo("video/appSecurity");
+			vars.app_security_video_played = true;
+		}
 		return true;
 	} else if (button == "limitless_email") {
 		vars.downloaded_spoof = true;
 		installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0, 56.0/57.0), "phoneEmailAppScreen", "email_download_screen_2"));
 		changeMainScreen("Productivity_Store");
+		showDialog("check_email_dialog");
+		
+		// Play the video in each of these cases.
+		if (!vars.app_security_video_played) {
+			playVideo("video/appSecurity");
+			vars.app_security_video_played = true;
+		}
 		return true;
 	} else if (button == "countdown_poster") {
 		changeToAndShowPhoneScreen("final_countdown_download_screen");
@@ -307,6 +324,9 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "app_purchase_screen_Email_download") {
 		installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0, 56.0/57.0), "phoneEmailAppScreen", "email_download_screen"));
+		return true;
+	} else if (button == "dialog_check_email_dialog_Okay.") {
+		closeDialog();
 		return true;
 	} else if (button == "todo_poster") {
 		changeToAndShowPhoneScreen("todo_download_screen");

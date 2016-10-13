@@ -1124,13 +1124,14 @@ io.on('connection', function (socket) {
 	/* Loads all the additional scenes into the game object. */
 	function loadScenes () {
 		game.screens["gameCompleteScreen"] = new Screen (0, 0, 0, new Image ("image/mission/complete", 0, 0, 0), [
-			new Button ("game_complete_take_survey", 400, 400, 800, 600, 2, "Take Our Survey", "40px Arial", "rgba(255, 255, 255, 1)")
+			new Button ("game_complete_take_survey", 400, 400, 800, 450, 2, "Take Our Survey", "40px Arial", "rgba(255, 255, 255, 1)")
 		], [], [
 			new Text ("game_complete_coffee_shop_score", 0, 0, 1000, 50, 1, "Coffee Shop: ", "30px Arial", "rgba(255, 255, 255, 1)"), 
 			new Text ("game_complete_library_score", 0, 50, 1000, 100, 1, "Library: ", "30px Arial", "rgba(255, 255, 255, 1)"), 
 			new Text ("game_complete_apartment_score", 0, 100, 1000, 150, 1, "Apartment: ", "30px Arial", "rgba(255, 255, 255, 1)"),
 			new Text ("game_complete_total_score", 0, 150, 1000, 200, 1, "Total Score: ", "30px Arial", "rgba(255, 255, 255, 1)"),
-			new Rectangle ("game_complete_take_survey_backing_rectangle", 400, 400, 800, 600, 1, "rgba(255, 255, 255, 0.5)")
+			new Rectangle ("game_complete_take_survey_backing_rectangle", 400, 400, 800, 450, 1, "rgba(255, 255, 255, 0.5)"),
+			new Text ("game_complete_screen_message", 100, 500, 1000, 700, 1, "That's all there is to play right now. Congratulations on making it to the end! We'd appreciate it if you take our survey to help make the game better. Sincerely, The CyberEDU Team", "18px Times", "rgba(255, 255, 255, 1)")
 		]);
 	
 		load_coffee_shop (game, addElementToScreen, removeElementFromScreen);
@@ -1145,9 +1146,6 @@ io.on('connection', function (socket) {
 		
 		// Temporary code - unlocks all the missions.
 		sendMissionEmail("police_station");
-		sendMissionEmail("coffee_shop");
-		sendMissionEmail("apartment");
-		sendMissionEmail("library");
 	}
 	
 	/* This function makes the specified location click-able on the player's map. 
@@ -1173,7 +1171,7 @@ io.on('connection', function (socket) {
 			} else if (location_to_unlock == "apartment") {
 				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(0,0,0,1)"));
 			} else if (location_to_unlock == "police_station") {
-				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_office_lobby", 0, 30, 173, 60, 2, "Go to DIT HQ", "18px Times", "rgba(0,0,0,1)"));
+				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_office_lobby", 0, 30, 173, 60, 2, "Go to Police Station", "18px Times", "rgba(0,0,0,1)"));
 			} else {
 				writeToServerLog(username + " | Unlock not handled for " + location_to_unlock);
 			}
@@ -2156,7 +2154,7 @@ io.on('connection', function (socket) {
 				return;
 			}
 			
-			if (police_station_onclick(button, changeMainScreen, resizeCanvas)) {
+			if (police_station_onclick(button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, game.police_station_variables)) {
 				return;
 			}
 

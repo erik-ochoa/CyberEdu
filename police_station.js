@@ -14,9 +14,18 @@ function load_police_station (game) {
 	game.screens["player_office"] = new Screen(0, 0, 0, new Image("image/police_station/player_office", 0, 0, 0), [
 		new Button ("player_office_exit_door", 985, 260, 1122, 648, 1)
 	], [] ,[]);
+	
+	game.dialogs["police_station_receptionist_dialog_1"] = new Dialog ("police_station_receptionist_dialog_1", "Receptionist", "Hello, " + game.player_name + ". Welcome to the police station. Here's your badge. Your new office is the door on the right. From here on out, You'll receive notifications of missions to complete via email on your phone.", ["Got it."]);
+	game.dialogs["police_station_receptionist_dialog_2"] = new Dialog ("police_station_receptionist_dialog_2", "Receptionist", "How are you doing, " + game.player_name + "? Remember, you get notifications of missions to complete via email. Once you get a mission, use the map to travel to the location and solve the case.", ["I'm doing fine."]);	
+	
+	game.dialogs["police_station_error_dialog"] = new Dialog ("police_station_error_dialog", "Notice", "This area is still under construction, and isn't in the game yet. Sorry.", ["Okay."]);
+	
+	game.police_station_variables = {
+		spoken_to_receptionist_once:false
+	}
 }
 
-function police_station_onclick (button, changeMainScreen, resizeCanvas) {
+function police_station_onclick (button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, vars) {
 	if (button == "police_station_door3") {
 		changeMainScreen("player_office");
 		resizeCanvas(1308, 837);
@@ -24,6 +33,29 @@ function police_station_onclick (button, changeMainScreen, resizeCanvas) {
 	} else if (button == "player_office_exit_door") {
 		changeMainScreen("office_lobby");
 		resizeCanvas(1152, 648);
+		return true;
+	} else if (button == "police_station_receptionist") {
+		if (vars.spoken_to_receptionist_once) {
+			showDialog("police_station_receptionist_dialog_2");
+		} else {
+			showDialog("police_station_receptionist_dialog_1");
+		}
+		return true;
+	} else if (button == "dialog_police_station_receptionist_dialog_1_Got it.") {
+		vars.spoken_to_receptionist_once = true;
+		sendMissionEmail("coffee_shop");
+		sendMissionEmail("apartment");
+		sendMissionEmail("library");
+		closeDialog();
+		return true;
+	} else if (button == "dialog_police_station_receptionist_dialog_2_I'm doing fine.") {
+		closeDialog();
+		return true;
+	} /* Remove these two cases later!*/ else if (button == "police_station_door1" || button == "police_station_door2") {
+		showDialog("police_station_error_dialog");
+		return true;
+	} /* Remove this case later! */else if (button == "dialog_police_station_error_dialog_Okay.") {
+		closeDialog();
 		return true;
 	} else {
 		return false;
