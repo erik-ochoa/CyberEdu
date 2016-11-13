@@ -488,7 +488,12 @@ socket.on('command', function (array) {
 			var video_element = document.getElementById(id);
 			CANVAS_ELEMENT.width = 0;
 			CANVAS_ELEMENT.height = 0;
-			
+		
+			var audio_elements = document.getElementsByTagName("audio");
+			for (var i = 0; i < audio_elements.length; i++) {
+				audio_elements[i].volume = 0.0;
+			}
+		
 			var returnToGame = function () {
 				video_element.width = 0;
 				video_element.height = 0;
@@ -500,6 +505,11 @@ socket.on('command', function (array) {
 				for (var j = 0; j < display.length; j++) {
 					drawDisplayElement(display[j]);
 				}
+				
+				var audio_elements = document.getElementsByTagName("audio");
+				for (var i = 0; i < audio_elements.length; i++) {
+					audio_elements[i].volume = music_volume / 100.0
+				}
 			}
 			
 			video_element.width = 960;
@@ -507,7 +517,7 @@ socket.on('command', function (array) {
 			video_element.onended = returnToGame;
 			video_element.onabort = function () { returnToGame(); alert('Video download was aborted for an unknown reason.'); }
 			video_element.onerror = function (error_event) { returnToGame(); alert('An error occurred playing the video: ' + JSON.stringify(error_event)); }
-			
+						
 			if (video_element.readyState == 4) {
 				video_element.play();
 			} else {

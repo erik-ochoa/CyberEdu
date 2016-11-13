@@ -29,18 +29,27 @@
 	<body onload="redrawAll()">
 		<!-- The primary canvas element, used to display the game graphics -->
 		<canvas id="view" width="1280" height="630" style="border:1px solid #000000; position:relative;" onclick="click_position(event)" onmousemove="rollover_position(event)"></canvas>
-		<input id="open_settings_button" type="button" value="Settings" onclick="displaySettingsPage()"></input>
-		<p><a href="/leaderboard.html" target="leaderboard">Leaderboard</a></p>
+		
+		<!-- A one row table which is the page footer, containing various items displayed below the canvas. -->
+		<!-- Empty td elements are a hack to increase the spacing between elements. TODO: find CSS code to accomplish that task -->
+		<table id="footer">	<tr>
+				<td> <input id="open_settings_button" type="button" value="Settings" onclick="displaySettingsPage()"></input> </td>
+				<td> </td>
+				<td> <a href="/leaderboard.html" target="leaderboard">Leaderboard</a> </td>
+				<td> </td>
+				<td> <a href="/help.html" target="help">Help</a> </td>
+		</tr> </table>
+		
 		<p id="text"> </p>
 
 		<!-- Settings page -->
 		<table id="settings" style="display:none;">
 			<tr>
 				<td> Music Volume (0 - 100): </td>
-				<td> <input id="settings/music_volume" type="range" name="Music Volume" min="0" max="100" value="100" onchange="setMusicVolume()"/> </td>
+				<td> <input id="settings/music_volume" type="range" name="Music Volume" min="0" max="100" value="50" onchange="setMusicVolume()"/> </td>
 			</tr> <tr>
 				<td> Voice Volume (0 - 100): </td>
-				<td> <input id="settings/voice_volume" type="range" name="Voice Volume" min="0" max="100" value="100" onchange="setSpeechVolume()"/> </td>
+				<td> <input id="settings/voice_volume" type="range" name="Voice Volume" min="0" max="100" value="50" onchange="setSpeechVolume()"/> </td>
 			</tr> <tr>
 				<td colspan="2"> <input type="button" value="Return To Game" onclick="exitSettingsPage()"/> </td>
 			</tr> <tr>
@@ -117,9 +126,11 @@
 		<img id="image/dorm_room" src="/images/dorm_room.jpg" width="0" height="0" />
 		<img id="image/dorm_room/computer" src="/images/dorm_room_computer_edited.jpg" width="0" height="0"/>
 
-		<img id="image/email_spoof" src="/images/emailspoof.png" width="0" height="0" />
+		<img id="image/email_spoof" src="/images/emailspoofr2.png" width="0" height="0" />
 		<img id="image/phone/icon/email" src="/images/Email.png" width="0" height="0"/>
+		<img id="image/phone/icon/email_2" src="/images/phone_app_icon_mail.gif" width="0" height="0" />
 		<img id="image/phone/icon/map" src="/images/MAPS.png" width="0" height="0" />
+		<img id="image/phone/icon/map_emma" src="/images/phone_app_icon_map.gif" width="0" height="0" />
 		<img id="image/phone/icon/todo" src="/images/To-DoList.png" width="0" height="0" />
 		<img id="image/phone/icon/settings" src="/images/Settings.png" width="0" height="0" />
 		<img id="image/phone/icon/camera" src="/images/Camera.png" width="0" height="0" />

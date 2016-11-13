@@ -588,7 +588,7 @@ var AppPurchaseScreen = function (x, y, layer, app_icon_id, app_name, app_catego
 					new Rectangle("app_purchase_screen_" + app_name + "_download_button_background", 5, 80, 84, 96, 2, 'rgba(0, 255, 128, 1)'),
 					new Rectangle("app_purchase_screen_" + app_name + "_cancel_button_background", 89, 80, 168, 96, 2, 'rgba(192, 192, 192, 1)')
 	];
-	/* Stored for possible future access. Although modifying these fields will not effect the screen itself, so
+	/* Stored for possible future access. Modifying these fields will not effect the screen itself, so
 	 * they are effectively read only. */
 	this.app_icon_id = app_icon_id;
 	this.app_name = app_name;
