@@ -1139,7 +1139,7 @@ io.on('connection', function (socket) {
 		load_library (game, addToFileSystem);
 		load_apartment (game);
 		load_introduction_part2(game);
-		load_police_station(game);
+		load_police_station(game, addToFileSystem);
 		game.scenes_loaded = true;
 		
 		unlockLocation("mall");
@@ -2154,7 +2154,7 @@ io.on('connection', function (socket) {
 				return;
 			}
 			
-			if (police_station_onclick(button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, game.police_station_variables)) {
+			if (police_station_onclick(button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, displayFileSystem, closeFileSystem, existsInFileSystem, displayBrowser, changeBrowserWebPage, closeBrowser, game.browsers["police_station_browser"], game.police_station_variables)) {
 				return;
 			}
 
