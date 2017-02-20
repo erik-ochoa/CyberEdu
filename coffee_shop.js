@@ -137,7 +137,8 @@ function load_coffee_shop (game, addElementToScreen, removeElementFromScreen) {
 		background_music_audio_id:"audio/mall",
 		times_reset:0,
 		score:0,
-		wifi_sniffing_video_played:false
+		wifi_sniffing_video_played:false,
+		on_completion_trigger_email_hack:false
 	};
 	
 	coffeeShopSetRandomCulprit(game.coffee_shop_variables, game, addElementToScreen, removeElementFromScreen);
@@ -259,7 +260,7 @@ function enterCoffeeShop (resizeCanvas, changeMainScreen, showDialog, addToTodoL
 // Returns true if the input event is consumed by this function, false if it does not.
 // Takes the name of the button and whatever other arguments it needs from the server.js in order to work.
 // Here vars is game.coffee_shop_variables as assigned above.
-function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, markAsComplete, checkForGameCompletion, vars, game) {
+function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, vars, game) {
 	if (button == "coffee_shop_manager") {
 		if (!vars.spoken_to_manager) {			
 			showDialog("coffee_shop_manager_dialog");
@@ -539,6 +540,9 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		if (!vars.wifi_sniffing_video_played) {
 			vars.wifi_sniffing_video_played = true;
 			playVideo("video/wifiSniffing");
+		}
+		if (vars.on_completion_trigger_email_hack) {
+			triggerEmailHack();
 		}
 		return true;
 	} else if (button == "dialog_coffee_shop_accused_dialog_Continue.") {

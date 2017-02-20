@@ -1,10 +1,12 @@
-function load_introduction (game, PHONE_SCREEN_LAYER) {
+function load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER) {
 	game.screens["introduction_dorm_room"] = new Screen (0, 0, 0, new Image ("image/dorm_room", 0, 0, 0), [new Button ("introduction_dorm_room_computer", 824, 211, 964, 340, 0)], [], [/*Extras*/])
 
 	game.screens["introduction_computer"] = new Screen (0, 0, 0, new Image ("image/dorm_room/computer", 0, 0, 0), [
 		new Button ("introduction_computer_monitor", 435, 172, 664, 302, 0),
 		new Button ("introduction_computer_monitor", 682, 228, 829, 460, 0)
-	], [], []);
+	], [], [
+		new ScrollableList ("test_list", 100, 100, 300, 400, 1, new Rectangle("test_rectangle", 0, 0, 200, 300, 0, 'rgba(255,255,255,1)'))
+	]);
 
 	game.screens["introduction_transition"] = new Screen (0, 0, 0, new Animation ("animation/dorm_room/transition", 0, 0, 0, true), [], [], []);
 
@@ -81,10 +83,55 @@ function load_introduction (game, PHONE_SCREEN_LAYER) {
 	game.dialogs["introduction_phone_dialog_1b"] = new Dialog ("introduction_phone_dialog_1b", "Voice", "Not bad. At least you avoided that totally obvious phishing scam. Unfortunately, you probably still have much to learn. You might have indeed clicked on the safe web address, but I'm not going to let you just use the app store.", ["Continue."]);
 
 	game.browsers["introduction_computer_browser"] = new Browser ();
-
-	game.webpages["1"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_1_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"), [new Button ("introduction_name_entry_finish_button", 100, 200, 200, 300, 2, "Next >", "18px Arial", "rgba(0,0,0,1)")], [new Button ("introduction_name_text_entry", 100, 130, 500, 200, 3, "", "24px Arial", "rgba(64,64,64,1)", "Your name here...")], [new Text ("introduction_registration_enter_name", 100, 100, 500, 150, 1, "What's your name?", "24px Arial", "rgba(0,0,0,1)"), new Rectangle("introduction_name_text_entry_outline_1", 98, 128, 502, 202, 1, "rgba(0, 0, 0, 1)"), new Rectangle("introduction_name_text_entry_outline_2", 100, 130, 500, 200, 2, "rgba(255, 255, 255, 1)")]);
-	game.webpages["2"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_2_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"), [new Button ("introduction_partner_name_entry_finish_button", 100, 200, 200, 300, 2, "Next >", "18px Arial", "rgba(0,0,0,1)")], [new Button ("introduction_partner_name_text_entry", 100, 130, 500, 200, 3, "", "24px Arial", "rgba(64,64,64,1)", "Best friend's name here...")], [new Text ("introduction_registration_enter_partner_name", 100, 100, 500, 150, 1, "What's your best friend's name?", "24px Arial", "rgba(0,0,0,1)"), new Rectangle("introduction_partner_name_text_entry_outline_1",  98, 128, 502, 202, 1, "rgba(0, 0, 0, 1)"), new Rectangle("introduction_partner_name_text_entry_outline_2", 100, 130, 500, 200, 2, "rgba(255, 255, 255, 1)")]);
-	game.webpages["3"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_3_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"), [], [], [new Text ("introduction_done_registration", 30, 50, 200, 500, 1, "Finished registration! You may now exit the browser.", "18px Arial", "rgba(0,0,0,1)")]);
+	
+	game.webpages["1"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_1_background", 0, 0, 800, 600, 0, "rgba(255,255,255,1)"), [
+		new Button ("introduction_registration_1_continue_button", 500, 430, 700, 530, 1, "Continue", "18px Arial", "rgba(0,0,255,1)")], [], [
+		new Text ("introduction_registration_1_instructions_text", 100, 50, 700, 430, 1, "Congratulations on your acceptance into the Division of Information Technology student internship program. All DIT interns are required an email account on the department's email server to be used for work purposes. To begin the process of creating this account, press the continue button at the bottom of this page.", "14px Arial", "rgba(0,0,0,1)")
+	]);
+	
+	game.webpages["2"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_2_background", 0, 0, 800, 600, 0, "rgba(255,255,255,1)"), 
+		[	/*Buttons*/
+			new Button ("introduction_registration_2_continue_button", 500, 430, 700, 530, 1, "Continue", "18px Arial", "rgba(0,0,255,1)")
+		], [ /*Text fields*/
+			new Button ("introduction_name_text_entry", 100, 100, 750, 150, 3, "", "24px Arial", "rgba(0,0,0,1)", "Your name here..."), 
+			new Button ("introduction_partner_name_text_entry", 100, 250, 750, 300, 3, "", "24px Arial", "rgba(0,0,0,1)", "Best friend's name here...")
+		], [
+			/*Extras*/
+			new Rectangle("introduction_registration_2_player_name_entry_outline", 98, 98, 752, 152, 1, "rgba(0,0,0,1)"),
+			new Rectangle("introduction_registration_2_partner_name_entry_outline", 98, 248, 752, 302, 1, "rgba(0,0,0,1)"),
+			new Rectangle("introduction_registration_2_player_name_entry_fill", 100, 100, 750, 150, 2, "rgba(255,255,255,1)"),
+			new Rectangle("introduction_registration_2_partner_name_entry_fill", 100, 250, 750, 300, 2, "rgba(255,255,255,1)"),
+			new Text("introduction_registration_enter_name", 50, 50, 750, 100, 1, "Enter your name:", "18px Arial", "rgba(0,0,0,1)"), 
+			new Text("introduction_registration_enter_partner_name", 50, 200, 750, 250, 1, "Enter your best friend's name:", "18px Arial", "rgba(0,0,0,1)")
+		]
+	);
+	
+	game.webpages["3"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_3_background", 0, 0, 800, 600, 0, 'rgba(255,255,255,1)'),
+		[
+			new Button("mfa_yes_button", 50, 200, 300, 250, 1, "Yes", "18px Arial", "rgba(0,255,0,1)"),
+			new Button("mfa_no_button", 350, 200, 600, 250, 1, "No", "18px Arial", "rgba(255,0,0,1)")
+		], [], [
+			new Text ("introduction_registration_enable_mfa", 50, 50, 750, 100, 1, "Would you like to enable multi-factor authentication (MFA)?", "24px Arial", "rgba(0,0,0,1)"),
+			new Text ("introduction_registration_mfa_instructions", 50, 100, 750, 200, 1, "Multi-factor authentication provides extra security to your account by sending a randomly generated authentication code to your phone each time you attempt to log in, which you will be prompted to enter to proceed. As a result, even if someone obtains your password, they will still be unable to access your account without also someone obtaining the code.", "14px Times", "rgba(0, 0, 0, 1)")
+		]
+	);
+	
+	game.webpages["3b"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_3b_background", 0, 0, 800, 600, 0, 'rgba(255,255,255,1)'),
+		[
+			new Button ("mfa_confirm_button", 350, 300, 600, 350, 1, "Confirm", "18px Arial", "rgba(0,0,255,1)"),
+			new Button ("mfa_cancel_button", 50, 300, 300, 350, 1, "Cancel", "18px Arial", "rgba(255,0,0,1)")
+		], [
+			new Button ("mfa_code_text_entry", 50, 150, 300, 250, 1, "", "18px Arial", "rgba(0,0,0,1)", "Enter code...")
+		], [
+			new Text ("introduction_enter_mfa_code", 50, 50, 750, 100, 1, "An authentication code was just sent to your phone. Enter the code to activate MFA.", "24px Arial", "rgba(0,0,0,1)")
+		]
+	);
+	
+	game.webpages["4"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_4_background", 0, 0, 800, 600, 0, 'rgba(255,255,255,1)'),
+		[], [], [new Text("introduction_registration_finished", 50, 50, 750, 150, 1, "Registration complete. You may now close this window.", "18px Arial", "rgba(0, 0, 0, 1)")]
+	);
+		
+	changeBrowserWebPage(game.browsers["introduction_computer_browser"], "1");
 
 	// Phone screens.
 	game.screens["phoneAppStoreButtonScreen"] = new Screen (0, 0, PHONE_SCREEN_LAYER, new Rectangle("phoneAppStoreButtonScreenBackground", 0, 0, 173, 291, 0, "rgba(255,255,255,1)"), [new Button ("introduction_app_store_button", 10, 10, 163, 281, 2, "Visit the APP Store!", "18px Georgia", "rgba(0,0,0,1)")], [], []);
@@ -93,7 +140,10 @@ function load_introduction (game, PHONE_SCREEN_LAYER) {
 	game.introduction_variables = {
 		finished_registration:false,
 		forwarded_phishing_email:false,
-		fell_for_scam:false
+		fell_for_scam:false,
+		mfa_enabled:false,
+		mfa_code:"0",
+		player_mfa_code_entry:"#####"
 	};
 }
 
@@ -108,7 +158,7 @@ function load_introduction_part2 (game) {
 	game.dialogs["introduction_phone_dialog_9"] = new Dialog ("introduction_phone_dialog_9", "Phone", "Well good luck then. Try not to get lost - there is quite a big world in there.", ["Continue."]);
 }
 
-function introduction_onclick (button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, hidePhone, showPhone, browser, vars) {
+function introduction_onclick (button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, hidePhone, showPhone, pushPhoneAlert, browser, vars) {
 	if (button == "introduction_dorm_room_computer") {
 		changeMainScreen("introduction_computer");
 		return true;
@@ -116,16 +166,38 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 		closeDialog();
 		return true;
 	} else if  (button == "introduction_computer_monitor") {
-		changeBrowserWebPage(browser, "1");
 		displayBrowser ("introduction_computer_browser");
 		return true;
-	} else if (button == "introduction_name_entry_finish_button") {
+	} else if (button == "introduction_registration_1_continue_button") {
 		changeBrowserWebPage(browser, "2");
 		return true;
-	} else if (button == "introduction_partner_name_entry_finish_button") {
-		vars.finished_registration = true;
-		changePhoneScreen("phoneAppStoreButtonScreen");
+	} else if (button == "introduction_registration_2_continue_button") {
 		changeBrowserWebPage(browser, "3");
+		return true;
+	} else if (button == "mfa_no_button") {
+		vars.finished_registration = true;
+		vars.mfa_enabled = false;
+		changePhoneScreen("phoneAppStoreButtonScreen");
+		changeBrowserWebPage(browser, "4");
+		return true;
+	} else if (button == "mfa_yes_button") {
+		// Generate an MFA code
+		vars.mfa_code = Math.random().toString(10).substring(2,7) // Note: it appears to be okay if the last index happens to be out of bounds.
+		pushPhoneAlert("To finish setting up Multi-factor authentication, enter this code when prompted: " + vars.mfa_code);
+		changeBrowserWebPage(browser, "3b");
+		return true;
+	} else if (button == "mfa_cancel_button") {
+		changeBrowserWebPage(browser, "3");
+		return true;
+	} else if (button == "mfa_confirm_button") {
+		if (vars.mfa_code == vars.player_mfa_code_entry) {
+			vars.finished_registration = true;
+			vars.mfa_enabled = true;
+			changePhoneScreen("phoneAppStoreButtonScreen");
+			changeBrowserWebPage(browser, "4");
+		} else {
+			// TODO if code is incorrect, need to display something and prompt user to re-enter code.
+		}
 		return true;
 	} else if (button == "introduction_app_store_button") {
 		showDialog("introduction_phone_dialog_1");
@@ -263,6 +335,9 @@ function introduction_text_field_edit (name, value, game) {
 		return true;
 	} else if (name == "introduction_partner_name_text_entry") {
 		game.partner_name = value;
+		return true;
+	} else if (name == "mfa_code_text_entry") {
+		game.introduction_variables.player_mfa_code_entry = value;
 		return true;
 	} else {
 		return false;

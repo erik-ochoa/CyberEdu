@@ -26,7 +26,8 @@ function load_apartment (game) {
 		wifi_config_video_played:false,
 		piracy_video_played:false,
 		background_music_audio_id:"audio/mall",
-		names_of_people:{billy:resident_1_name, jacob:resident_2_name, emily:resident_3_name, madeline:resident_4_name}
+		names_of_people:{billy:resident_1_name, jacob:resident_2_name, emily:resident_3_name, madeline:resident_4_name},
+		on_completion_trigger_email_hack:false
 	};
 
 	game.browsers["rout"] = new Browser();
@@ -174,7 +175,7 @@ function pickCulprit (accused, showDialog, closeDialog, vars) {
 // Returns true if the input event is consumed by this function, false if it does not.
 // Takes the name of the button and whatever other arguments it needs from the server.js in order to work.
 // Here vars is game.apartment_variables as assigned above.
-function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, vars, browser, displayBrowser, closeBrowser, changeBrowserWebPage, checkForGameCompletion, score_text_element) {
+function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, vars, browser, displayBrowser, closeBrowser, changeBrowserWebPage, triggerEmailHack, checkForGameCompletion, score_text_element) {
 	if (button == "go_to_apartment") { // Button on the phone's map app.
 		resizeCanvas(1153, 648.5);
 		changeMainScreen("apartment");
@@ -604,7 +605,7 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		closeDialog();
 		resizeCanvas(1153, 648.5);
 		
-		finishApartment(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo, checkForGameCompletion);
+		finishApartment(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo, triggerEmailHack, checkForGameCompletion);
 		return true;
 	} else if (button == "apartment_failed_quit") {
 		changeMainScreen("player_office");
@@ -617,7 +618,7 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 	}
 }
 
-function finishApartment (vars, score_text_element, resizeCanvas, changeMainScreen, playVideo, checkForGameCompletion) {
+function finishApartment (vars, score_text_element, resizeCanvas, changeMainScreen, playVideo, triggerEmailHack, checkForGameCompletion) {
 	// var score = (vars.firstTry ? 10 : 0) + (vars.helpBilly ? 5 : 0) + (vars.ratBilly ? 5 : 0) + (vars.matchedPassword ? 10 : 0) + 5 /* 5 baseline; prevents scoring negative points and brings total to 30. */;
 	var score = 50;
 	if (score > vars.score)
@@ -628,6 +629,9 @@ function finishApartment (vars, score_text_element, resizeCanvas, changeMainScre
 	if (!vars.wifi_config_video_played) {
 	  playVideo("video/wifiConfig");
 	  vars.wifi_config_video_played = true;
+	}
+	if (vars.on_completion_trigger_email_hack) {
+		triggerEmailHack();
 	}
 	checkForGameCompletion();
 }
