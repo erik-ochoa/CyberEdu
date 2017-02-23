@@ -599,6 +599,70 @@ var AppPurchaseScreen = function (x, y, layer, app_icon_id, app_name, app_catego
 	this.app_description = app_description;
 }
 
+/* This is a sub-class of screen, which represents a vertically scrolling list.
+ * Adding buttons/textFields/extras directly in general should not be done (or at least done with extreme caution).
+ *
+ * Unlike the base screen, the lower and right boundaries are also required, for the purpose of deciding which elements can be displayed and which elements should not.
+ * The scrolling list also contains two buttons, with names scrolling_list_<name>_scroll_up and scrolling_list_<name>_scroll_down, where <name> is the string passed as the name parameter.
+ * Those buttons will control the scroll position appropriately.
+ *
+ * This constructor creates an empty scrollable list. Elements must be added through the .....
+ */
+var ScrollableList = function (name, x1, y1, x2, y2, layer, base) {
+	var SCROLL_BUTTON_WIDTH = 10;
+	var SCROLL_BUTTON_HEIGHT = 20;
+	var SCROLL_BUTTON_FONT = '18px Arial';
+
+	this.type = 'screen'
+	this.x = x1;
+	this.y = y1;
+	this.layer = layer;
+	this.base = base;
+	
+	this.scroll_position = 0;
+	this.display_elements = [];
+	this.display_element_sizes = [];
+	this.x2 = x2;
+	this.y2 = y2;
+	this.width = this.x2 - this.x;
+	this.height = this.y2 - this.y;
+	
+	this.buttons = [
+		new Button ("scrolling_list_" + name + "_scroll_up", this.width - SCROLL_BUTTON_WIDTH, this.height/2 - SCROLL_BUTTON_HEIGHT, this.width, this.height/2, base.layer + 1, "/\\", SCROLL_BUTTON_FONT, 'rgba(0,0,0,1)'),
+		new Button ("scrolling_list_" + name + "_scroll_down", this.width - SCROLL_BUTTON_WIDTH, this.height/2, this.width, this.height/2 + SCROLL_BUTTON_HEIGHT, base.layer + 1, "\\/", SCROLL_BUTTON_FONT, 'rgba(0,0,0,1)')
+	];
+	this.textFields = [];
+	this.extras = [];
+}
+
+/* Helper function related to ScrollableList. Based on the current scroll position, determines the y-coordinate of the top of the element at the given index. 
+ * Note that this function can return a negative value (if the scroll position is past the given element).
+ */
+function yPositionOfScrollableListElement(scrollableList, index) {
+	var i = scrollableList.scroll_position;
+	if (i == index) {
+		return 0;
+	} else if (index > i) {
+		var yPos = 0;
+		for (; i < index; i++) {
+			yPos += scrollableList.display_element_sizes[i];
+		}
+		return yPos;
+	} else if (index < i) {
+		var yPos = 0;
+		for (; i >= index; i--) {
+			yPos -= scrollableList.display_element_sizes[i];
+		}
+		return yPos;
+	}	
+}
+
+/* Helper function related to ScrollableList. Returns true if the element at the given index should be displayed on the screen, based on the current scroll position. */
+function scrollableListElementDisplayable(scrollableList, index) {
+	var yPos = yPositionOfScrollableListElement(scrollableList, index);
+	return yPos >= 0 && yPos + scrollableList.display_element_sizes[index] <= scrollableList.height;
+}
+
 /* An internet browser in game. Each device can have its own object, to preserve common sense.
  * The usage of the browser object's screen field is such that it has one element in the extras list, a screen, @ (0, 70), the webpage*/
 var Browser = function () {
@@ -739,7 +803,7 @@ function drawDisplayObject (element, commands) {
 			drawDisplayObject(translate(element.extras[i], element.x, element.y, element.layer), commands);
 		}
 
-		element["on_screen"] = true;
+		markAsOnScreen(element);
 	}
 }
 
@@ -768,7 +832,27 @@ function clearDisplayObject (element, commands) {
 			clearDisplayObject(translate(element.extras[i], element.x, element.y, element.layer), commands);
 		}
 
-		delete element["on_screen"];
+		markAsOffScreen(element);
+	}
+}
+
+/* Helper function. Marks this screen and all sub-screens as on screen */
+function markAsOnScreen(element) {
+	element["on_screen"] = true;
+	
+	for (var i = 0; i < element.extras.length; i++) {
+		if (element.extras[i].type == 'screen')
+			markAsOnScreen(element.extras[i]);
+	}
+}
+
+/* Helper function. Marks this screen and all sub-screens as off the screen. */
+function markAsOffScreen(element) {
+	delete element["on_screen"]
+	
+	for (var i = 0; i < element.extras.length; i++) {
+		if (element.extras[i].type == 'screen')
+			markAsOffScreen(element.extras[i]);
 	}
 }
 
@@ -785,6 +869,19 @@ function translate (element, dx, dy, dl) {
 		answer.y2 += dy;
 	}
 	return answer;
+}
+
+/* Helper function.
+ * Translates the element by the specified amount. Modifies the given object.
+ */
+function translateInPlace (element, dx, dy, dl) {
+	element.x += dx;
+	element.y += dy;
+	element.layer += dl;
+	if (typeof element.x2 !== 'undefiend' && typeof element.y2 !== 'undefined') {
+		element.x2 += dx;
+		element.y2 += dy;
+	}
 }
 
 /* adds the commands required to add the specified button to commands */
@@ -1004,7 +1101,7 @@ io.on('connection', function (socket) {
 	
 	/* Creates a fresh game object, for a player who has never played before. */
 	function makeNewGame () {
-		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneNotYetActivatedScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, toDoList:[], todolist_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false, locked_locations:["mall", "police_station", "coffee_shop", "library", "apartment"]};
+		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], mailbox_displayed_index:0, toDoList:[], todolist_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false, locked_locations:["mall", "police_station", "coffee_shop", "library", "apartment"]};
 		game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100, 0)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 		game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 		game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
@@ -1013,12 +1110,19 @@ io.on('connection', function (socket) {
 		game.screens["phoneSettingsUninstallPage"] = new Screen (game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneSettingsUninstallPage"], new Button("phone-uninstall-back", 0, 0, 173, 20, 2, "Back", "16px Times", "rgba(0,0,0,1)"));
 		
+		game.screens["phoneAlertLogPage"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
+		addButtonToScreen(game.screens["phoneAlertLogPage"], new Button ("phone-alert-log-back", 0, 0, 173, 20, 2, "Back", "16px Times", "rgba(0,0,0,1)"));
+		// Invariant: this element is never moved or deleted from the 0th position in the phoneAlertLogPage's extras list
+		addElementToScreen(game.screens["phoneAlertLogPage"], new ScrollableList("phone-alert-log-list", 0, 20, 173, 291, 2, new Rectangle ("phone_alert_log_backing_transparent_rectangle", 0, 0, 173, 271, 0, "rgba(0,0,0,0)")));
+		
 		game.dialogs["invalidUninstallDialog"] = new Dialog ("invalidUninstallDialog", "", "You can't uninstall that app!", ["Close."]);
 		
 		installPhoneApp(new PhoneApp("Settings", new Image("image/phone/icon/settings", 0, 0, 0, 56.0/57.0), "phoneSettingsAppScreen"));
 		game.screens["phoneSettingsAppScreen"] = new Screen (game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
+		
 		addButtonToScreen(game.screens["phoneSettingsAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Settings", "24px Times", "rgba(0,0,0,1)"));
 		addButtonToScreen(game.screens["phoneSettingsAppScreen"], new Button("phone-settings-uninstall-page", 0, 30, 173, 50, 2, "Uninstall Apps", "16px Times", "rgba(0,0,0,1)"));
+		addButtonToScreen(game.screens["phoneSettingsAppScreen"], new Button("phone-alert-log", 0, 50, 173, 70, 2, "Alert Log", "16px Times", "rgba(0,0,0,1)"));
 
 		// Note that all phone applications should have an exit button; however, may be placed anywhere on the screen, not necessarily at (0,0).
 		// installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0), "phoneEmailAppScreen"));
@@ -1031,7 +1135,6 @@ io.on('connection', function (socket) {
 		// installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0), "phoneMapAppScreen"));
 		game.screens["phoneMapAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Map", "24px Times", "rgba(0,0,0,1)"));
-
 
 		game.screens["phoneTodoListAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		// installPhoneApp( new PhoneApp ("To-Do", new Image ("image/phone/icon/todo", 0, 0, 0, 56.0/57.0), "phoneTodoListAppScreen"));
@@ -1050,14 +1153,16 @@ io.on('connection', function (socket) {
 
 		game.dialogs["testDialog"] = new Dialog ("Title", "Title", "Text", ["close", "browser"]);
 
-
-
 		game.filesystems["testFilesystem"] = new FileSystem();
 		addToFileSystem(game.filesystems["testFilesystem"], "", "test.txt");
 		addToFileSystem(game.filesystems["testFilesystem"], "", new Folder ("test_dir", ["a.txt", "b.txt"]));
 
 		// Load the introduction scene into the game state object.
-		load_introduction (game, PHONE_SCREEN_LAYER);
+		load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER);
+		addElementToScrollableList(game.screens["introduction_computer"].extras[0], new Rectangle("test_blue_rect", 0, 0, 200, 100, 0, "rgba(0,0,255,1)"), 100);
+		addElementToScrollableList(game.screens["introduction_computer"].extras[0], new Rectangle("test_red_rect", 0, 0, 200, 100, 0, "rgba(255,0,0,1)"), 100);
+		addElementToScrollableList(game.screens["introduction_computer"].extras[0], new Rectangle("test_green_rect", 0, 0, 200, 50, 0, "rgba(0,255,0,1)"), 50);
+		addElementToScrollableList(game.screens["introduction_computer"].extras[0], new Rectangle("test_magenta_rect", 0, 0, 200, 100, 0, "rgba(255,0,255,1)"), 100);
 	}
 
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
@@ -1142,9 +1247,21 @@ io.on('connection', function (socket) {
 		load_police_station(game, addToFileSystem);
 		game.scenes_loaded = true;
 		
+		// Decide after which scene should the MFA sequence occur (when the player gets hacked)
+		var random_num = 1 + Math.floor(3 * Math.random()); // Random number from 1 to 3, inclusive
+		if (random_num == 1) {
+			console.log(username + " | will be hacked after completing the library.");
+			game.library_variables.on_completion_trigger_email_hack = true;
+		} else if (random_num == 2) {
+			console.log(username + " | will be hacked after completing the coffee shop.");
+			game.coffee_shop_variables.on_completion_trigger_email_hack = true;
+		} else {
+			console.log(username + " | will be hacked after completing the apartment.");
+			game.apartment_variables.on_completion_trigger_email_hack = true;
+		}
+		
 		unlockLocation("mall");
 		
-		// Temporary code - unlocks all the missions.
 		sendMissionEmail("police_station");
 	}
 	
@@ -1559,6 +1676,17 @@ io.on('connection', function (socket) {
 			}
 			return false;
 		}
+	}
+	
+	// Pushes an "Alert" message to the player's phone.
+	// message should be a string; the message to display.
+	function pushPhoneAlert (message) {
+		var alert_log = game.screens["phoneAlertLogPage"].extras[0]; // This is the scrolling list element containing all the logs.
+		
+		var notification_text_y_size = 90; 
+		var notification_text = new Text ("phone_notification_" + alert_log.display_elements.length, 0, 0, 173, notification_text_y_size, 0, message, "12px Times", "rgba(0,0,0,1)");
+	
+		addElementToScrollableList(alert_log, notification_text, notification_text_y_size);
 	}
 
 	function addToTodoList (task) {
@@ -2028,6 +2156,79 @@ io.on('connection', function (socket) {
 		if (removeCount != 1) writeToServerLog(username + " | Warning, call to removeTextInputFieldFromScreen removed " + removeCount + " fields. Arguments were screen = " + screen + "field = " + field);
 		socket.emit('command', commands);
 	}
+	
+	/* Adds an element to a ScrollableList. 
+	 * Note that the (x, y) position of an element added to a ScrollableList will be changeDirectory
+	 * based on the current scroll position of that list.
+	 * This method will work even if the ScrollableList is on the screen.
+	 */
+	function addElementToScrollableList (scrollableList, element, element_vertical_size) {
+		var new_element_index = scrollableList.display_elements.length;
+		scrollableList.display_elements[new_element_index] = element;
+		scrollableList.display_element_sizes[new_element_index] = element_vertical_size;
+		
+		if (scrollableListElementDisplayable(scrollableList, new_element_index)) {
+			// Moves the object to the appropriate position, and adds it to the screen.
+			translateInPlace(element, -element.x, yPositionOfScrollableListElement(scrollableList, new_element_index) - element.y, 0);		
+			addElementToScreen(scrollableList, element);
+		}
+	}
+	
+	/* Changes the scroll position of a ScrollableList to a the specified new position.
+	 * This method will work even when the ScrollableList is on the screen.
+	 */
+	function changeScrollPositionOfScrollableList (scrollableList, newScrollPosition) {
+		console.log("Called. New Scroll Position is " + newScrollPosition);
+		console.log(scrollableList.on_screen);
+		// Remove all visible elements from the screen.
+		for (var i = 0; i < scrollableList.extras.length; i++) {
+			removeElementFromScreen(scrollableList, scrollableList.extras[i]);
+			i--;
+		}
+		
+		// Sets the new scroll position.
+		scrollableList.scroll_position = newScrollPosition;
+		
+		// Adds the elements that are now visible back to the screen in the appropriate places.
+		for (var i = 0; i < scrollableList.display_elements.length; i++) {
+			if (scrollableListElementDisplayable(scrollableList, i)) {
+				translateInPlace(scrollableList.display_elements[i], -scrollableList.display_elements[i].x, yPositionOfScrollableListElement(scrollableList, i) - scrollableList.display_elements[i].y, 0);
+				addElementToScreen(scrollableList, scrollableList.display_elements[i]);
+			}
+		}
+	}
+	
+	/* Removes the specified element from the ScrollableList.
+	 * This method will work even when the ScrollableList is on the screen.
+	 */
+	function deleteElementFromScrollableList (scrollableList, element) {
+		var removeCount = 0;
+		// Find the given element in the scrollableList's display elements and delete it, as well as the 
+		// record of its size.
+		for (var i = 0; i < scrollableList.display_elements.length; i++) {
+			if (scrollableList.display_elements[i] == element) {
+				scrollableList.display_elements.splice(i, 1);
+				scrollableList.display_element_sizes.splice(i, 1);
+				i--;
+				removeCount++;
+			}
+		}
+		
+		// The scroll position may now need to be updated, if the removal of this element has caused the current scroll position to become invalid.
+		// The scroll position must always be 0 if the list is empty, or between 0 and the list's length - 1 if the list is not empty.
+		// Note that this direct modification of the scroll position is only safe because of the call below these conditional statements.
+		if (scrollableList.display_elements.length == 0) {
+			scrollableList.scroll_position = 0;
+		} else if (scrollableList.scroll_position >= scrollableList.display_elements.length) {
+			scrollableList.scroll_position = scrollableList.display_elements.length - 1;
+		}
+		
+		// There is of course a more efficient way to do this [redraw the components that moved as a result of the deletion], but this is the easiest.
+		changeScrollPositionOfScrollableList(scrollableList, scrollableList.scroll_position);
+		
+		if (removeCount != 1) 
+			writeToServerLog(username + " | Warning: call to deleteElementFromScrollableList removed " + removeCount + " elements. Arguments were scrollableList = " + scrollableList + ", element = " + element);
+	}
 
 	/* Starts playing an audio file. The audioID is a string, which matches the ID of the audio element in the HTML code. */
 	function playAudio (audioID) {
@@ -2055,6 +2256,19 @@ io.on('connection', function (socket) {
 		commands.push(["playVideo", videoID]);
 
 		socket.emit('command', commands);
+	}
+	
+	/* This function triggers the email-hacking incident */
+	function triggerEmailHack () {
+		var message;
+		if (game.introduction_variables.mfa_enabled) {
+			var mfa_code = Math.random(10).toString().substring(2, 7);
+			message = new EmailMessage("New Account Activity", "No-Reply", "A login attempt was detected from 222.186.161.215 [China - Nanjing].", []);
+			pushPhoneAlert("Login attempted from 222.186.161.215 [China - Nanjing]. Enter this code when prompted to proceed: " + mfa_code);
+		} else {
+			message = new EmailMessage("New Account Activity", "No-Reply", "A new login was detected from 222.186.161.215 [China - Nanjing].", []);
+		}
+		addToMailbox(message);
 	}
 	
 	/* Function checks to see if the user has completed the game. If so, will show the game complete screen. */
@@ -2099,6 +2313,51 @@ io.on('connection', function (socket) {
 
 		return false;
 	}
+	
+	// Returns a reference to the screen object that contains a button with the given name.
+	// Returns null if the requested button cannot be located.
+	function findScreenWithButton (button_name) {
+		var retVal = null;
+		if (typeof game.active_dialog !== 'undefined') {
+			retVal =  findScreenWithButtonHelper(game.dialogs[game.active_dialog.name].screen, button_name);
+		} else if (typeof game.active_browser !== 'undefined') {
+			retVal = findScreenWithButtonHelper(game.browsers[game.active_browser].screen, button_name);
+		} else if (typeof game.active_filesystem !== 'undefined') {
+			retVal = findScreenWithButtonHelper(get_current_screen(game.filesystems[game.active_filesystem]), button_name);
+		} else {
+			retVal = findScreenWithButtonHelper(game.screens[game.main_screen], button_name);
+		}
+		
+		if (retVal != null) {
+			return retVal;
+		} else {
+			if (game.phone.visible && game.phone.raised && game.phone.screen_on) {
+				retVal = findScreenWithButtonHelper(game.screens[game.phone.screen], button_name);
+			} 
+			
+			return retVal;
+		}	
+	}
+	
+	// Helper function. Returns screen if the given screen directly contains the button.
+	// Otherwise, recursively searches for the button in the screens that are children of
+	// this screen.
+	function findScreenWithButtonHelper (screen, button_name) {
+		for (var i = 0; i < screen.buttons.length; i++) {
+			if (screen.buttons[i].name == button_name)
+				return screen;
+		}
+		
+		for (var i = 0; i < screen.extras.length; i++) {
+			if (screen.extras[i].type == 'screen') {
+				var returnValue = findScreenWithButtonHelper(screen.extras[i], button_name);
+				if (returnValue != null) 
+					return returnValue;
+			}
+		}
+		
+		return null;
+	}
 
 	socket.on('click', function (button) {
 		// Verify that the clicked button is actually on the screen.
@@ -2141,26 +2400,26 @@ io.on('connection', function (socket) {
 		
 		// Handle events in the modules, but only if they are loaded
 		if (game.scenes_loaded) {
-			if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, markAsComplete, checkForGameCompletion, game.coffee_shop_variables, game)) {
+			if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, game.coffee_shop_variables, game)) {
 				return;
 			} else if(mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, installPhoneApp, addButtonToScreen, changePhoneScreen, addToTodoList, markAsComplete, removeElementFromScreen, showPhone, raisePhone, phoneScreenOn, game, game.mall_scene_variables)) {
 				return;
 			}
-			if (library_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFileSystem, existsInFileSystem, checkForGameCompletion, game.library_variables, game.screens["library_success"].extras[1])) {
+			if (library_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFileSystem, existsInFileSystem, triggerEmailHack, checkForGameCompletion, game.library_variables, game.screens["library_success"].extras[1])) {
 				return;
 			}
 
-			if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables, game.browsers["rout"], displayBrowser, closeBrowser, changeBrowserWebPage, checkForGameCompletion, game.screens["apartment_success"].extras[0])) {
+			if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables, game.browsers["rout"], displayBrowser, closeBrowser, changeBrowserWebPage, checkForGameCompletion, triggerEmailHack, game.screens["apartment_success"].extras[0])) {
 				return;
 			}
 			
-			if (police_station_onclick(button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, displayFileSystem, closeFileSystem, existsInFileSystem, displayBrowser, changeBrowserWebPage, closeBrowser, game.browsers["police_station_browser"], game.police_station_variables)) {
+			if (police_station_onclick(button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, displayFileSystem, closeFileSystem, existsInFileSystem, displayBrowser, changeBrowserWebPage, closeBrowser, playVideo, game.browsers["police_station_browser"], game.police_station_variables)) {
 				return;
 			}
 
 		}
 
-		if (introduction_onclick(button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, hidePhone, showPhone, game.browsers["introduction_computer_browser"], game.introduction_variables)) {
+		if (introduction_onclick(button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, hidePhone, showPhone, pushPhoneAlert, game.browsers["introduction_computer_browser"], game.introduction_variables)) {
 			return;
 		}
 
@@ -2199,6 +2458,28 @@ io.on('connection', function (socket) {
 			changePhoneScreen("phoneHomeScreen");
 			return;
 		}
+		
+		if (button.match(/scrolling_list_.*_scroll_up/) != null) {
+			var scrolling_list = findScreenWithButton(button);
+			if (scrolling_list != null) {
+				if (scrolling_list.scroll_position > 0)
+					changeScrollPositionOfScrollableList(scrolling_list, scrolling_list.scroll_position - 1);
+				return;
+			} else {
+				writeToServerLog(username + " | failed to find scrolling list with the button: " + button_name);
+			} 
+		} else if (button.match(/scrolling_list_.*_scroll_down/) != null) {
+			var scrolling_list = findScreenWithButton(button);
+			if (scrolling_list != null) {
+				if (scrolling_list.display_elements.length > 0 && scrolling_list.scroll_position < scrolling_list.display_elements.length - 1)
+					changeScrollPositionOfScrollableList(scrolling_list, scrolling_list.scroll_position + 1);
+				return;
+			} else {
+				writeToServerLog(username + " | failed to find scrolling list with the button: " + button_name);
+			}
+		}
+		
+		
 		if (typeof game.active_filesystem !== 'undefined') {
 			var current_folder = get_folder(game.filesystems[game.active_filesystem], game.filesystems[game.active_filesystem].currentDirectory);
 			for (var i = 0; i < current_folder.contents.length; i++) {
@@ -2236,7 +2517,7 @@ io.on('connection', function (socket) {
 		} else if (button == 'browser-minimize') {
 			closeBrowser(true);
 		} else if (button == 'browser-x') {
-			closeBrowser(false);
+			closeBrowser(true); // For maximum realism, this should be closeBrowser(false), to clear the displayed webpage when the browser is exited, but for ease of gameplay, I set it to true.
 		} else if (button == 'dialog_Title_close') {
 			closeDialog();
 		} else if (button == 'dialog_Title_browser') {
@@ -2289,6 +2570,10 @@ io.on('connection', function (socket) {
 		} else if (button == 'phone-settings-uninstall-page') {
 			changePhoneScreen("phoneSettingsUninstallPage");
 		} else if (button == 'phone-uninstall-back') {
+			changePhoneScreen("phoneSettingsAppScreen");
+		} else if (button == 'phone-alert-log') {
+			changePhoneScreen("phoneAlertLogPage");
+		} else if (button == 'phone-alert-log-back') {
 			changePhoneScreen("phoneSettingsAppScreen");
 		} else if (button == 'dialog_invalidUninstallDialog_Close.') {
 			closeDialog();
