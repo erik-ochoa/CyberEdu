@@ -2413,7 +2413,7 @@ io.on('connection', function (socket) {
 				return;
 			}
 			
-			if (police_station_onclick(button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, displayFileSystem, closeFileSystem, existsInFileSystem, displayBrowser, changeBrowserWebPage, closeBrowser, game.browsers["police_station_browser"], game.police_station_variables)) {
+			if (police_station_onclick(button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, displayFileSystem, closeFileSystem, existsInFileSystem, displayBrowser, changeBrowserWebPage, closeBrowser, playVideo, game.browsers["police_station_browser"], game.police_station_variables)) {
 				return;
 			}
 

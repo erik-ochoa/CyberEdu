@@ -131,11 +131,12 @@ function load_police_station (game, addToFileSystem) {
 	game.police_station_variables = {
 		spoken_to_receptionist_once:false,
 		only_arithmeticLab:false,
-		included_all:false
+		included_all:false,
+		backups_video_shown:false
 	};
 }
 
-function police_station_onclick (button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, displayFileSystem, closeFileSystem, existsInFileSystem, displayBrowser, changeBrowserWebPage, closeBrowser, browser, vars) {
+function police_station_onclick (button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, displayFileSystem, closeFileSystem, existsInFileSystem, displayBrowser, changeBrowserWebPage, closeBrowser, playVideo, browser, vars) {
 	if (button == "police_station_door3") {
 		changeMainScreen("player_office");
 		resizeCanvas(1308, 837);
@@ -278,6 +279,10 @@ function police_station_onclick (button, changeMainScreen, resizeCanvas, sendMis
 		return true;
 	} else if(button == "dialog_victim_name_dialog_6_Next.") {
 		closeDialog();
+		if (!vars.backups_video_shown) {
+			playVideo("video/backups");
+			vars.backups_video_shown = true;
+		}
 		return true;
 	} else if(button == "close_ads") {
 		changeMainScreen("office_lobby");
