@@ -10,6 +10,22 @@ function load_police_station (game, addToFileSystem) {
 		new Text ("police_station_nameplate3", 334, 233, 411, 253, 2, game.player_name, "16px Arial", "rgba(0, 0, 0, 1)")//,
 		//new Image ("image/police_station/office_lobby/glass_wall", 0, 0, 3)
 	]);
+
+	game.screens["office_lobby_no_victim"] = new Screen(0, 0, 0, new Image("image/police_station/office_lobby_no_victim", 0, 0, 0), [
+		new Button ("police_station_door1", 25, 210, 143, 451, 1),
+		new Button ("police_station_door2", 173, 210, 289, 451, 1),
+		new Button ("police_station_door3", 317, 210, 436, 451, 1),
+		new Button ("police_station_receptionist", 806, 293, 869, 421, 1)
+	], [], [
+		new Text ("police_station_nameplate1", 44, 233, 123, 253, 2, "P.D. Chief", "16px Arial", "rgba(0, 0, 0, 1)"),
+		new Text ("police_station_nameplate2", 190, 233, 266, 253, 2, game.partner_name, "16px Arial", "rgba(0, 0, 0, 1)"),
+		new Text ("police_station_nameplate3", 334, 233, 411, 253, 2, game.player_name, "16px Arial", "rgba(0, 0, 0, 1)")//,
+		//new Image ("image/police_station/office_lobby/glass_wall", 0, 0, 3)
+	]);
+
+	game.screens["player_office_victim"] = new Screen(0, 0, 0, new Image("image/police_station/player_office_victim", 0, 0, 0, 1.7), [
+		new Button ("player_office_exit_door", 985, 260, 1122, 648, 1)
+	], [] ,[]);
 	
 	game.screens["player_office"] = new Screen(0, 0, 0, new Image("image/police_station/player_office", 0, 0, 0), [
 		new Button ("player_office_exit_door", 985, 260, 1122, 648, 1)
@@ -22,11 +38,11 @@ function load_police_station (game, addToFileSystem) {
 
 	game.browsers["police_station_browser"] = new Browser();
 	
-	game.dialogs["police_station_receptionist_dialog_1"] = new Dialog ("police_station_receptionist_dialog_1", "Receptionist", "Hello, " + game.player_name + ". Welcome to the police station. Here's your badge. Your new office is the door on the right. From here on out, You'll receive notifications of missions to complete via email on your phone.", ["Got it."]);
-	game.dialogs["police_station_receptionist_dialog_2"] = new Dialog ("police_station_receptionist_dialog_2", "Receptionist", "How are you doing, " + game.player_name + "? Remember, you get notifications of missions to complete via email. Once you get a mission, use the map to travel to the location and solve the case.", ["I'm doing fine."]);
+	game.dialogs["police_station_receptionist_dialog_1"] = new Dialog ("police_station_receptionist_dialog_1", "Receptionist", "Hello, " + game.player_name + ". Welcome to the UMD Division of IT Headquarters. Here's your employee badge, access to the intern office. Your new office is the door on the right. From here on out, You'll receive notifications of missions to complete via email on your phone.", ["Got it."]);
+	game.dialogs["police_station_receptionist_dialog_2"] = new Dialog ("police_station_receptionist_dialog_2", "Receptionist", "How are you doing, " + game.player_name + "? Remember, you get notifications of missions to complete via email. Once you get a mission, use the map to travel to the location and solve the case.", ["Got it."]);
 
 	game.dialogs["police_station_victim_name_dialog_1"] = new Dialog("police_station_victim_name_dialog_1", victim_name, "Hello, my name is " + victim_name + " I'm here because my internet browser is acting very strange and I am wondering if anyone could offer any assistance.", ["Help."]);
-	game.dialogs["police_station_victim_name_dialog_2"] = new Dialog("police_station_victim_name_dialog_2", game.player_name, "I might be able to help you out, what seems to be the problem?", ["Next."]);
+	game.dialogs["police_station_victim_name_dialog_2"] = new Dialog("police_station_victim_name_dialog_2", game.player_name, "I might be able to help you out. Follow me into my office. What seems to be the problem?", ["Next."]);
 	game.dialogs["police_station_victim_name_dialog_3"] = new Dialog("police_station_victim_name_dialog_3", victim_name, "Thanks for your help. Everytime I open my internet broswer, a ton of pop ads cover the screen. Then when I manage to close enough of them, I noticed that my browser's homepage has been changed.", ["Next."]);
 	game.dialogs["police_station_victim_name_dialog_4"] = new Dialog("police_station_victim_name_dialog_4", game.player_name, "Sounds like you might have a nasty case of malware. Have you downloaded anything from or browsed any risky or shady sites recently?", ["Next."]);
 	game.dialogs["police_station_victim_name_dialog_5"] = new Dialog("police_station_victim_name_dialog_5", victim_name, "Being a college student, I tried to see if I can find a free version of ArithmeticLab software for free. I found the program online but it was torrent download I think. I just thought it was a different form of dwonload. Do you think that may be the cause?", ["Next."]);
@@ -132,14 +148,20 @@ function load_police_station (game, addToFileSystem) {
 		spoken_to_receptionist_once:false,
 		only_arithmeticLab:false,
 		included_all:false,
+		module_complete: false
 		backups_video_shown:false
 	};
 }
 
 function police_station_onclick (button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, displayFileSystem, closeFileSystem, existsInFileSystem, displayBrowser, changeBrowserWebPage, closeBrowser, playVideo, browser, vars) {
 	if (button == "police_station_door3") {
+>>>>>>> 9866503f4403725ca40b14b6906470444be013ef
 		changeMainScreen("player_office");
 		resizeCanvas(1308, 837);
+		return true;
+	} else if(button == "player_office_exit_door" && vars.module_complete == true) {
+		changeMainScreen("office_lobby_no_victim");
+		resizeCanvas(1152, 648);
 		return true;
 	} else if (button == "player_office_exit_door") {
 		changeMainScreen("office_lobby");
@@ -163,14 +185,19 @@ function police_station_onclick (button, changeMainScreen, resizeCanvas, sendMis
 		closeDialog();
 		return true;
 	} /* Remove these two cases later!*/ else if (button == "police_station_door1" || button == "police_station_door2") {
+		changeMainScreen("player_office");
+		return true;
+	} else if(button == "police_station_door3" && vars.module_complete == false) {
 		showDialog("police_station_victim_name_dialog_1");
 		return true;
-	} /* Remove this case later! */else if (button == "dialog_police_station_victim_name_dialog_1_Help.") {
+	}
+	else if (button == "dialog_police_station_victim_name_dialog_1_Help.") {
 		closeDialog();
 		showDialog("police_station_victim_name_dialog_2");
 		return true;
 	} else if (button == "dialog_police_station_victim_name_dialog_2_Next.") {
 		closeDialog();
+		changeMainScreen("player_office_victim");
 		showDialog("police_station_victim_name_dialog_3");
 		return true;
 	} else if(button == "dialog_police_station_victim_name_dialog_3_Next.") {
@@ -279,13 +306,14 @@ function police_station_onclick (button, changeMainScreen, resizeCanvas, sendMis
 		return true;
 	} else if(button == "dialog_victim_name_dialog_6_Next.") {
 		closeDialog();
+		vars.module_complete = true;
 		if (!vars.backups_video_shown) {
 			playVideo("video/backups");
 			vars.backups_video_shown = true;
 		}
 		return true;
 	} else if(button == "close_ads") {
-		changeMainScreen("office_lobby");
+		changeMainScreen("player_office_victim");
 		showDialog("police_station_victim_name_dialog_4");
 		return true;
 	}
