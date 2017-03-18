@@ -29,9 +29,6 @@ function load_coffee_shop (game, addElementToScreen, removeElementFromScreen) {
 		new Rectangle ("coffee_shop_failed_quit_backing_rectangle", 628, 427, 938, 515, 1, "rgba(255,255,0,0.5)")
 	]);
 	
-	// Loading the music.
-	game.background_music["coffee_shop"] = "audio/mall";
-	
 	var manager_name = "Manager";
 	var customer_1_name = "Black Jeans";
 	var customer_2_name = "Newspaper";

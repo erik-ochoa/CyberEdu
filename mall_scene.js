@@ -33,13 +33,6 @@ function load_mall(game) {
 		new Button ("limitless_email", 752, 205, 860, 235, 0)
 		], [], []);
 
-	game.background_music["mall_inside"] = "audio/mall";
-	game.background_music["Productivity_Store"] = "audio/mall";
-	game.background_music["Navigation_Store"] = "audio/mall";
-	game.background_music["Social_Hub"] = "audio/mall";
-	game.background_music["Spoof"] = "audio/mall";
-
-
 	var inside_female = "Emma";
 	var social_employee ="Craig"
 	var social_male = "Patrick";
