@@ -828,19 +828,33 @@ function clearDisplayObject (element, commands) {
 	}
 }
 
-/* Helper function. Marks this screen and all sub-screens as on screen */
-function markAsOnScreen(element) {
+/* Helper function. Marks this screen and all sub-screens as on screen. 
+ * The parent_on_screen_x, parent_on_screen_y, and parent_on_screen_layer arguments are used in recursive calls.
+ */
+function markAsOnScreen(element, parent_on_screen_x, parent_on_screen_y, parent_on_screen_layer) {
 	element["on_screen"] = true;
+	element["on_screen_x"] = typeof parent_on_screen_x === 'undefined' ? element.x : element.x + parent_on_screen_x;
+	element["on_screen_y"] = typeof parent_on_screen_y === 'undefined' ? element.y : element.y + parent_on_screen_y; 
+	element["on_screen_layer"] = typeof parent_on_screen_layer === 'undefined' ? element.layer : element.layer + parent_on_screen_layer;
+	
+	if (element.base.type == 'screen')
+		markAsOnScreen(element.base, element["on_screen_x"], element["on_screen_y"], element["on_screen_layer"]);
 	
 	for (var i = 0; i < element.extras.length; i++) {
 		if (element.extras[i].type == 'screen')
-			markAsOnScreen(element.extras[i]);
+			markAsOnScreen(element.extras[i], element["on_screen_x"], element["on_screen_y"], element["on_screen_layer"]);
 	}
 }
 
 /* Helper function. Marks this screen and all sub-screens as off the screen. */
 function markAsOffScreen(element) {
-	delete element["on_screen"]
+	delete element["on_screen"];
+	delete element["on_screen_x"];
+	delete element["on_screen_y"];
+	delete element["on_screen_layer"];
+	
+	if (element.base.type == 'screen')
+		markAsOffScreen(element.base);
 	
 	for (var i = 0; i < element.extras.length; i++) {
 		if (element.extras[i].type == 'screen')
@@ -2030,10 +2044,8 @@ io.on('connection', function (socket) {
 	function addElementToScreen (screen, element) {
 		var commands = [];
 		
-		// MASSIVE BUG: If the argument screen is nested within another screen, this does not work.
-		// Bug is likely to be translated below. 
 		if (screen["on_screen"]) {
-			drawDisplayObject(translate(element, screen.x, screen.y, screen.layer), commands);
+			drawDisplayObject(translate(element, screen.on_screen_x, screen.on_screen_y, screen.on_screen_layer), commands);
 		}
 
 		screen.extras.push(element);
@@ -2045,7 +2057,7 @@ io.on('connection', function (socket) {
 	function removeElementFromScreen (screen, element) {
 		var commands = [];
 		if (screen["on_screen"]) {
-			clearDisplayObject(translate(element, screen.x, screen.y, screen.layer), commands);
+			clearDisplayObject(translate(element, screen.on_screen_x, screen.on_screen_y, screen.on_screen_layer), commands);
 		}
 
 		var removeCount = 0;
@@ -2065,9 +2077,9 @@ io.on('connection', function (socket) {
 		var commands = [];
 		if (screen["on_screen"]) {
 			if (button.text) {
-				commands.push(["addButton", button.name, screen.x + button.x1, screen.y + button.y1, screen.x + button.x2, screen.y + button.y2, screen.layer + button.layer, button.text, button.font, button.font_color]);
+				commands.push(["addButton", button.name, screen.on_screen_x + button.x1, screen.on_screen_y + button.y1, screen.on_screen_x + button.x2, screen.on_screen_y + button.y2, screen.on_screen_layer + button.layer, button.text, button.font, button.font_color]);
 			} else {
-				commands.push(["addButton", button.name, screen.x + button.x1, screen.y + button.y1, screen.x + button.x2, screen.y + button.y2, screen.layer + button.layer]);
+				commands.push(["addButton", button.name, screen.on_screen_x + button.x1, screen.on_screen_y + button.y1, screen.on_screen_x + button.x2, screen.on_screen_y + button.y2, screen.on_screen_layer + button.layer]);
 			}
 		}
 
@@ -2100,7 +2112,7 @@ io.on('connection', function (socket) {
 	function addTextInputFieldToScreen (screen, field) {
 		var commands = [];
 		if (screen["on_screen"]) {
-			commands.push(["addTextInputField", field.name, screen.x + field.x1, screen.y + field.y1, screen.x + field.x2, screen.y + field.y2, screen.layer + field.layer, field.text, field.font, field.font_color, field.help_text]);
+			commands.push(["addTextInputField", field.name, screen.on_screen_x + field.x1, screen.on_screen_y + field.y1, screen.on_screen_x + field.x2, screen.on_screen_y + field.y2, screen.on_screen_layer + field.layer, field.text, field.font, field.font_color, field.help_text]);
 		}
 
 		screen.textFields.push(field);
