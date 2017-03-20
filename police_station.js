@@ -148,14 +148,13 @@ function load_police_station (game, addToFileSystem) {
 		spoken_to_receptionist_once:false,
 		only_arithmeticLab:false,
 		included_all:false,
-		module_complete: false
+		module_complete: false,
 		backups_video_shown:false
 	};
 }
 
 function police_station_onclick (button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, displayFileSystem, closeFileSystem, existsInFileSystem, displayBrowser, changeBrowserWebPage, closeBrowser, playVideo, browser, vars) {
 	if (button == "police_station_door3") {
->>>>>>> 9866503f4403725ca40b14b6906470444be013ef
 		changeMainScreen("player_office");
 		resizeCanvas(1308, 837);
 		return true;

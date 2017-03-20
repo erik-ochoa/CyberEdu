@@ -730,7 +730,7 @@ var PhoneApp = function (name, icon, screen_name, purchase_screen_name) {
 	this.purchase_screen_name = purchase_screen_name;
 }
 
-var ToDoTask = function(name, locationOfTask, task) {
+var TodoTask = function(name, locationOfTask, task) {
 	this.name = name;
 	this.task = task;
 	this.locationOfTask = locationOfTask;
@@ -738,14 +738,6 @@ var ToDoTask = function(name, locationOfTask, task) {
 	this.completed = false;
 }
 
-var sceneTasks = function(name) {
-	this.name = name;
-	this.tasks = new Array();
-	this.xpos = 30;
-	this.ypos = 30;
-	this.position = 45;
-	this.size = 0;
-}
 // Constants
 var PHONE_X = 200;
 var PHONE_Y_RAISED = 400;
@@ -1064,6 +1056,7 @@ io.on('connection', function (socket) {
 	 *		screen: The name of the screen object to show (The size of the phone screen is 173 x 291 pixels).
 	 *  phone_apps: An array of apps installed on the phone.
 	 *  mailbox: An array of email messages; the contents of the player's mailbox.
+	 *  todoList: An object used as a map of <location> --> {screen_name:<name of the screen for this location's todoList>, taskList:<array of TodoTasks>}
 	 *  main_screen: The name of the currently active main screen.
 	 *  active_browser: The name of the internet browser object that is currently active. Undefined if the browser is not active.
 	 *  active_dialog: An object with the following information. Undefined if there is no active dialog box.
@@ -1100,7 +1093,7 @@ io.on('connection', function (socket) {
 	
 	/* Creates a fresh game object, for a player who has never played before. */
 	function makeNewGame () {
-		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], toDoList:[], todolist_displayed_index:0, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false, locked_locations:["mall", "police_station", "coffee_shop", "library", "apartment"]};
+		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], todoList:{}, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false, locked_locations:["mall", "police_station", "coffee_shop", "library", "apartment"]};
 		game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100, 0)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 		game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 		game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
@@ -1127,6 +1120,7 @@ io.on('connection', function (socket) {
 		// installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0), "phoneEmailAppScreen"));
 		game.screens["phoneEmailAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneEmailAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Email", "24px Times", "rgba(0,0,0,1)"));
+		// Invariant: this element is never moved or deleted from the 0th position in the extras list
 		addElementToScreen(game.screens["phoneEmailAppScreen"], new ScrollableList("phone-email-list", 0, 30, 173, 291, 2, new Rectangle("phone_email_list_backing_transparent_rectangle", 0, 0, 173, 261, 0, 'rgba(0,0,0,0)')));
 
 		// Phone Map application -- To add a new location to the game, use the unlockLocation and add to the game.locked_locations list.
@@ -1134,18 +1128,12 @@ io.on('connection', function (socket) {
 		game.screens["phoneMapAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Map", "24px Times", "rgba(0,0,0,1)"));
 
+		// Phone TodoList application -- 
 		game.screens["phoneTodoListAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-		// installPhoneApp( new PhoneApp ("To-Do", new Image ("image/phone/icon/todo", 0, 0, 0, 56.0/57.0), "phoneTodoListAppScreen"));
-		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit To-Do List", "24px Times", "rgba(0,0,0,1)", 2));
-		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-mall", 0, 30, 173, 60, 2, "Mall", "24px Times", "rgba(0,0,0,1)", 2));
-		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-coffee", 0, 60, 173, 90, 2, "Coffee Shop", "24px Times", "rgba(0,0,0,1)", 2));
-		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-todo-library", 0, 90, 173, 120, 2, "Library", "24px Times", "rgba(0,0,0,1)", 2));
-		game.screens["phoneTodoLibrary"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-		game.screens["phoneTodoMall"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-		game.screens["phoneTodoCoffeeShop"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-		addButtonToScreen(game.screens["phoneTodoLibrary"], new Button("phone-backto-locations", 0, 0, 173, 30, 2, "Back", "24px Times", "rgba(0,0,0,1)", 2));
-		addButtonToScreen(game.screens["phoneTodoMall"], new Button("phone-backto-locations", 0, 0, 173, 30, 2, "Back", "24px Times", "rgba(0,0,0,1)", 2));
-		addButtonToScreen(game.screens["phoneTodoCoffeeShop"], new Button("phone-backto-locations", 0, 0, 173, 30, 2, "Back", "24px Times", "rgba(0,0,0,1)", 2));
+		//installPhoneApp( new PhoneApp ("To-Do", new Image ("image/phone/icon/todo", 0, 0, 0, 56.0/57.0), "phoneTodoListAppScreen"));
+		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit To-Do List", "24px Times", "rgba(0,0,0,1)"));
+		// This element should also never be moved or deleted from the 0th position of the extras list.
+		addElementToScreen(game.screens["phoneTodoListAppScreen"], new ScrollableList ("phone-todo-locations-list", 0, 30, 173, 291, 2, new Rectangle("phone_todo_locations_list_backing_transparent_rectangle", 0, 0, 173, 261, 0, 'rgba(0,0,0,0)')));
 
 		game.browsers["testBrowser"] = new Browser();
 
@@ -1157,10 +1145,6 @@ io.on('connection', function (socket) {
 
 		// Load the introduction scene into the game state object.
 		load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER);
-		addElementToScrollableList(game.screens["introduction_computer"].extras[0], new Rectangle("test_blue_rect", 0, 0, 200, 100, 0, "rgba(0,0,255,1)"), 100);
-		addElementToScrollableList(game.screens["introduction_computer"].extras[0], new Rectangle("test_red_rect", 0, 0, 200, 100, 0, "rgba(255,0,0,1)"), 100);
-		addElementToScrollableList(game.screens["introduction_computer"].extras[0], new Rectangle("test_green_rect", 0, 0, 200, 50, 0, "rgba(0,255,0,1)"), 50);
-		addElementToScrollableList(game.screens["introduction_computer"].extras[0], new Rectangle("test_magenta_rect", 0, 0, 200, 100, 0, "rgba(255,0,255,1)"), 100);
 	}
 
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
@@ -1687,52 +1671,84 @@ io.on('connection', function (socket) {
 		addElementToScrollableList(alert_log, notification_text, notification_text_y_size, 0);
 	}
 
+	var TASK_VERTICAL_SIZE = 36;
 	function addToTodoList (task) {
-		for(var ctr = 0; ctr < game.toDoList.length; ctr++) {
-			if(task.locationOfTask == game.toDoList[ctr].name) {
-				if(task.locationOfTask == 'library' && game.toDoList[ctr].tasks.length < MAX_TODO_LIST_TASKS) {
-					task.text = new Text (task.name, 0, game.toDoList[ctr].position, 173, 261,2, task.task, "16px Times", "rgba(0,0,01)");
-					game.toDoList[ctr].tasks.push(task);
-					addElementToScreen(game.screens["phoneTodoLibrary"], task.text);
-					game.toDoList[ctr].position = game.toDoList[ctr].position + 36;
-				}else if (task.locationOfTask == 'mall' && game.toDoList[ctr].tasks.length < MAX_TODO_LIST_TASKS) {
-					game.toDoList[ctr].tasks.push(task);
-					task.text = new Text (task.name, 0, game.toDoList[ctr].position, 173, 261 , 2, task.task, "16px Times", "rgba(0,0,0,1)");
-					addElementToScreen(game.screens["phoneTodoMall"], task.text);
-					game.toDoList[ctr].position = game.toDoList[ctr].position + 36;
-				}else if(task.locationOfTask == 'coffee-shop' && game.toDoList[ctr].tasks.length < MAX_TODO_LIST_TASKS) {
-					task.text = new Text (task.name, 0, game.toDoList[ctr].position, 173, 261, 2, task.task, "16px Times", "rgba(0,0,0,1)");
-					addElementToScreen(game.screens["phoneTodoCoffeeShop"], task.text);
-					game.toDoList[ctr].tasks.push(task);
-					game.toDoList[ctr].position = game.toDoList[ctr].position + 36;
-				}
+		// If this is the case, this location has not been seen before, so it must be added to the todo list main screen.
+		if (typeof game.todoList[task.locationOfTask] === 'undefined') {
+			game.todoList[task.locationOfTask] = {};
+			
+			game.todoList[task.locationOfTask].screen_name = "phoneTodoListAppScreenForLocation-" + task.locationOfTask;
+			game.screens[game.todoList[task.locationOfTask].screen_name] = new Screen (0, 0, 0, new Image('image/phone/screen/on', 0, 0, 0), [
+				new Button("phone-backto-locations", 0, 0, 173, 30, 1, "Back", "24px Times", "rgba(0,0,0,1)")
+				], [], [
+				new ScrollableList ("phone-todo-list-for-" + task.locationOfTask, 0, 30, 173, 291, 1, new Rectangle ("phone_todo_list_for_" + task.locationOfTask + "_backing_transparent_rectangle", 0, 0, 173, 261, 0, 'rgba(0,0,0,0)'))
+			]);
+			
+			console.log(game.todoList[task.locationOfTask].screen_name);
+			console.log(game.screens[game.todoList[task.locationOfTask].screen_name]);
+			
+			game.todoList[task.locationOfTask].taskList = [];
+			
+			var scrollableList = game.screens["phoneTodoListAppScreen"].extras[0]; // This is the scrollableList of all the locations. 
+			addElementToScrollableList(scrollableList, new Screen (0, 0, 0, 
+				new Rectangle(task.locationOfTask + "_todo_location_task_transparent_base_rectangle", 0, 0, 173, 291, 0, 'rgba(0,0,0,0)'), [
+				new Button ("phone-todo-list-open-location-" + task.locationOfTask, 0, 0, 173, 21, 1, task.locationOfTask, "18px Times", "rgba(0,0,0,1)") ], [], [
+			]), 21);
+		} 	
+		
+		game.todoList[task.locationOfTask].taskList.push(task);
+		addElementToScrollableList(game.screens[game.todoList[task.locationOfTask].screen_name].extras[0], createDisplayElementForTask(task), TASK_VERTICAL_SIZE);
+	}
+	
+	function removeFromTodoList (taskName, location) {
+		if (typeof game.todoList[location] === 'undefined') throw new Error ("Location was not defined in the Todo List: " + location);
+		
+		var removeCount = 0;
+		for (var i = 0; i < game.todoList[location].taskList.length; i++) {
+			if (game.todoList[location].taskList[i].name == taskName) {
+				game.todoList[location].taskList.splice(i, 1);
+				
+				var scrollableList = game.screens[game.todoList[location].screen_name].extras[0];
+				deleteElementFromScrollableList(scrollableList, scrollableList.display_elements[i]);
+				
+				removeCount++;
 			}
 		}
-			
+		
+		if (removeCount != 1) console.log(username + " | Warning: removeFromTodoList(" + taskName + ", " + location + ") removed " + removeCount + " entries!");
+	}
+	
+	function removeAllAtLocationFromTodoList (location) {
+		if (typeof game.todoList[location] === 'undefined') throw new Error ("Location was not defined in the Todo List: " + location);
+		
+		for (var i = 0; i < game.todoList[location].taskList.length; i++) {
+			removeFromTodoList(game.todoList[location].taskList[i].name, location);
+			i--;
+		}
 	}
 
-	function markAsComplete(taskName, location) {
-		for(var ctr = 0; ctr < game.toDoList.length; ctr++) {
-			if(location == game.toDoList[ctr].name) {
-				for(var i = 0; i < game.toDoList[ctr].tasks.length; i++) {
-					if(game.toDoList[ctr].tasks[i].name == taskName) {
-						game.toDoList[ctr].tasks[i].completed = true;
-						game.toDoList[ctr].tasks[i].text.font_color = "rgba(64,64,64,1)";
-						if(location == 'mall') {
-							removeElementFromScreen(game.screens["phoneTodoMall"], game.toDoList[ctr].tasks[i].text);
-							addElementToScreen(game.screens["phoneTodoMall"], game.toDoList[ctr].tasks[i].text);
-						} else if (location == 'library') {
-							removeElementFromScreen(game.screens["phoneTodoLibrary"], game.toDoList[ctr].tasks[i].text);
-							addElementToScreen(game.screens["phoneTodoLibrary"], game.toDoList[ctr].tasks[i].text);
-						} else if (location == 'coffee-shop') {
-							removeElementFromScreen(game.screens["phoneTodoCoffeeShop"], game.toDoList[ctr].tasks[i].text);
-							addElementToScreen(game.screens["phoneTodoCoffeeShop"], game.toDoList[ctr].tasks[i].text);
-						}
-					}
-				}
-
+	function markAsComplete(taskName, location, complete_status) {
+		if (typeof game.todoList[location] === 'undefined') throw new Error ("Location was not defined in the Todo List: " + location);
+		
+		var found = false;
+		for (var i = 0; i < game.todoList[location].taskList.length; i++) {
+			if (game.todoList[location].taskList[i].name == taskName) {
+				var task = game.todoList[location].taskList[i];
+				task.completed = complete_status;
+				
+				var scrollableList = game.screens[game.todoList[location].screen_name].extras[0];
+				deleteElementFromScrollableList(scrollableList, scrollableList.display_elements[i]);
+				addElementToScrollableList(scrollableList, createDisplayElementForTask(task), TASK_VERTICAL_SIZE, i);
+				
+				found = true;
 			}
 		}
+		
+		if (!found) console.log(username + " | Warning: no task found in " + location + " with name " + taskName);
+	}
+	
+	function createDisplayElementForTask(task) {
+		return new Text (task.name, 0, 0, 173, TASK_VERTICAL_SIZE, 1, task.task, "16px Times", task.completed ? "rgba(64,64,64,1)" : "rgba(0,0,0,1)");
 	}
 
 	var EMAIL_VERTICAL_SIZE = 15; // The vertical height of a single email message (in the phone-email-list)
@@ -1841,7 +1857,7 @@ io.on('connection', function (socket) {
 	/* Changes the phone screen, to the screen with the specified name */
 	function changePhoneScreen (name) {
 		var commands = [];
-
+		
 		game.screens[name].x = game.canvas.x - PHONE_SCREEN_X;
 		game.screens[name].y = game.canvas.y - PHONE_SCREEN_Y;
 		game.screens[name].layer = PHONE_SCREEN_LAYER;
@@ -2145,8 +2161,6 @@ io.on('connection', function (socket) {
 	 * This method will work even when the ScrollableList is on the screen.
 	 */
 	function changeScrollPositionOfScrollableList (scrollableList, newScrollPosition) {
-		console.log("changeScrollPositionOfScrollableList called. New Scroll Position is " + newScrollPosition);
-		console.log(scrollableList.on_screen);
 		// Remove all visible elements from the screen.
 		for (var i = 0; i < scrollableList.extras.length; i++) {
 			removeElementFromScreen(scrollableList, scrollableList.extras[i]);
@@ -2159,7 +2173,6 @@ io.on('connection', function (socket) {
 		// Adds the elements that are now visible back to the screen in the appropriate places.
 		for (var i = 0; i < scrollableList.display_elements.length; i++) {
 			if (scrollableListElementDisplayable(scrollableList, i)) {
-				console.log(scrollableList.display_elements[i]);
 				translateInPlace(scrollableList.display_elements[i], -scrollableList.display_elements[i].x, yPositionOfScrollableListElement(scrollableList, i) - scrollableList.display_elements[i].y, 0);
 				addElementToScreen(scrollableList, scrollableList.display_elements[i]);
 			}
@@ -2368,7 +2381,7 @@ io.on('connection', function (socket) {
 		
 		// Handle events in the modules, but only if they are loaded
 		if (game.scenes_loaded) {
-			if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, game.coffee_shop_variables, game)) {
+			if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, game.coffee_shop_variables, game)) {
 				return;
 			} else if(mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, installPhoneApp, addButtonToScreen, changePhoneScreen, addToTodoList, markAsComplete, removeElementFromScreen, showPhone, raisePhone, phoneScreenOn, game, game.mall_scene_variables)) {
 				return;
@@ -2447,6 +2460,12 @@ io.on('connection', function (socket) {
 			}
 		}
 		
+		if (button.match(/phone-todo-list-open-location-.*/) != null) {
+			// Extract the location name from the button string and change the phone screen to the todoList for that location. 
+			var location = button.substring(30);
+			changePhoneScreen("phoneTodoListAppScreenForLocation-" + location);
+			return;
+		}
 		
 		if (typeof game.active_filesystem !== 'undefined') {
 			var current_folder = get_folder(game.filesystems[game.active_filesystem], game.filesystems[game.active_filesystem].currentDirectory);
@@ -2523,12 +2542,6 @@ io.on('connection', function (socket) {
 			changeMainScreen("mall_scene");
 		} else if (button == 'phone-backto-locations') {
 			changePhoneScreen("phoneTodoListAppScreen");
-		} else if (button == 'phone-todo-library') {
-			changePhoneScreen("phoneTodoLibrary");
-		} else if (button == 'phone-todo-coffee') {
-			changePhoneScreen("phoneTodoCoffeeShop");
-		} else if (button == 'phone-todo-mall') {
-			changePhoneScreen("phoneTodoMall");
 		} else if (button == 'phone-settings-uninstall-page') {
 			changePhoneScreen("phoneSettingsUninstallPage");
 		} else if (button == 'phone-uninstall-back') {

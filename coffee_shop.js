@@ -200,7 +200,7 @@ function coffeeShopSetRandomCulprit (vars, game, addElementToScreen, removeEleme
 	}
 }
 
-function resetCoffeeShopVariables (vars, game, addElementToScreen, removeElementFromScreen) {
+function resetCoffeeShopVariables (vars, game, addElementToScreen, removeElementFromScreen, removeAllAtLocationFromTodoList) {
 	vars.spoken_to_manager = false;
 	vars.spoken_to_customer_1 = false;
 	vars.spoken_to_customer_2 = false;
@@ -217,6 +217,7 @@ function resetCoffeeShopVariables (vars, game, addElementToScreen, removeElement
 	vars.times_reset++;
 	
 	coffeeShopSetRandomCulprit(vars, game, addElementToScreen, removeElementFromScreen);
+	removeAllAtLocationFromTodoList("Coffee Shop");
 }
 
 function coffeeShopPickCulprit (accused, showDialog, closeDialog, vars, game) {
@@ -241,29 +242,29 @@ function coffeeShopShowPartnerDialog (showDialog, closeDialog, vars) {
 
 function coffeeShopCheckCompletionOfSpeakToWitnessesTask(markAsComplete, vars) {
 	if (vars.spoken_to_customer_2 && vars.spoken_to_customer_3 && vars.spoken_to_customer_4) {
-		markAsComplete("coffee_shop_task_speak_to_witnesses", "coffee-shop");
+		markAsComplete("coffee_shop_task_speak_to_witnesses", "Coffee Shop", true);
 	}
 }
 
 function enterCoffeeShop (resizeCanvas, changeMainScreen, showDialog, addToTodoList, vars) {
 	resizeCanvas(1188, 681);
 	changeMainScreen("coffee_shop");
-	addToTodoList(new ToDoTask("coffee_shop_task_speak_to_manager", "coffee-shop", "Speak with Manager"));
 	if (!vars.entry_message_shown) {
 		showDialog("coffee_shop_partner_dialog");
+		addToTodoList(new TodoTask("coffee_shop_task_speak_to_manager", "Coffee Shop", "Speak with Manager"));
 	}
 }
 
 // Returns true if the input event is consumed by this function, false if it does not.
 // Takes the name of the button and whatever other arguments it needs from the server.js in order to work.
 // Here vars is game.coffee_shop_variables as assigned above.
-function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, vars, game) {
+function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, vars, game) {
 	if (button == "coffee_shop_manager") {
 		if (!vars.spoken_to_manager) {			
 			showDialog("coffee_shop_manager_dialog");
-			markAsComplete("coffee_shop_task_speak_to_manager", "coffee-shop");
-			addToTodoList(new ToDoTask("coffee_shop_task_speak_to_witnesses", "coffee-shop", "Talk to witnesses (man wearing a top hat, woman wearing a red shirt, woman reading the newspaper)."));
-			addToTodoList(new ToDoTask("coffee_shop_task_speak_to_manager_2", "coffee-shop", "When you've identified the culprit, speak with the manager again."));
+			markAsComplete("coffee_shop_task_speak_to_manager", "Coffee Shop", true);
+			addToTodoList(new TodoTask("coffee_shop_task_speak_to_witnesses", "Coffee Shop", "Talk to witnesses (man wearing a top hat, woman wearing a red shirt, woman reading the newspaper)."));
+			addToTodoList(new TodoTask("coffee_shop_task_speak_to_manager_2", "Coffee Shop", "When you've identified the culprit, speak with the manager again."));
 		} else if (vars.picking_culprit) {
 			showDialog("coffee_shop_manager_dialog_6");
 		} else {
@@ -286,14 +287,14 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 	} else if (button == "dialog_coffee_shop_manager_dialog_4_Yes.") {
 		closeDialog();
 		showDialog("coffee_shop_manager_dialog_5");	
-		markAsComplete("coffee_shop_task_speak_to_manager_2", "coffee-shop");
+		markAsComplete("coffee_shop_task_speak_to_manager_2", "Coffee Shop", true);
 		return true;
 	} else if (button == "dialog_coffee_shop_manager_dialog_4_Not yet.") {
 		closeDialog();
 		return true;
 	} else if (button == "dialog_coffee_shop_manager_dialog_5_Okay.") {
 		vars.picking_culprit = true;
-		addToTodoList(new ToDoTask ("coffee_shop_task_select_culprit", "coffee-shop", "Select the culprit."));
+		addToTodoList(new TodoTask ("coffee_shop_task_select_culprit", "Coffee Shop", "Select the culprit."));
 		closeDialog();
 		return true;
 	} else if (button == "dialog_coffee_shop_manager_dialog_6_Yes, I know, it was...") {
@@ -307,7 +308,8 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 	} else if (button == "dialog_coffee_shop_manager_dialog_6_I'm not so sure anymore.") {
 		vars.picking_culprit = false;
 		closeDialog();
-		// TODO: I (JRH) need to un-check the task 'coffee_shop_task_speak_to_manager_2' here, and remove the task 'coffee_shop_task_select_culprit', if that is possible. Or re-think when tasks are checked off.
+		markAsComplete('coffee_shop_task_speak_to_manager_2', 'Coffee Shop', false);
+		removeFromTodoList('coffee_shop_task_select_culprit', 'Coffee Shop');
 		return true;
 	} else if (button == "dialog_coffee_shop_manager_dialog_7_Continue.") {
 		closeDialog();
@@ -479,7 +481,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		return true;
 	} else if (button == "dialog_coffee_shop_player_dialog_Continue.") {
 		closeDialog();
-		markAsComplete("coffee_shop_task_select_culprit", "coffee-shop");
+		markAsComplete("coffee_shop_task_select_culprit", "Coffee Shop", true);
 		showDialog("coffee_shop_manager_dialog_7");
 		return true;
 	} else if (button == "dialog_coffee_shop_police_dialog_Continue.") {
@@ -493,7 +495,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 	} else if (button == "dialog_coffee_shop_police_dialog_3_Okay.") {
 		closeDialog();
 		resizeCanvas(1152, 648);
-		resetCoffeeShopVariables(vars, game, addElementToScreen, removeElementFromScreen);
+		resetCoffeeShopVariables(vars, game, addElementToScreen, removeElementFromScreen, removeAllAtLocationFromTodoList);
 		changeMainScreen("coffee_shop_failed");
 		return true;
 	} else if (button == "dialog_coffee_shop_police_dialog_4_Continue.") {
@@ -531,7 +533,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		for (var i = 0; i < game.screens["coffee_shop_success"].extras.length; i++)
 			if (game.screens["coffee_shop_success"].extras[i].name == "coffee_shop_success_score")
 				game.screens["coffee_shop_success"].extras[i].text = "You Scored " + vars.score + " Points (out of 30)!";
-		resetCoffeeShopVariables(vars, game, addElementToScreen, removeElementFromScreen);
+		resetCoffeeShopVariables(vars, game, addElementToScreen, removeElementFromScreen, removeAllAtLocationFromTodoList);
 		changeMainScreen("coffee_shop_success");
 		checkForGameCompletion();
 		if (!vars.wifi_sniffing_video_played) {

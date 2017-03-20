@@ -305,6 +305,7 @@ var lastKnownMousePosition = {x:0.0, y:0.0}
 	clearAnimatedGif: (id) - clears a specific animated GIF from the display.
  */
 socket.on('command', function (array) {
+	console.log("array.length = " + array.length);
 	for (var i = 0; i < array.length; i++) {
 		console.log("array[" + i + "] = " + array[i]);
 		var command_name = array[i][0];
@@ -490,8 +491,8 @@ socket.on('command', function (array) {
 			CANVAS_ELEMENT.height = 0;
 		
 			var audio_elements = document.getElementsByTagName("audio");
-			for (var i = 0; i < audio_elements.length; i++) {
-				audio_elements[i].volume = 0.0;
+			for (var j = 0; j < audio_elements.length; j++) {
+				audio_elements[j].volume = 0.0;
 			}
 		
 			var returnToGame = function () {
@@ -507,8 +508,8 @@ socket.on('command', function (array) {
 				}
 				
 				var audio_elements = document.getElementsByTagName("audio");
-				for (var i = 0; i < audio_elements.length; i++) {
-					audio_elements[i].volume = music_volume / 100.0
+				for (var j = 0; j < audio_elements.length; j++) {
+					audio_elements[j].volume = music_volume / 100.0
 				}
 			}
 			

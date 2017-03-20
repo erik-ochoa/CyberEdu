@@ -132,16 +132,8 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		if (!vars.spoken_to_emma) {
 			showDialog("inside_female_dialog_1");
 			vars.spoken_to_emma = true;
-	}
-		game.toDoList.push(new sceneTasks("mall"));
-		game.toDoList.push(new sceneTasks("library"));
-		game.toDoList.push(new sceneTasks("coffee-shop"));
-		addToTodoList(new ToDoTask("task1", "mall", "Go home"));
-		addToTodoList(new ToDoTask("task2", "mall", "Go to bed"));
-		addToTodoList(new ToDoTask("task3", "mall", "The office is one of the gretaest shows ever"));
-		addToTodoList(new ToDoTask("task4", "mall", "The office is one of the gretaest shows ever"));
-		addToTodoList(new ToDoTask("task5", "mall", "The office is one of the gretaest shows ever"));
-		markAsComplete("task1","mall");
+		}
+
 		return true;
 	} else if ((button == "productivity_store" || button == "navigation_store" || button == "social_space") && !vars.made_decision_on_map) {
 		showDialog("map_talk_2");

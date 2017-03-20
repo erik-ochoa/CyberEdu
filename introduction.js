@@ -4,9 +4,7 @@ function load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER) {
 	game.screens["introduction_computer"] = new Screen (0, 0, 0, new Image ("image/dorm_room/computer", 0, 0, 0), [
 		new Button ("introduction_computer_monitor", 435, 172, 664, 302, 0),
 		new Button ("introduction_computer_monitor", 682, 228, 829, 460, 0)
-	], [], [
-		new ScrollableList ("test_list", 100, 100, 300, 400, 1, new Rectangle("test_rectangle", 0, 0, 200, 300, 0, 'rgba(255,255,255,1)'))
-	]);
+	], [], []);
 
 	game.screens["introduction_transition"] = new Screen (0, 0, 0, new Animation ("animation/dorm_room/transition", 0, 0, 0, true), [], [], []);
 
