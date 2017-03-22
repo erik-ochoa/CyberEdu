@@ -479,7 +479,7 @@ writeToServerLog("system | CyberEDU server firing up on port " + SERVER_PORT);
  */
 var Button = function (name, x1, y1, x2, y2, layer, text, font, font_color, help_text) {
 	if (typeof text !== 'undefined' && (typeof font === 'undefined' || typeof font_color === 'undefined'))
-		writeToServerLog("Illegal call to Button constructor; text provided, but not all optional arguments were provided!");
+		throw new Error("Illegal call to Button constructor; text provided, but not all optional arguments were provided!");
 
 	this.name = name;
 	this.x1 = x1;
@@ -884,7 +884,7 @@ function translateInPlace (element, dx, dy, dl) {
 	element.x += dx;
 	element.y += dy;
 	element.layer += dl;
-	if (typeof element.x2 !== 'undefiend' && typeof element.y2 !== 'undefined') {
+	if (typeof element.x2 !== 'undefined' && typeof element.y2 !== 'undefined') {
 		element.x2 += dx;
 		element.y2 += dy;
 	}
@@ -1068,6 +1068,8 @@ io.on('connection', function (socket) {
 	 *		raised: A boolean, true if the phone is in the raised position, false if it is in the lowered position
 	 *		screen_on: A boolean, true if the screen is on, false if it is off
 	 *		screen: The name of the screen object to show (The size of the phone screen is 173 x 291 pixels).
+	 *		active_alert_screen: The name of the currently displayed phone alert screen. Undefined if no phone alert is active.
+	 *		pending_alerts: The queue of pending alerts. An alert is represented by a single string, the alert message.
 	 *  phone_apps: An array of apps installed on the phone.
 	 *  mailbox: An array of email messages; the contents of the player's mailbox.
 	 *  todoList: An object used as a map of <location> --> {screen_name:<name of the screen for this location's todoList>, taskList:<array of TodoTasks>}
@@ -1107,7 +1109,7 @@ io.on('connection', function (socket) {
 	
 	/* Creates a fresh game object, for a player who has never played before. */
 	function makeNewGame () {
-		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneHomeScreen"}, phone_apps:[], mailbox:[], todoList:{}, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false, locked_locations:["mall", "police_station", "coffee_shop", "library", "apartment"]};
+		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneHomeScreen", pending_alerts:[]}, phone_apps:[], mailbox:[], todoList:{}, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Bobby", partner_name:"Ashley", scenes_loaded:false, locked_locations:["mall", "police_station", "coffee_shop", "library", "apartment"]};
 		game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100, 0)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 		game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 		game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
@@ -1172,12 +1174,21 @@ io.on('connection', function (socket) {
 				init_commands.push(["addButton", "lower-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, game.canvas.x, game.canvas.y - PHONE_Y_RAISED + PHONE_Y_LOWERED, PHONE_LAYER]);
 				init_commands.push(["addButton", "phone-power-button", game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[0], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[1], game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[2], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[3], PHONE_LAYER]);
 				if (game.phone.screen_on) {
-					// Move the screen to the correct position before drawing it.
-					game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
-					game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
+					if (typeof game.phone.active_alert_screen !== 'undefined') {
+						// Move the screen to the correct position before it is drawn.
+						game.screens[game.phone.active_alert_screen].x = game.canvas.x - PHONE_SCREEN_X;
+						game.screens[game.phone.active_alert_screen].y = game.canvas.y - PHONE_SCREEN_Y;
+						
+						delete game.screens[game.phone.active_alert_screen].on_screen;
+						drawDisplayObject(game.screens[game.phone.screen], init_commands);
+					} else {
+						// Move the screen to the correct position before drawing it.
+						game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
+						game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
 					
-					delete game.screens[game.phone.screen].on_screen;
-					drawDisplayObject(game.screens[game.phone.screen], init_commands);
+						delete game.screens[game.phone.screen].on_screen;
+						drawDisplayObject(game.screens[game.phone.screen], init_commands);
+					}
 				} else {
 					init_commands.push(["drawImage", "image/phone/screen/off", game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER]);
 				}
@@ -1354,7 +1365,10 @@ io.on('connection', function (socket) {
 				commands.push(["deleteButton", "lower-phone-button"]);
 				commands.push(["deleteButton", "phone-power-button"]);
 				if (game.phone.screen_on) {
-					clearDisplayObject(game.screens[game.phone.screen], commands);
+					if (typeof game.phone.active_alert_screen === 'undefined')
+						clearDisplayObject(game.screens[game.phone.screen], commands);
+					else
+						clearDisplayObject(game.screens[game.phone.active_alert_screen], commands);
 				} else {
 					commands.push(["clearImage", "image/phone/screen/off", game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER]);
 				}
@@ -1378,9 +1392,15 @@ io.on('connection', function (socket) {
 				commands.push(["addButton", "lower-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, game.canvas.x, game.canvas.y - PHONE_Y_RAISED + PHONE_Y_LOWERED, PHONE_LAYER]);
 				commands.push(["addButton", "phone-power-button", game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[0], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[1], game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[2], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[3], PHONE_LAYER]);
 				if (game.phone.screen_on) {
-					game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
-					game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
-					drawDisplayObject(game.screens[game.phone.screen], commands);
+					if (typeof game.phone.active_alert_screen === 'undefined') {
+						game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
+						game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
+						drawDisplayObject(game.screens[game.phone.screen], commands);
+					} else {
+						game.screens[game.phone.active_alert_screen].x = game.canvas.x - PHONE_SCREEN_X;
+						game.screens[game.phone.active_alert_screen].y = game.canvas.y - PHONE_SCREEN_Y;
+						drawDisplayObject(game.screens[game.phone.active_alert_screen], commands);						
+					}
 				} else {
 					commands.push(["drawImage", "image/phone/screen/off", game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER]);
 				}
@@ -1405,9 +1425,15 @@ io.on('connection', function (socket) {
 			commands.push(["addButton", "lower-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_RAISED, game.canvas.x, game.canvas.y - PHONE_Y_RAISED + PHONE_Y_LOWERED, PHONE_LAYER]);
 			commands.push(["addButton", "phone-power-button", game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[0], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[1], game.canvas.x - PHONE_POWER_BUTTON_BOUNDS[2], game.canvas.y - PHONE_POWER_BUTTON_BOUNDS[3], PHONE_LAYER]);
 			if (game.phone.screen_on) {
-				game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
-				game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
-				drawDisplayObject(game.screens[game.phone.screen], commands);
+				if (typeof game.phone.active_alert_screen === 'undefined') {
+					game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
+					game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
+					drawDisplayObject(game.screens[game.phone.screen], commands);
+				} else {
+					game.screens[game.phone.active_alert_screen].x = game.canvas.x - PHONE_SCREEN_X;
+					game.screens[game.phone.active_alert_screen].y = game.canvas.y - PHONE_SCREEN_Y;
+					drawDisplayObject(game.screens[game.phone.active_alert_screen], commands);
+				}
 			} else {
 				commands.push(["drawImage", "image/phone/screen/off", game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER]);
 			}
@@ -1428,7 +1454,10 @@ io.on('connection', function (socket) {
 			commands.push(["addButton", "raise-phone-button", game.canvas.x - PHONE_X, game.canvas.y - PHONE_Y_LOWERED, game.canvas.x, game.canvas.y, PHONE_LAYER]);
 			commands.push(["deleteButton", "phone-power-button"]);
 			if (game.phone.screen_on) {
-				clearDisplayObject(game.screens[game.phone.screen], commands);
+				if (typeof game.phone.active_alert_screen === 'undefined')
+					clearDisplayObject(game.screens[game.phone.screen], commands);
+				else
+					clearDisplayObject(game.screens[game.phone.active_alert_screen], commands);
 			} else {
 				commands.push(["clearImage", "image/phone/screen/off", game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER]);
 			}
@@ -1444,9 +1473,16 @@ io.on('connection', function (socket) {
 
 		if (game.phone.visible && game.phone.raised && !game.phone.screen_on) {
 			commands.push(["clearImage", "image/phone/screen/off", game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER]);
-			game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
-			game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
-			drawDisplayObject(game.screens[game.phone.screen], commands);
+			
+			if (typeof game.phone.active_alert_screen === 'undefined') {
+				game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
+				game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
+				drawDisplayObject(game.screens[game.phone.screen], commands);
+			} else {
+				game.screens[game.phone.active_alert_screen].x = game.canvas.x - PHONE_SCREEN_X;
+				game.screens[game.phone.active_alert_screen].y = game.canvas.y - PHONE_SCREEN_Y;
+				drawDisplayObject(game.screens[game.phone.active_alert_screen], commands);
+			}
 		}
 
 		game.phone.screen_on = true;
@@ -1458,7 +1494,10 @@ io.on('connection', function (socket) {
 		var commands = [];
 
 		if (game.phone.visible && game.phone.raised && game.phone.screen_on) {
-			clearDisplayObject(game.screens[game.phone.screen], commands);
+			if (typeof game.phone.active_alert_screen === 'undefined')
+				clearDisplayObject(game.screens[game.phone.screen], commands);
+			else
+				clearDisplayObject(game.screens[game.phone.active_alert_screen], commands);
 			commands.push(["drawImage", "image/phone/screen/off", game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER]);
 		}
 
@@ -1677,12 +1716,71 @@ io.on('connection', function (socket) {
 	// Pushes an "Alert" message to the player's phone.
 	// message should be a string; the message to display.
 	function pushPhoneAlert (message) {
+		var commands = [];
+	
 		var alert_log = game.screens["phoneAlertLogPage"].extras[0]; // This is the scrolling list element containing all the logs.
+		var current_time = new Date();
+		var current_time_string = (current_time.getMonth() + 1) + "/" + current_time.getDate() + " " + current_time.toLocaleTimeString();
 		
 		var notification_text_y_size = 90; 
-		var notification_text = new Text ("phone_notification_" + alert_log.display_elements.length, 0, 0, 173, notification_text_y_size, 0, message, "12px Times", "rgba(0,0,0,1)");
+		var notification_text = new Text ("phone_notification_" + alert_log.display_elements.length, 0, 0, 173, notification_text_y_size, 0, current_time_string + ": " + message, "12px Times", "rgba(0,0,0,1)");
 	
 		addElementToScrollableList(alert_log, notification_text, notification_text_y_size, 0);
+		
+		if (typeof game.phone.active_alert_screen === 'undefined') {
+			game.screens["phoneAlertScreenName"] = createPhoneAlertScreen(message);
+			game.phone.active_alert_screen = "phoneAlertScreenName";
+			
+			if (game.phone.visible && game.phone.raised && game.phone.screen_on) {
+				game.screens["phoneAlertScreenName"].x = game.canvas.x - PHONE_SCREEN_X;
+				game.screens["phoneAlertScreenName"].y = game.canvas.y - PHONE_SCREEN_Y;
+				
+				clearDisplayObject(game.screens[game.phone.screen], commands);
+				drawDisplayObject(game.screens[game.phone.active_alert_screen], commands);
+			}			
+		} else {
+			game.phone.pending_alerts.push(message);
+		}
+		
+		socket.emit('command', commands);
+	}
+	
+	function dismissPhoneAlertPopup () {
+		var commands = [];
+		
+		// Dismiss the active phone alert; if there is another alert in the queue, show that alert, otherwise, show the regular phone screen.
+		if (game.phone.pending_alerts.length > 0) {
+			if (game.phone.visible && game.phone.raised && game.phone.screen_on) {
+				clearDisplayObject(game.screens["phoneAlertScreenName"], commands);
+			}
+		
+			game.screens["phoneAlertScreenName"] = createPhoneAlertScreen(game.phone.pending_alerts[0]);
+			game.screens["phoneAlertScreenName"].x = game.canvas.x - PHONE_SCREEN_X;
+			game.screens["phoneAlertScreenName"].y = game.canvas.y - PHONE_SCREEN_Y;
+			
+			game.phone.pending_alerts.splice(0, 1); // Remove the element that was just drawn from the queue.
+			
+			if (game.phone.visible && game.phone.raised && game.phone.screen_on) {
+				drawDisplayObject(game.screens["phoneAlertScreenName"], commands);
+			}
+		} else {
+			clearDisplayObject(game.screens["phoneAlertScreenName"], commands);
+			
+			game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
+			game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
+			drawDisplayObject(game.screens[game.phone.screen], commands);
+			
+			delete game.phone.active_alert_screen;
+		}
+		
+		socket.emit('command', commands);
+	}
+	
+	function createPhoneAlertScreen(message) {
+		return new Screen (0, 0, PHONE_SCREEN_LAYER, new Image('image/phone/screen/on', 0, 0, 0), [
+			new Button ('phone-dismiss-active-alert', 20, 256, 153, 286, 1, "Dismiss", "24px Times", "rgba(0,0,0,1)")], [], [
+			new Text ('phone-alert-screen-message', 0, 0, 173, 251, 1, message, '18px Arial', 'rgba(0,0,0,1)')
+		]);
 	}
 
 	var TASK_VERTICAL_SIZE = 36;
@@ -1876,7 +1974,7 @@ io.on('connection', function (socket) {
 		game.screens[name].y = game.canvas.y - PHONE_SCREEN_Y;
 		game.screens[name].layer = PHONE_SCREEN_LAYER;
 
-		if (game.phone.visible && game.phone.raised && game.phone.screen_on) {
+		if (game.phone.visible && game.phone.raised && game.phone.screen_on && typeof game.phone.active_alert_screen === 'undefined') {
 			clearDisplayObject(game.screens[game.phone.screen], commands);
 			drawDisplayObject(game.screens[name], commands);
 		}
@@ -2376,7 +2474,9 @@ io.on('connection', function (socket) {
 					if (game.phone.raised) {
 						if (button == 'lower-phone-button' || button == 'phone-power-button')
 							valid = true;
-						if (game.phone.screen_on && verifyScreen(game.screens[game.phone.screen], button))
+						if (game.phone.screen_on && typeof game.phone.active_alert_screen === 'undefined' && verifyScreen(game.screens[game.phone.screen], button))
+							valid = true;
+						if (game.phone.screen_on && typeof game.phone.active_alert_screen !== 'undefined' && verifyScreen(game.screens[game.phone.active_alert_screen], button))
 							valid = true;
 					} else {
 						if (button == 'raise-phone-button')
@@ -2562,6 +2662,8 @@ io.on('connection', function (socket) {
 			changePhoneScreen("phoneAlertLogPage");
 		} else if (button == 'phone-alert-log-back') {
 			changePhoneScreen("phoneSettingsAppScreen");
+		} else if (button == 'phone-dismiss-active-alert') {
+			dismissPhoneAlertPopup();
 		} else if (button == 'dialog_invalidUninstallDialog_Close.') {
 			closeDialog();
 		} else if (button == 'game_complete_take_survey') {
