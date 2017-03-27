@@ -10,55 +10,68 @@ function load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER) {
 
 	game.screens["introduction_outside_mall"] = new Screen (0, 0, 0, new Image ("image/mallexterior", 0, 0, 0), [], [] ,[]);
 
-	game.screens["intro_email"] = new Screen (0, 0, 0, new Image ("image/introemail", 0, 0,0),
-	[new Button ("confirmation", 350, 133, 710, 163, 2, "VR Simulation Training", "24px Arial", "rgba(0,0,0,1)"),
-	new Button ("caps_confirmation", 350, 184, 800, 210, 2, "COMPLETE FORM IMMEDIATELY", "22px Arial", "rgba(0,0,0,1)"),
+	game.screens["intro_email"] = new Screen (0, 0, 0, new Image ("image/emailinbox", 0, 0, 0, 0.35),
+	[new Button ("confirmation", 350, 200, 800, 230, 2, "VR Simulation Training", "24px Arial", "rgba(0,0,0,1)"),
+	new Button ("caps_confirmation", 350, 152, 850, 182, 2, "COMPLETE FORM IMMEDIATELY", "22px Arial", "rgba(0,0,0,1)")
 	], [], []);
 
 	game.screens["good_email"] = new Screen(0, 0, 0, new Image ("image/emailbody", 0 , 0 , 0, 0.35),
-	[new Button ("good_link", 285, 320, 980, 350, 1, "http://login.umd/register/confirmation?", "20px Arial", "rgba(6,69,173,1)"),
+	[new Button ("good_link", 285, 375, 665, 395, 1, "http://login.umd.edu/register/confirmation?", "20px Arial", "rgba(6,69,173,1)"),
 	new Button ("good_inbox", 25, 95, 160, 130, 1)], [],
 	[new Text ("good_subject", 285, 100, 645, 130, 1, "VR Simulation Training", "24px Arial", "rgba(0,0,0,1)"),
-	new Text ("good_dear", 285, 150, 645, 180, 1, "Welcome!", "20px Arial", "rgba(0,0,0,1)"),
-	new Text ("good_please", 285, 195, 980, 225, 1, "Thank-you for deciding to intern wiht the Division of IT here at UMD.", "20px Arial", "rgba(0,0,0,1)"),
-	new Text ("good_aup", 285, 240, 980, 270, 1, "As part of your training we ask that all of our interns complete", "20px Arial", "rgba(0,0,0,1)"),
-	new Text ("good_aup_2", 285, 275, 980, 305, 1, "our new VR training. Here we will test your knowledge in a variety of cyber-securty related topics.", "20px Arial", "rgba(0,0,0,1)"),
-	new Text ("good_disregard", 285, 365, 980, 395, 1, "Once you have put on and calibrated your VR headset, click the link below to begin.", "20px Arial", "rgba(0,0,0,1)"),
-	new Text ("good_disregard_2", 285, 410, 980, 440, 1, "-UMD Division of IT", "20px Arial", "rgba(0,0,0,1)")
+	new Text ("good_sender", 350, 140, 790, 170, 1, "Sent From: dit@umd.edu at 12:30PM", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("good_dear", 285, 190, 645, 220, 1, "Welcome!", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("good_please", 285, 235, 980, 255, 1, "Thank you for deciding to intern with the Division of IT here at UMD.", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("good_aup", 285, 270, 980, 300, 1, "We ask that all of our new interns complete our new VR training module.", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("good_aup_2", 285, 305, 980, 335, 1, "There, we will test your knowledge in a variety of cybersecurity-related topics.", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("good_disregard", 285, 350, 980, 370, 1, "Go ahead, put on your VR headset and click the link below to begin!", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("good_disregard_2", 285, 430, 980, 460, 1, "-UMD Division of IT", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("good_reply", 850, 140, 900, 170, 1, "Reply", "18px Arial", "rgba(0,0,0,1)"),
+	new Text ("good_forward", 925, 140, 1000, 170, 3, "Forward", "18px Arial", "rgba(0,0,0,1)"),
+	new Rectangle ("reply_bg", 845, 140, 900, 165, 2, "rgba(0,0,255,0.1)"),
+	new Rectangle ("forward_bg", 920, 140, 995, 165, 2, "rgba(0,0,255,0.1)"),
+	new Rectangle ("inbox_bg", 20, 95, 165, 135, 2, "rgba(0,0,255,0.1)")
 	]);
 
 	game.screens["bad_email"] = new Screen(0, 0, 0, new Image ("image/emailbody", 0 , 0 , 0, 0.35),
-	[new Button ("bad_link", 285, 515, 980, 545, 1, "http://ti-it.registration.payroll.com", "20px Arial", "rgba(6,69,173,1)"),
-	new Button ("bad_inbox", 25, 95, 160, 130, 1)], [],
+	[new Button ("bad_link", 285, 545, 580, 575, 1, "http://it-it.registration.payroll.com", "20px Arial", "rgba(6,69,173,1)"),
+	new Button ("bad_inbox", 25, 95, 160, 130, 1),
+	new Button ("bad_forward", 925, 140, 1000, 170, 3, "Forward", "18px Arial", "rgba(0,0,0,1)")], [],
 	[new Text ("bad_subject", 285, 100, 735, 130, 1, "COMPLETE FORM IMMEDIATELY", "22px Arial", "rgba(0,0,0,1)"),
-	new Text ("bad_dear", 285, 150, 645, 180, 1, "Dear Friend,", "20px Arial", "rgba(0,0,0,1)"),
-	new Text ("bad_please", 285, 195, 980, 225, 1, "We have noticed that you are missing key payroll employment", "20px Arial", "rgba(0,0,0,1)"),
-	new Text ("bad_please_2", 285, 230, 980, 260, 1, "documents in regards to your new position.", "20px Arial", "rgba(0,0,0,1)"),
-	new Text ("bad_please_3", 285, 265, 980, 295, 1, "Please use the link below to fill out the missing form.", "20px Arial", "rgba(0,0,0,1)"),
-	new Text ("bad_aup", 285, 310, 980, 340, 1, "In order to continue processing your employment we need", "20px Arial", "rgba(0,0,0,1)"),
-	new Text ("bad_aup_2", 285, 345, 980, 375, 1, "you to take immediate action to fill out these forms, if not.", "20px Arial", "rgba(0,0,0,1)"),
-	new Text ("bad_aup_2", 285, 390, 980, 420, 1, "you will be terminated from your current position.", "20px Arial", "rgba(0,0,0,1)"),
-	new Text ("bad_disregard", 285, 435, 980, 465, 1, "Thank you for choosing TI-IT Solutions", "20px Arial", "rgba(0,0,0,1)"),
-	new Text ("bad_disregard_2", 285, 470, 980, 500, 1, "Online Employee Form Advisor -IT-TI Solutions Team", "20px Arial", "rgba(0,0,0,1)")
+	new Text ("bad_sender", 350, 140, 820, 170, 1, "Sent From: ti-itsupp@gmail.com at 12:34PM", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_dear", 285, 190, 645, 220, 1, "Dear Friend,", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_please", 285, 245, 980, 265, 1, "We have noticed that you are missing key pay roll empolyment", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_please_2", 285, 270, 980, 290, 1, "documents in regards to your new position, so", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_please_3", 285, 295, 980, 325, 1, "please use the link below to fill them out.", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_aup", 285, 350, 980, 370, 1, "In order to continue processing your employment, we need", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_aup_2", 285, 375, 980, 405, 1, "you to take immediate action to fill out these forms.", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_aup_3", 285, 420, 980, 450, 1, "Otherwise, you will be terminated.", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_disregard", 285, 465, 980, 495, 1, "Thank you for choosing TI-IT Solutions", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_disregard_2", 285, 500, 980, 530, 1, "Online Employee Form Advisor -TI-IT Solutions Team", "20px Arial", "rgba(0,0,0,1)"),
+	new Text ("bad_reply", 850, 140, 900, 170, 1, "Reply", "18px Arial", "rgba(0,0,0,1)"),
+	new Rectangle ("reply_bg", 845, 140, 900, 165, 2, "rgba(0,0,255,0.1)"),
+	new Rectangle ("forward_bg", 920, 140, 995, 165, 2, "rgba(0,0,255,0.1)"),
+	new Rectangle ("inbox_bg", 20, 95, 165, 135, 2, "rgba(0,0,255,0.1)")
 	]);
 
 	game.dialogs["introduction_dialog"] = new Dialog ("introduction_dialog", "", "Finally back from that 4 hour long meeting. Amy said that they were going email me with instructions on starting the VR training. I wonder if she found the time yet.", ["Begin."]);
 	game.dialogs["introduction_get_my_apps"] = new Dialog ("introduction_get_my_apps", "", "Sweet, she sent the email. Let's take a look and see how long this will take. Hmmm there seems to be two emails from the Division of IT.", ["Let's go!"]);
-	game.dialogs["introduction_phone_dialog_1a"] = new Dialog ("introduction_phone_dialog_1a", "Voice", "Congratulations! You just became a statistic by failing your first test, the classic phishing scam. Don't worry though, alot of our first time intern fall for this. Let's see if you'll do better on our other tests. Put on the VR headset when ready to continue your training.", ["Continue."]);
-	game.dialogs["introduction_phone_dialog_1b"] = new Dialog ("introduction_phone_dialog_1b", "Voice", "Congratulations on passing our first test. You would be surprised how many of our interns fall for that phishing scam test. You might be able to pull this off. Put on the VR headset when ready to continue your training.", ["Continue."]);
+	game.dialogs["introduction_phone_dialog_1a"] = new Dialog ("introduction_phone_dialog_1a", "Voice", "Congratulations! You just became a statistic by failing your first test, the classic phishing scam. Don't worry though, a lot of our first-time interns fall for this. Let's see if you'll do better on our other tests. Put on the VR headset when ready to continue your training.", ["Continue."]);
+	game.dialogs["introduction_phone_dialog_1b"] = new Dialog ("introduction_phone_dialog_1b", "Voice", "Congratulations on passing our first test. You would be surprised how many of our interns fall for that phishing scam test. You might be able to pull this off.", ["Continue."]);
+	game.dialogs["introduction_forward"] = new Dialog ("introduction_forward", "", "Forward this email to spam@umd.edu?", ["Yes.", "No."]);
 
 	game.browsers["introduction_computer_browser"] = new Browser ();
-	
+
 	game.webpages["1"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_1_background", 0, 0, 800, 600, 0, "rgba(255,255,255,1)"), [
 		new Button ("introduction_registration_1_continue_button", 500, 430, 700, 530, 1, "Continue", "18px Arial", "rgba(0,0,255,1)")], [], [
 		new Text ("introduction_registration_1_instructions_text", 100, 50, 700, 430, 1, "Congratulations on your acceptance into the Division of Information Technology student internship program. All DIT interns are required an email account on the department's email server to be used for work purposes. To begin the process of creating this account, press the continue button at the bottom of this page.", "14px Arial", "rgba(0,0,0,1)")
 	]);
-	
-	game.webpages["2"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_2_background", 0, 0, 800, 600, 0, "rgba(255,255,255,1)"), 
+
+	game.webpages["2"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_2_background", 0, 0, 800, 600, 0, "rgba(255,255,255,1)"),
 		[	/*Buttons*/
 			new Button ("introduction_registration_2_continue_button", 500, 430, 700, 530, 1, "Continue", "18px Arial", "rgba(0,0,255,1)")
 		], [ /*Text fields*/
-			new Button ("introduction_name_text_entry", 100, 100, 750, 150, 3, "", "24px Arial", "rgba(0,0,0,1)", "Your name here..."), 
+			new Button ("introduction_name_text_entry", 100, 100, 750, 150, 3, "", "24px Arial", "rgba(0,0,0,1)", "Your name here..."),
 			new Button ("introduction_partner_name_text_entry", 100, 250, 750, 300, 3, "", "24px Arial", "rgba(0,0,0,1)", "Best friend's name here...")
 		], [
 			/*Extras*/
@@ -66,11 +79,11 @@ function load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER) {
 			new Rectangle("introduction_registration_2_partner_name_entry_outline", 98, 248, 752, 302, 1, "rgba(0,0,0,1)"),
 			new Rectangle("introduction_registration_2_player_name_entry_fill", 100, 100, 750, 150, 2, "rgba(255,255,255,1)"),
 			new Rectangle("introduction_registration_2_partner_name_entry_fill", 100, 250, 750, 300, 2, "rgba(255,255,255,1)"),
-			new Text("introduction_registration_enter_name", 50, 50, 750, 100, 1, "Enter your name:", "18px Arial", "rgba(0,0,0,1)"), 
+			new Text("introduction_registration_enter_name", 50, 50, 750, 100, 1, "Enter your name:", "18px Arial", "rgba(0,0,0,1)"),
 			new Text("introduction_registration_enter_partner_name", 50, 200, 750, 250, 1, "Enter your best friend's name:", "18px Arial", "rgba(0,0,0,1)")
 		]
 	);
-	
+
 	game.webpages["3"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_3_background", 0, 0, 800, 600, 0, 'rgba(255,255,255,1)'),
 		[
 			new Button("mfa_yes_button", 50, 200, 300, 250, 1, "Yes", "18px Arial", "rgba(0,255,0,1)"),
@@ -80,7 +93,7 @@ function load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER) {
 			new Text ("introduction_registration_mfa_instructions", 50, 100, 750, 200, 1, "Multi-factor authentication provides extra security to your account by sending a randomly generated authentication code to your phone each time you attempt to log in, which you will be prompted to enter to proceed. As a result, even if someone obtains your password, they will still be unable to access your account without also someone obtaining the code.", "14px Times", "rgba(0, 0, 0, 1)")
 		]
 	);
-	
+
 	game.webpages["3b"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_3b_background", 0, 0, 800, 600, 0, 'rgba(255,255,255,1)'),
 		[
 			new Button ("mfa_confirm_button", 350, 300, 600, 350, 1, "Confirm", "18px Arial", "rgba(0,0,255,1)"),
@@ -91,11 +104,23 @@ function load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER) {
 			new Text ("introduction_enter_mfa_code", 50, 50, 750, 100, 1, "An authentication code was just sent to your phone. Enter the code to activate MFA.", "24px Arial", "rgba(0,0,0,1)")
 		]
 	);
-	
+
 	game.webpages["4"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_4_background", 0, 0, 800, 600, 0, 'rgba(255,255,255,1)'),
 		[], [], [new Text("introduction_registration_finished", 50, 50, 750, 150, 1, "Registration complete. You may now close this window.", "18px Arial", "rgba(0, 0, 0, 1)")]
 	);
-		
+
+	game.webpages["5"] = new Screen (0, 70, 0, new Rectangle ("introduction_phished", 0, 0, 800, 600, 0, 'rgba(255,255,255,1)'),
+		[], [],
+		[new Image("image/bademail", 170, 170, 1, 0.3),
+		new Text ("introduction_phishing_instructions", 50, 50, 750, 150, 1, "You've just been phished. But don't worry, we just want you to watch out for suspicious cues like unverified email accounts, typos, harsh/extreme deadlines. Now, close this window and forward that email to spam@umd.edu.", "18px Times", "rgba(0, 0, 0, 1)")]
+	);
+
+	game.webpages["6"] = new Screen (0, 70, 0, new Rectangle ("introduction_phished", 0, 0, 800, 600, 0, 'rgba(255,255,255,1)'),
+		[], [],
+		[new Image("image/bademail", 170, 170, 1, 0.3),
+		new Text ("introduction_phishing_instructions", 50, 50, 750, 150, 1, "It looks like you simply ignored that phishing email in your Inbox. Close this window and forward that email to spam@umd.edu. After you forward it, you can click the link again to finally begin your training.", "18px Times", "rgba(0, 0, 0, 1)")]
+	);
+
 	changeBrowserWebPage(game.browsers["introduction_computer_browser"], "1");
 
 	// Phone screens.
@@ -106,10 +131,11 @@ function load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER) {
 	game.introduction_variables = {
 		finished_registration:false,
 		forwarded_phishing_email:false,
-		fell_for_scam:false,
 		mfa_enabled:false,
 		mfa_code:"0",
-		player_mfa_code_entry:"#####"
+		player_mfa_code_entry:"#####",
+		clicked_bad_link:false,
+		ignored_bad_email:false
 	};
 }
 
@@ -174,8 +200,15 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 		return true;
 	} else if (button == "browser-x" || button == "browser-minimize") {
 		if (vars.finished_registration) {
-			showDialog("introduction_get_my_apps");
-			return true; // Consume this event to leave the browser open, until the dialog is processed.
+			if (vars.clicked_bad_link == true || vars.ignored_bad_email == true) {
+				closeBrowser(false);
+				hidePhone();
+				changeMainScreen("intro_email");
+				return true;
+			} else {
+				showDialog("introduction_get_my_apps");
+				return true; // Consume this event to leave the browser open, until the dialog is processed.
+			}
 		} else { // Do nothing.
 			return false;
 		}
@@ -194,12 +227,41 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 		hidePhone();
 		return true;
 	} else if (button == "bad_link") {
-		showDialog("introduction_phone_dialog_1a");
+		vars.clicked_bad_link = true;
+		changeBrowserWebPage(browser, "5");
+		displayBrowser("introduction_computer_browser");
 		hidePhone();
 		return true;
 	} else if (button == "good_link") {
-		showDialog("introduction_phone_dialog_1b");
-		hidePhone;
+		if (vars.forwarded_phishing_email == true) {
+			if (vars.clicked_bad_link == false) {
+				showDialog("introduction_phone_dialog_1b"); //passed
+				hidePhone();
+				return true;
+			} else {
+				showDialog("introduction_phone_dialog_1a"); //failed
+				hidePhone();
+				return true;
+			}
+		} else { //ignored phishing email
+			vars.ignored_bad_email = true;
+			changeBrowserWebPage(browser, "6");
+			displayBrowser("introduction_computer_browser");
+			hidePhone();
+			return true;
+		}
+	} else if (button == "bad_forward") {
+		showDialog("introduction_forward");
+		hidePhone();
+		return true;
+	} else if (button == "dialog_introduction_forward_Yes.") {
+		vars.forwarded_phishing_email = true;
+		closeDialog();
+		hidePhone();
+		return true;
+	} else if (button == "dialog_introduction_forward_No.") {
+		closeDialog();
+		hidePhone();
 		return true;
 	} else if (button == "bad_inbox" || button == "good_inbox") {
 		changeMainScreen("intro_email");
