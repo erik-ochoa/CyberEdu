@@ -1291,7 +1291,7 @@ io.on('connection', function (socket) {
 			TASK #2 from Ibrahim, Erik, and Omkar
 			This should push phone alert
 			*/
-			pushPhoneAlert("You can now visit " + location_to_unlock);
+			//pushPhoneAlert("You can now visit " + location_to_unlock);
 
 			if (location_to_unlock == "mall") {
 				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,150, 173, 180, 2, "Go to Mall", "18px Times", "rgba(0,0,0,1)"));
