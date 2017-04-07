@@ -2,16 +2,16 @@
 // Put them into the game object in the load_coffee_shop() method instead.
 
 function load_coffee_shop (game, addElementToScreen, removeElementFromScreen) {
-	game.screens["coffee_shop"] = new Screen (0, 0, 0, new Image ("image/coffeeshop", 0, 0, 0), [
-		new Button ("coffee_shop_manager", 268, 313, 328, 396, 0), 
-		new Button ("coffee_shop_customer_1", 342, 321, 398, 530, 0),
-		new Button ("coffee_shop_customer_2", 173, 440, 314, 596, 0),
-		new Button ("coffee_shop_customer_3", 582, 321, 627, 383, 0),
-		new Button ("coffee_shop_customer_4", 534, 381, 577, 500, 0),
-		new Button ("coffee_shop_customer_5", 979, 353, 1021, 418, 0),
-		new Button ("coffee_shop_culprit_1", 823, 363, 868, 405, 0),
-		new Button ("coffee_shop_culprit_2", 894, 354, 947, 411, 0),
-		new Button ("coffee_shop_culprit_3", 1049, 391, 1106, 527, 0)
+	game.screens["coffee_shop"] = new Screen (0, 0, 0, new Image ("image/coffeeshop", 0, 0, 0, 0.25), [
+		new Button ("coffee_shop_manager", 240, 313, 297, 396, 0), 
+		new Button ("coffee_shop_customer_1", 340, 319, 396, 431, 0),
+		new Button ("coffee_shop_customer_2", 237, 405, 306, 606, 0),
+		new Button ("coffee_shop_customer_3", 606, 305, 655, 374, 0),
+		new Button ("coffee_shop_customer_4", 519, 375, 577, 500, 0),
+		new Button ("coffee_shop_customer_5", 997, 333, 1064, 403, 0),
+		new Button ("coffee_shop_culprit_1", 854, 337, 896, 391, 0),
+		new Button ("coffee_shop_culprit_2", 920, 336, 978, 396, 0),
+		new Button ("coffee_shop_culprit_3", 1070, 358, 1120, 553, 0)
 	], [], []);
 	
 	game.screens["coffee_shop_success"] = new Screen (0, 0, 0, new Image ("image/mission/complete", 0, 0, 0), [
@@ -30,21 +30,21 @@ function load_coffee_shop (game, addElementToScreen, removeElementFromScreen) {
 	]);
 	
 	var manager_name = "Manager";
-	var customer_1_name = "Black Jeans";
-	var customer_2_name = "Newspaper";
+	var customer_1_name = "Yellow Shirt";
+	var customer_2_name = "White Sweater";
 	var customer_3_name = "Top Hat";
 	var customer_4_name = "Red Shirt";
-	var customer_5_name = "Pink Shirt";
-	var culprit_1_name = "White Shirt";
-	var culprit_2_name = "Black Suit";
+	var customer_5_name = "Black Suit";
+	var culprit_1_name = "Pink Shirt";
+	var culprit_2_name = "White Shirt";
 	var culprit_3_name = "Plaid shirt";
 	
-	var manager_voice = "US English Female";
+	var manager_voice = "US English Male";
 	var customer_1_voice = "US English Female";
 	var customer_2_voice = "US English Female";
 	var customer_3_voice = "UK English Male";
-	var customer_4_voice = "US English Female";
-	var customer_5_voice = "US English Female";
+	var customer_4_voice = "US English Male";
+	var customer_5_voice = "US English Male";
 	var culprit_1_voice = "US English Female";
 	var culprit_2_voice = "US English Male";
 	var culprit_3_voice = "US English Male";
@@ -54,8 +54,8 @@ function load_coffee_shop (game, addElementToScreen, removeElementFromScreen) {
 	var ERROR_STRING = "If you see this message, Jonathan Hansford wrote code that didn't work and should be ashamed of it.";
 	
 	game.dialogs["coffee_shop_manager_dialog"] = new Dialog ("coffee_shop_manager_dialog", game.player_name, "Hello ma'am. We're the detectives you called for. Do you have any leads?", ["Continue."]);
-	game.dialogs["coffee_shop_manager_dialog_2"] = new Dialog ("coffee_shop_manager_dialog_2", manager_name, "The guy in the top hat, the woman in the red shirt, and the woman in a gray shirt reading the newspaper all told me that they had financial information stolen from them sometime after they left here.", ["Continue."], manager_voice);
-	game.dialogs["coffee_shop_manager_dialog_3"] = new Dialog ("coffee_shop_manager_dialog_3", game.partner_name, "Let's go talk to the victims, " + game.player_name, ["Okay."]);
+	game.dialogs["coffee_shop_manager_dialog_2"] = new Dialog ("coffee_shop_manager_dialog_2", manager_name, "The man in the top hat, the man wearing a purple tie, and the woman in a white sweater all told me that they had financial information stolen from them sometime after they left here.", ["Continue."], manager_voice);
+	game.dialogs["coffee_shop_manager_dialog_3"] = new Dialog ("coffee_shop_manager_dialog_3", game.partner_name, "Let's go talk to the victims, " + game.player_name + ".", ["Okay."]);
 	game.dialogs["coffee_shop_manager_dialog_4"] = new Dialog ("coffee_shop_manager_dialog_4", manager_name, "Do you know who did it?", ["Yes.", "Not yet."], manager_voice);
 	game.dialogs["coffee_shop_manager_dialog_5"] = new Dialog ("coffee_shop_manager_dialog_5", "", "Click on the person responsible for these crimes!", ["Okay."]);
 	game.dialogs["coffee_shop_manager_dialog_6"] = new Dialog ("coffee_shop_manager_dialog_6", manager_name, "You said you knew who did it. Who was it?", ["Yes, I know, it was...", "It was YOU!", "I'm not so sure anymore."], manager_voice);
@@ -145,14 +145,14 @@ function coffeeShopSetRandomCulprit (vars, game, addElementToScreen, removeEleme
 	var random_num = 1 + Math.floor(Math.random() * 3); // An integer from 1 to 3, inclusive
 	var second_random_num = Math.floor(Math.random() * 2); // Either 0 or 1 with equal probability
 	
-	var culprit_1_mouse = new Image ("image/electronics-02", 833, 399, 1, 0.01); // scale: 1%
-	var culprit_1_headset = new Image ("image/electronics-03", 776, 394, 1, 0.01); // scale: 1%
+	var culprit_1_mouse = new Image ("image/electronics-02", 807, 382, 1, 0.01); // scale: 1%
+	var culprit_1_headset = new Image ("image/electronics-03", 790, 381, 1, 0.01); // scale: 1%
 	
-	var culprit_2_mouse = new Image ("image/electronics-02", 854, 400, 1, 0.01); // scale: 1%
-	var culprit_2_headset = new Image ("image/electronics-03", 913, 404, 1, 0.0125); // scale: 1.25% (26px wide).
+	var culprit_2_mouse = new Image ("image/electronics-02", 886, 388, 1, 0.01); // scale: 1%
+	var culprit_2_headset = new Image ("image/electronics-03", 949, 393, 1, 0.01); // scale: 1%
 	
-	var culprit_3_mouse = new Image ("image/electronics-01", 1002, 488, 1, 0.01); // scale: 1%
-	var culprit_3_headset = new Image ("image/electronics-03", 952, 480, 1, 0.02); // scale: 2% 
+	var culprit_3_mouse = new Image ("image/electronics-01", 992, 472, 1, 0.01); // scale: 1%
+	var culprit_3_headset = new Image ("image/electronics-03", 900, 472, 1, 0.015); // scale: 1.5% 
 	
 	for (var i = 0; game.screens["coffee_shop"].extras.length; i++) {
 		if (game.screens["coffee_shop"].extras[i].type == 'image' && game.screens["coffee_shop"].extras[i].id.indexOf("image/electronics") == 0) {
@@ -247,8 +247,8 @@ function coffeeShopCheckCompletionOfSpeakToWitnessesTask(markAsComplete, vars) {
 }
 
 function enterCoffeeShop (resizeCanvas, changeMainScreen, showDialog, addToTodoList, vars) {
-	resizeCanvas(1188, 681);
 	changeMainScreen("coffee_shop");
+	resizeCanvas(1223, 674);
 	if (!vars.entry_message_shown) {
 		showDialog("coffee_shop_partner_dialog");
 		addToTodoList(new TodoTask("coffee_shop_task_speak_to_manager", "Coffee Shop", "Speak with Manager"));
