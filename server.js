@@ -25,7 +25,7 @@ eval(fs.readFileSync(__dirname + '/police_station.js').toString());
 // Prevent entire server from crashing in the event a single user causes an error.
 process.on('uncaughtException', function (err) {
 	writeToServerLog("system | Error: An exception has been caught at the top level. The server will continue to run.\r\n" + err.stack);
-	
+
 	if (EXCEPTION_EMAIL_NOTIFICATIONS_ENABLED) {
 		sendEmail("FROM: cyber_edu@umd.edu\r\n" +
 			"TO: jrhansf@terpmail.umd.edu\r\n" +
@@ -64,7 +64,7 @@ var Session = function (cookie, ip, username) {
 	this.username = username;
 	this.connected = false;
 	this.created = Date.now();
-	// Expiration date is in milliseconds since January 1, 1970. 
+	// Expiration date is in milliseconds since January 1, 1970.
 	// This sets the expiration to five minutes from now.
 	// The user will have five minutes to connect to Socket IO before the session times out.
 	this.expires = this.created + 300000;
@@ -91,7 +91,7 @@ function parseSessionCookie(cookies) {
 		var split = cookies.split(';');
 		for (var i = 0; i < split.length; i++) {
 			var split2 = split[i].split('=');
-			if (split2[0].trim() == 'session') 
+			if (split2[0].trim() == 'session')
 				return split2[1].trim();
 		}
 		return undefined;
@@ -122,7 +122,7 @@ function clearExpiredSessions () {
 function guessMimeType(filename) {
 	var split = filename.split('.');
 	var extension = split[split.length - 1];
-	
+
 	if (extension == "html") {
 		return "text/html";
 	} else if (extension == "js") {
@@ -153,7 +153,7 @@ function guessMimeType(filename) {
 function processAuthenticatedRequest(request, response) {
 	var request_url = url.parse(request.url, true);
 	writeToServerLog("client: " + request.socket.remoteAddress + " | Responding with the file " + request_url.pathname + ".");
-	
+
 	var file;
 	if (request_url.pathname == "/") {
 		file = __dirname + '/index.html';
@@ -168,35 +168,35 @@ function processAuthenticatedRequest(request, response) {
 			response.end("Error loading " + file);
 		} else /*if (typeof request.headers.range === 'undefined') */ {
 			var inputStream = fs.createReadStream(file);
-		
+
 			//response.setHeader('Accept-Ranges', 'bytes');
 			response.setHeader('Content-Length', stats.size);
 			response.setHeader('Content-Type', guessMimeType(file));
 			response.writeHead(200);
-			
+
 			inputStream.on('open', function () {
 				inputStream.pipe(response);
 			});
-			
-			inputStream.on('error', function (err) { 
-				writeToServerLog("client : " + request.socket.remoteAddress + " | A ReadStream error occurred."); 
-				response.end(); 
-				throw err; 
-			});  
+
+			inputStream.on('error', function (err) {
+				writeToServerLog("client : " + request.socket.remoteAddress + " | A ReadStream error occurred.");
+				response.end();
+				throw err;
+			});
 		} /* else {
 			// Must serve the requested range of the file only.
 			var range = request.headers.range;
-			
+
 			if (range.substring(0,6) != "bytes=") {
 				response.writeHead(416);
 				response.end();
 				writeToServerLog("system | Encountered an HTTP range it couldn't parse: " + range);
 			} else {
 				console.log(range);
-				var rangeParts = range.substring(6).split("-");			
+				var rangeParts = range.substring(6).split("-");
 				var start;
 				var end;
-				
+
 				if (rangeParts.length == 0 || rangeParts.length > 2) {
 					response.writeHead(416);
 					response.end(); // Something is wrong with the range.
@@ -208,29 +208,29 @@ function processAuthenticatedRequest(request, response) {
 					} else {
 						start = parseInt(rangeParts[0]);
 						end = parseInt(rangeParts[1]);
-					}					
+					}
 					if (start > end || start > stats.size || start < 0 || end < 0 || end > stats.size) {
 						response.writeHead(416); // Range is out of bounds.
 						response.end();
 						writeToServerLog("system | Encountered an HTTP range out of bounds: " + range + " file length was : " + stats.size);
-					} else {					
+					} else {
 						response.setHeader('Accept-Ranges', 'bytes');
 						response.setHeader('Content-Length', end - start + 1);
 						response.setHeader('Content-Type', guessMimeType(file));
 						response.setHeader('Range', "bytes " + start + "-" + end + "/" + stats.size);
 						response.writeHead(206);
-						
+
 						var inputStream = fs.createReadStream(file, {start: start, end: end});
 						inputStream.on('open', function () {
 							inputStream.pipe(response);
 							console.log('input stream successfully piped in range request.');
 							console.log('start = ' + start + ' end = ' + end);
 						});
-						
+
 						inputStream.on('error', function (err) {
-							writeToServerLog("client : " + request.socket.remoteAddress + " | A ReadStream error occurred."); 
-							response.end(); 
-							throw err; 
+							writeToServerLog("client : " + request.socket.remoteAddress + " | A ReadStream error occurred.");
+							response.end();
+							throw err;
 						});
 					}
 				}
@@ -242,20 +242,20 @@ function processAuthenticatedRequest(request, response) {
 // Deals with incoming HTTP requests.
 function handler (request, response) {
 	var request_url = url.parse(request.url, true);
-	writeToServerLog("client: " + request.socket.remoteAddress + " | HTTP request received for " + request_url.pathname + " with cookies " + request.headers.cookie + " and query parameters " + JSON.stringify(request_url.query));	
-	var session_cookie = parseSessionCookie(request.headers.cookie);	
-	
+	writeToServerLog("client: " + request.socket.remoteAddress + " | HTTP request received for " + request_url.pathname + " with cookies " + request.headers.cookie + " and query parameters " + JSON.stringify(request_url.query));
+	var session_cookie = parseSessionCookie(request.headers.cookie);
+
 	// For some reason (at least IE and Firefox) sometimes do not send the cookies when requesting the favicon. This permits the favicon to be accessed without authentication.
 	if (request_url.pathname == "/favicon.ico") {
 		processAuthenticatedRequest(request, response);
 		return;
 	}
-	
+
 	// If the user has already logged in.
 	if (typeof session_cookie !== 'undefined' && typeof active_sessions[session_cookie] !== 'undefined' && active_sessions[session_cookie].ip_address == request.socket.remoteAddress && !hasExpired(active_sessions[session_cookie])) {
 		processAuthenticatedRequest(request, response);
 	} else {
-		
+
 		if (typeof request_url.query.ticket === 'undefined') {
 			// The user has not started the login process and, needs to be redirected to CAS.
 			writeToServerLog("client: " + request.socket.remoteAddress + " | Redirecting user to the CAS server.");
@@ -266,21 +266,21 @@ function handler (request, response) {
 			// The user has entered their login credentials into CAS and provided the server with a CAS ticket which must be validated.
 			var cas_request = https.request ({ hostname: "login.umd.edu", port: 443, path: "/cas/validate?service=" + encodeURIComponent(SERVER_HOSTNAME + request_url.pathname) + "&ticket=" + request_url.query.ticket }, function (cas_response) {
 				var validation_response = "";
-				
+
 				cas_response.on('data', function (chunk) {
 					validation_response += chunk.toString();
 				});
-				
+
 				cas_response.on('end', function () {
 					var response_lines = validation_response.split("\n");
 					if (response_lines[0] == "yes") {
 						var username = response_lines[1];
-						
+
 						if (typeof active_sessions[username] !== 'undefined' && active_sessions[username].connected) {
 							// User logged in successfully, but already had a valid session.
 							response.writeHead(403);
 							response.end("Login failed.\r\n\r\nReason: You're already logged in.");
-							
+
 							writeToServerLog("client: " + request.socket.remoteAddress + " | failed to login: already logged in.");
 						} else {
 							// Delete the previous session for this user, if one exists.
@@ -289,7 +289,7 @@ function handler (request, response) {
 								delete active_sessions[active_sessions[username].cookie];
 								writeToServerLog("client: " + request.socket.remoteAddress + " | deleted previous session for " + username + ".");
 							}
-							
+
 							// Creates and stores a new session for this user.
 							var cookie = generateSessionId();
 							response.setHeader("Set-Cookie", "session = " + cookie + "; PATH=/;");
@@ -298,26 +298,26 @@ function handler (request, response) {
 							active_sessions[username] = new_session;
 
 							writeToServerLog("client: " + request.socket.remoteAddress + " | logged in as " + username + ".");
-							processAuthenticatedRequest(request, response);	
+							processAuthenticatedRequest(request, response);
 						}
-					} else {					
+					} else {
 						response.writeHead(403);
 						response.end("Login failed.\r\n\r\nReason: CAS validation failed. Try deleting ?ticket=" + request_url.query.ticket + " from the URL and try again.");
-						
+
 						writeToServerLog("client: " + request.socket.remoteAddress + " | failed to login: bad CAS ticket.");
 					}
 				});
 			});
-			
+
 			cas_request.on('error', function (err) {
 				writeToServerLog("client: " + request.socket.remoteAddress +  " | An error occurred sending the validation request to CAS.");
-				
+
 				response.writeHead(500);
 				response.end("Error communicating with the authentication server.");
-				
+
 				throw err;
 			});
-			
+
 			writeToServerLog("client: " + request.socket.remoteAddress + " | Sending validation HTTPS request to CAS server");
 			cas_request.end();
 		}
@@ -368,7 +368,7 @@ function sendEmail (content) {
 				writeToServerLog("sendmail | An error occurred. Error code: " + error);
 			}
 		});
-	
+
 		mail_process.stdin.write(content);
 		mail_process.stdin.end();
 	} else {
@@ -382,23 +382,23 @@ function sendEmail (content) {
 function updateLeaderboard () {
 	fs.readdir(__dirname + '/saves', function (err, files) {
 		if (err) throw err;
-		
+
 		/* To define additional leaderboard fields, you need to:
 		 * - Set the field in the leaderboard_row object based on the game object inside the fs.readFile() callback.
 		 * - Add the field to the total score (if desired).
 		 * - Add the field to the leaderboard HTML itself in the writeLeaderboard() function.
 		 */
 		var leaderboard_row = [];
-				
+
 		// This runs when all the files have been read in
 		function writeLeaderboard () {
 			var outputStream = fs.createWriteStream(__dirname + '/leaderboard.html');
-			
+
 			leaderboard_row.sort(function (a, b) {
 				// Sorts on total score in descending order.
 				return b.total_score - a.total_score;
 			});
-			
+
 			outputStream.write('<!DOCTYPE HTML>\r\n<html>\r\n<head>\r\n');
 			outputStream.write('\t<meta charset="UTF-8">\r\n\t<title>CyberEdu Leaderboard</title>\r\n\t<link rel="shortcut icon" href="/favicon.ico"/>\r\n\t<style>\r\n');
 			outputStream.write('\t\ttable, th, td {\r\n\t\t\tborder: 1px solid black;\r\n\t\t}\r\n'); // Creates a border around each cell, and the entire table.
@@ -406,13 +406,13 @@ function updateLeaderboard () {
 			outputStream.write('\t</style>\r\n</head>\r\n<body>\r\n\t<table>\r\n');
 			outputStream.write('\t\t<tr> <th>Name</th> <th>Coffee Shop</th> <th>Apartment</th> <th>Library</th> <th>Total</th> </tr>\r\n');
 			for (var i = 0; i < leaderboard_row.length; i++) {
-				outputStream.write('\t\t<tr> <td> '	+ leaderboard_row[i].player_name + '</td> <td>' 
-				+ leaderboard_row[i].coffee_shop_score + '</td> <td>' 
-				+ leaderboard_row[i].apartment_score + '</td> <td>' 
-				+ leaderboard_row[i].library_score + '</td> <td>' 
+				outputStream.write('\t\t<tr> <td> '	+ leaderboard_row[i].player_name + '</td> <td>'
+				+ leaderboard_row[i].coffee_shop_score + '</td> <td>'
+				+ leaderboard_row[i].apartment_score + '</td> <td>'
+				+ leaderboard_row[i].library_score + '</td> <td>'
 				+ leaderboard_row[i].total_score + '</td> </tr>\r\n');
 			}
-			
+
 			outputStream.write('\t</table>\r\n');
 			outputStream.write('\t<p>Last Updated: ' + new Date() + '</p>\r\n');
 			outputStream.write('</body>\r\n</html>\r\n');
@@ -420,33 +420,33 @@ function updateLeaderboard () {
 				writeToServerLog("system | wrote the leaderboard.");
 			});
 		}
-		
+
 		var files_processed = 0;
-		
+
 		for (var i = 0; i < files.length; i++) {
 			/* This is a closure. It ensures that the
 			 * correct value of i is passed into each of the callbacks. */
 			(function (i) {
 				fs.readFile(__dirname + '/saves/' + files[i], function (err, data) {
 					if (err) throw err;
-					
+
 					var game_object = JSON.parse(data);
-					
+
 					leaderboard_row[i] = {};
 					leaderboard_row[i].player_name = game_object.player_name;
 					leaderboard_row[i].coffee_shop_score = typeof game_object.coffee_shop_variables === 'undefined' ? 0 : game_object.coffee_shop_variables.score;
 					leaderboard_row[i].apartment_score = typeof game_object.apartment_variables === 'undefined' ? 0 : game_object.apartment_variables.score;
 					leaderboard_row[i].library_score = typeof game_object.library_variables === 'undefined' ? 0 : game_object.library_variables.score;
-					
+
 					leaderboard_row[i].total_score = leaderboard_row[i].coffee_shop_score + leaderboard_row[i].apartment_score + leaderboard_row[i].library_score;
-					
+
 					files_processed++;
 					if (files_processed == files.length) {
 						writeLeaderboard();
 					}
 				});
 			})(i);
-		}	
+		}
 	});
 
 	setTimeout(updateLeaderboard, 3600000); // Every hour.
@@ -501,7 +501,7 @@ var Image = function(id, x, y, layer, scale) {
 	this.id = id;
 	this.x = x;
 	this.y = y;
-	this.layer = layer;	
+	this.layer = layer;
 	this.scale = scale;
 };
 
@@ -558,8 +558,8 @@ var Screen = function (x, y, layer, base_element, buttons, textInputFields, extr
 };
 
 /* An extension of a regular screen, which is intended to mimic mobile App stores and be used
- * as the prompt when downloading apps. It has all the fields an ordinary screen has, and therefore 
- * can be used anywhere that a screen may be. 
+ * as the prompt when downloading apps. It has all the fields an ordinary screen has, and therefore
+ * can be used anywhere that a screen may be.
  * The download_count argument should be an integer
  * The app permissions argument should be a comma-separated string.
  * Important note: the buttons are named app_purchase_screen_<app_name>_download and app_purchase_screen_<app_name>_cancel.
@@ -570,16 +570,16 @@ var AppPurchaseScreen = function (x, y, layer, app_icon_id, app_name, app_catego
 	this.y = y;
 	this.layer = layer;
 	this.base = new Rectangle ("app_purchase_screen_" + app_name + "_base", 0, 0, 173, 291, 0, 'rgba(255, 255, 255, 1)');
-	
-	/* Modification warning: the definition of the download button must be identical in the uninstallPhoneApp function, 
-	* and in the installPhoneApp function, the _already_installed text element should be created in the same position. 
+
+	/* Modification warning: the definition of the download button must be identical in the uninstallPhoneApp function,
+	* and in the installPhoneApp function, the _already_installed text element should be created in the same position.
 	*/
 	this.buttons = [new Button ("app_purchase_screen_" + app_name + "_download", 5, 80, 84, 96, 3, "  Download", "11px Times", "rgba(0, 0, 0, 1)"),
 					new Button ("app_purchase_screen_" + app_name + "_cancel", 89, 80, 168, 96, 3, "  Cancel", "11px Times", "rgba(0, 0, 0, 1)")
 	];
 	this.textFields = [];
-	this.extras = [new Image (app_icon_id, 10, 10, 1), 
-					new Text("app_purchase_screen_" + app_name + "_title", 70, 10, 173, 30, 2, app_name, "14px Arial", "rgba(0, 0, 0, 1)"), 
+	this.extras = [new Image (app_icon_id, 10, 10, 1),
+					new Text("app_purchase_screen_" + app_name + "_title", 70, 10, 173, 30, 2, app_name, "14px Arial", "rgba(0, 0, 0, 1)"),
 					new Text("app_purchase_screen_" + app_name + "_category", 70, 30, 173, 45, 2, app_category, "12px Arial", "rgba(0, 0, 0, 1)"),
 					new Text("app_purchase_screen_" + app_name + "_developer", 70, 45, 173, 60, 2, "By " + app_developer, "12px Arial", "rgba(0, 0, 0, 1)"),
 					new Text("app_purchase_screen_" + app_name + "_downloads", 70, 60, 173, 75, 2, "Downloads: " + download_count.toString(), "11px Times", "rgba(0, 0, 0, 1)"),
@@ -618,7 +618,7 @@ var ScrollableList = function (name, x1, y1, x2, y2, layer, base) {
 	this.y = y1;
 	this.layer = layer;
 	this.base = base;
-	
+
 	this.scroll_position = 0;
 	this.display_elements = [];
 	this.display_element_sizes = [];
@@ -626,7 +626,7 @@ var ScrollableList = function (name, x1, y1, x2, y2, layer, base) {
 	this.y2 = y2;
 	this.width = this.x2 - this.x;
 	this.height = this.y2 - this.y;
-	
+
 	this.buttons = [
 		new Button ("scrolling_list_" + name + "_scroll_up", this.width - SCROLL_BUTTON_WIDTH, this.height/2 - SCROLL_BUTTON_HEIGHT, this.width, this.height/2, base.layer + 1, "/\\", SCROLL_BUTTON_FONT, 'rgba(0,0,0,1)'),
 		new Button ("scrolling_list_" + name + "_scroll_down", this.width - SCROLL_BUTTON_WIDTH, this.height/2, this.width, this.height/2 + SCROLL_BUTTON_HEIGHT, base.layer + 1, "\\/", SCROLL_BUTTON_FONT, 'rgba(0,0,0,1)')
@@ -635,7 +635,7 @@ var ScrollableList = function (name, x1, y1, x2, y2, layer, base) {
 	this.extras = [];
 }
 
-/* Helper function related to ScrollableList. Based on the current scroll position, determines the y-coordinate of the top of the element at the given index. 
+/* Helper function related to ScrollableList. Based on the current scroll position, determines the y-coordinate of the top of the element at the given index.
  * Note that this function can return a negative value (if the scroll position is past the given element).
  */
 function yPositionOfScrollableListElement(scrollableList, index) {
@@ -654,7 +654,7 @@ function yPositionOfScrollableListElement(scrollableList, index) {
 			yPos -= scrollableList.display_element_sizes[i];
 		}
 		return yPos;
-	}	
+	}
 }
 
 /* Helper function related to ScrollableList. Returns true if the element at the given index should be displayed on the screen, based on the current scroll position. */
@@ -714,7 +714,7 @@ var EmailMessage = function (subject, sender, message, attachments, location_to_
 	this.message = message;
 	this.attachments = attachments;
 	this.unread = true;
-	
+
 	this.location_to_unlock = location_to_unlock;
 }
 
@@ -766,7 +766,7 @@ function drawDisplayObject (element, commands) {
 		if (typeof element.scale !== 'undefined') {
 			commands.push(["drawImage", element.id, element.x, element.y, element.layer, element.scale]);
 		} else {
-			commands.push(["drawImage", element.id, element.x, element.y, element.layer]);		
+			commands.push(["drawImage", element.id, element.x, element.y, element.layer]);
 		}
 	} else if (element.type == 'animation') {
 		commands.push(["drawAnimation", element.id, element.x, element.y, element.layer, element.callbackRequested]);
@@ -828,18 +828,18 @@ function clearDisplayObject (element, commands) {
 	}
 }
 
-/* Helper function. Marks this screen and all sub-screens as on screen. 
+/* Helper function. Marks this screen and all sub-screens as on screen.
  * The parent_on_screen_x, parent_on_screen_y, and parent_on_screen_layer arguments are used in recursive calls.
  */
 function markAsOnScreen(element, parent_on_screen_x, parent_on_screen_y, parent_on_screen_layer) {
 	element["on_screen"] = true;
 	element["on_screen_x"] = typeof parent_on_screen_x === 'undefined' ? element.x : element.x + parent_on_screen_x;
-	element["on_screen_y"] = typeof parent_on_screen_y === 'undefined' ? element.y : element.y + parent_on_screen_y; 
+	element["on_screen_y"] = typeof parent_on_screen_y === 'undefined' ? element.y : element.y + parent_on_screen_y;
 	element["on_screen_layer"] = typeof parent_on_screen_layer === 'undefined' ? element.layer : element.layer + parent_on_screen_layer;
-	
+
 	if (element.base.type == 'screen')
 		markAsOnScreen(element.base, element["on_screen_x"], element["on_screen_y"], element["on_screen_layer"]);
-	
+
 	for (var i = 0; i < element.extras.length; i++) {
 		if (element.extras[i].type == 'screen')
 			markAsOnScreen(element.extras[i], element["on_screen_x"], element["on_screen_y"], element["on_screen_layer"]);
@@ -852,10 +852,10 @@ function markAsOffScreen(element) {
 	delete element["on_screen_x"];
 	delete element["on_screen_y"];
 	delete element["on_screen_layer"];
-	
+
 	if (element.base.type == 'screen')
 		markAsOffScreen(element.base);
-	
+
 	for (var i = 0; i < element.extras.length; i++) {
 		if (element.extras[i].type == 'screen')
 			markAsOffScreen(element.extras[i]);
@@ -935,7 +935,7 @@ function setup_dialog_screen(dialog, canvas, previous_screen) {
 	}
 	previous_screen.buttons = [];
 	previous_screen.textFields = [];
-	
+
 	delete previous_screen.on_screen; // This copy isn't actually on the screen. Causes false alarms for repeated draw calls.
 
 	previous_screen.layer -= DIALOG_LAYER; // Need to draw the stuff under the dialog.
@@ -990,7 +990,7 @@ io.on('connection', function (socket) {
 	/* Must figure out who the user is, and possibly deny the connection. */
 	var session_cookie = parseSessionCookie(socket.handshake.headers.cookie);
 	var username;
-	
+
 	if (typeof session_cookie !== 'undefined' && typeof active_sessions[session_cookie] !== 'undefined' && active_sessions[session_cookie].ip_address == socket.handshake.address && !active_sessions[session_cookie].connected && !hasExpired(active_sessions[session_cookie])) {
 		username = active_sessions[session_cookie].username;
 		active_sessions[session_cookie].connected = true;
@@ -1008,7 +1008,7 @@ io.on('connection', function (socket) {
 					reasons += "Your IP address does not match. ";
 				if (active_sessions[session_cookie].connected)
 					reasons += "You are already connected to the server or your save file is still being updated. ";
-				if (hasExpired(active_sessions[session_cookie])) 
+				if (hasExpired(active_sessions[session_cookie]))
 					reasons += "Your session has expired. (Try refreshing the page.)";
 			}
 		}
@@ -1017,17 +1017,17 @@ io.on('connection', function (socket) {
 		socket.disconnect();
 		return;
 	}
-	
+
 	/* Mark the session as disconnected and set an expiration timer when a user disconnects. */
 	socket.on('disconnect', function () {
-	
+
 		// The user has five minutes to return before their session expires and they will have to login again.
 		function endSession () {
 			active_sessions[session_cookie].connected = false;
 			active_sessions[session_cookie].expires = Date.now() + 300000;
 			writeToServerLog(username + " | Disconnected.");
 		}
-		
+
 		// If the game object is defined, save it.
 		if (typeof game !== 'undefined') {
 			fs.writeFile(save_file, JSON.stringify(game), function (err) {
@@ -1044,7 +1044,7 @@ io.on('connection', function (socket) {
 			endSession();
 		}
 	});
-	
+
 	writeToServerLog(username + " | Connected.");
 
 	/* Each user has a game state object, which is stored in a JSON file while they are not playing.
@@ -1085,7 +1085,7 @@ io.on('connection', function (socket) {
 	 *	locked_locations: A string array, representing the locations that the player has not yet unlocked.
 	 */
 	var game;
-	
+
 	var save_file = __dirname + "/saves/" + username + ".json";
 	// Load the player's save game, if applicable.
 	fs.readFile(save_file, function (err, buf) {
@@ -1097,7 +1097,7 @@ io.on('connection', function (socket) {
 				// Some other error; not good.
 				socket.emit('server-error', "Unexpected error attempting to load save file. You have been disconnected.");
 				socket.disconnect();
-				
+
 				throw err;
 			}
 		} else {
@@ -1106,28 +1106,28 @@ io.on('connection', function (socket) {
 			sendClientInitCommands();
 		}
 	});
-	
+
 	/* Creates a fresh game object, for a player who has never played before. */
 	function makeNewGame () {
 		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneHomeScreen", pending_alerts:[]}, phone_apps:[], mailbox:[], todoList:{}, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Anonymous Player", partner_name:"Ashley", scenes_loaded:false, locked_locations:["mall", "police_station", "coffee_shop", "library", "apartment"]};
 		game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100, 0)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 		game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 		game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-		
+
 		// Note that this screen is defined before its application, because all the other installPhoneApp calls depend on it
 		game.screens["phoneSettingsUninstallPage"] = new Screen (game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneSettingsUninstallPage"], new Button("phone-uninstall-back", 0, 0, 173, 20, 2, "Back", "16px Times", "rgba(0,0,0,1)"));
-		
+
 		game.screens["phoneAlertLogPage"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneAlertLogPage"], new Button ("phone-alert-log-back", 0, 0, 173, 20, 2, "Back", "16px Times", "rgba(0,0,0,1)"));
 		// Invariant: this element is never moved or deleted from the 0th position in the phoneAlertLogPage's extras list
 		addElementToScreen(game.screens["phoneAlertLogPage"], new ScrollableList("phone-alert-log-list", 0, 20, 173, 291, 2, new Rectangle ("phone_alert_log_backing_transparent_rectangle", 0, 0, 173, 271, 0, "rgba(0,0,0,0)")));
-		
+
 		game.dialogs["invalidUninstallDialog"] = new Dialog ("invalidUninstallDialog", "", "You can't uninstall that app!", ["Close."]);
-		
+
 		installPhoneApp(new PhoneApp("Settings", new Image("image/phone/icon/settings", 0, 0, 0, 56.0/57.0), "phoneSettingsAppScreen"));
 		game.screens["phoneSettingsAppScreen"] = new Screen (game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
-		
+
 		addButtonToScreen(game.screens["phoneSettingsAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Settings", "24px Times", "rgba(0,0,0,1)"));
 		addButtonToScreen(game.screens["phoneSettingsAppScreen"], new Button("phone-settings-uninstall-page", 0, 30, 173, 50, 2, "Uninstall Apps", "16px Times", "rgba(0,0,0,1)"));
 		addButtonToScreen(game.screens["phoneSettingsAppScreen"], new Button("phone-alert-log", 0, 50, 173, 70, 2, "Alert Log", "16px Times", "rgba(0,0,0,1)"));
@@ -1144,7 +1144,7 @@ io.on('connection', function (socket) {
 		game.screens["phoneMapAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		addButtonToScreen(game.screens["phoneMapAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit Map", "24px Times", "rgba(0,0,0,1)"));
 
-		// Phone TodoList application -- 
+		// Phone TodoList application --
 		game.screens["phoneTodoListAppScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
 		//installPhoneApp( new PhoneApp ("To-Do", new Image ("image/phone/icon/todo", 0, 0, 0, 56.0/57.0), "phoneTodoListAppScreen"));
 		addButtonToScreen(game.screens["phoneTodoListAppScreen"], new Button("phone-exit-app", 0, 0, 173, 30, 2, "Exit To-Do List", "24px Times", "rgba(0,0,0,1)"));
@@ -1178,14 +1178,14 @@ io.on('connection', function (socket) {
 						// Move the screen to the correct position before it is drawn.
 						game.screens[game.phone.active_alert_screen].x = game.canvas.x - PHONE_SCREEN_X;
 						game.screens[game.phone.active_alert_screen].y = game.canvas.y - PHONE_SCREEN_Y;
-						
+
 						delete game.screens[game.phone.active_alert_screen].on_screen;
 						drawDisplayObject(game.screens[game.phone.screen], init_commands);
 					} else {
 						// Move the screen to the correct position before drawing it.
 						game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
 						game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
-					
+
 						delete game.screens[game.phone.screen].on_screen;
 						drawDisplayObject(game.screens[game.phone.screen], init_commands);
 					}
@@ -1200,7 +1200,7 @@ io.on('connection', function (socket) {
 
 		if (typeof game.active_browser !== 'undefined') {
 			init_commands.push(["resizeCanvas", 800, 600]);
-			
+
 			delete game.browsers[game.active_browser].screen.on_screen;
 			drawDisplayObject(game.browsers[game.active_browser].screen, init_commands);
 		} else if (typeof game.active_filesystem !== 'undefined') {
@@ -1221,7 +1221,7 @@ io.on('connection', function (socket) {
 			}
 
 			clearDisplayObject(game.screens[game.main_screen], init_commands);
-						
+
 			delete game.dialogs[game.active_dialog.name].screen.on_screen;
 			drawDisplayObject(game.dialogs[game.active_dialog.name].screen, init_commands);
 		}
@@ -1229,23 +1229,23 @@ io.on('connection', function (socket) {
 		if (typeof game.background_music[game.main_screen] !== 'undefined') {
 			init_commands.push(["playSound", game.background_music[game.main_screen]]);
 		}
-		
+
 		socket.emit('command', init_commands);
 	}
-	
+
 	/* Loads all the additional scenes into the game object. */
 	function loadScenes () {
 		game.screens["gameCompleteScreen"] = new Screen (0, 0, 0, new Image ("image/mission/complete", 0, 0, 0), [
 			new Button ("game_complete_take_survey", 400, 400, 800, 450, 2, "Take Our Survey", "40px Arial", "rgba(255, 255, 255, 1)")
 		], [], [
-			new Text ("game_complete_coffee_shop_score", 0, 0, 1000, 50, 1, "Coffee Shop: ", "30px Arial", "rgba(255, 255, 255, 1)"), 
-			new Text ("game_complete_library_score", 0, 50, 1000, 100, 1, "Library: ", "30px Arial", "rgba(255, 255, 255, 1)"), 
+			new Text ("game_complete_coffee_shop_score", 0, 0, 1000, 50, 1, "Coffee Shop: ", "30px Arial", "rgba(255, 255, 255, 1)"),
+			new Text ("game_complete_library_score", 0, 50, 1000, 100, 1, "Library: ", "30px Arial", "rgba(255, 255, 255, 1)"),
 			new Text ("game_complete_apartment_score", 0, 100, 1000, 150, 1, "Apartment: ", "30px Arial", "rgba(255, 255, 255, 1)"),
 			new Text ("game_complete_total_score", 0, 150, 1000, 200, 1, "Total Score: ", "30px Arial", "rgba(255, 255, 255, 1)"),
 			new Rectangle ("game_complete_take_survey_backing_rectangle", 400, 400, 800, 450, 1, "rgba(255, 255, 255, 0.5)"),
 			new Text ("game_complete_screen_message", 100, 500, 1000, 700, 1, "That's all there is to play right now. Congratulations on making it to the end! We'd appreciate it if you take our survey to help make the game better. Sincerely, The CyberEDU Team", "18px Times", "rgba(255, 255, 255, 1)")
 		]);
-	
+
 		load_coffee_shop (game, addElementToScreen, removeElementFromScreen);
 		load_mall(game);
 		load_library (game, addToFileSystem);
@@ -1253,7 +1253,7 @@ io.on('connection', function (socket) {
 		load_introduction_part2(game);
 		load_police_station(game, addToFileSystem);
 		game.scenes_loaded = true;
-		
+
 		// Decide after which scene should the MFA sequence occur (when the player gets hacked)
 		var random_num = 1 + Math.floor(3 * Math.random()); // Random number from 1 to 3, inclusive
 		if (random_num == 1) {
@@ -1266,32 +1266,39 @@ io.on('connection', function (socket) {
 			console.log(username + " | will be hacked after completing the apartment.");
 			game.apartment_variables.on_completion_trigger_email_hack = true;
 		}
-		
+
 		unlockLocation("mall");
-		
+
 		sendMissionEmail("police_station");
 	}
-	
-	/* This function makes the specified location click-able on the player's map. 
-	 * Valid locations are "mall", "police_station", "coffee_shop", "library", and "apartment". 
+
+	/* This function makes the specified location click-able on the player's map.
+	 * Valid locations are "mall", "police_station", "coffee_shop", "library", and "apartment".
 	 */
 	function unlockLocation (location) {
 		var location_to_unlock;
-		
+
 		for (var i = 0; i < game.locked_locations.length; i++) {
 			if (game.locked_locations[i] == location) {
 				location_to_unlock = game.locked_locations[i];
 				game.locked_locations.splice(i, 1);
 			}
-		}		
-			
+		}
+
 		if (typeof location_to_unlock !== 'undefined') {
+
+			/*
+			TASK #2 from Ibrahim, Erik, and Omkar
+			This should push phone alert
+			*/
+			pushPhoneAlert("You can now visit " + location_to_unlock);
+
 			if (location_to_unlock == "mall") {
 				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,150, 173, 180, 2, "Go to Mall", "18px Times", "rgba(0,0,0,1)"));
 			} else if (location_to_unlock == "coffee_shop") {
 				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, 2, "Go to Coffee Shop", "18px Times", "rgba(0,0,0,1)"));
 			} else if (location_to_unlock == "library") {
-				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, 2, "Go to Library", "18px Times", "rgba(0,0,0,1)"));	
+				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, 2, "Go to Library", "18px Times", "rgba(0,0,0,1)"));
 			} else if (location_to_unlock == "apartment") {
 				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(0,0,0,1)"));
 			} else if (location_to_unlock == "police_station") {
@@ -1303,7 +1310,7 @@ io.on('connection', function (socket) {
 			writeToServerLog(username + " | An invalid call to unlockLocation(" + location +  ") occurred.");
 		}
 	}
-	
+
 	/* Sends the player an email which describes their mission in the specified location.
 	 */
 	function sendMissionEmail(location) {
@@ -1317,8 +1324,8 @@ io.on('connection', function (socket) {
 			addToMailbox(new EmailMessage("P.I. Application", "Police Station Receptionist", "Congratulations new detective, your application was reviewed and you have become an official licensed private investigator. Now that you have the equipment you need, come to the police station to pick up your badge.", [], "police_station"));
 		} else {
 			writeToServerLog(username + " | Invalid call to sendMissionEmail(" + location + ").");
-		} 
-	} 
+		}
+	}
 
 	/* Changes the canvas size to the specified arguments */
 	function resizeCanvas (newX, newY) {
@@ -1399,7 +1406,7 @@ io.on('connection', function (socket) {
 					} else {
 						game.screens[game.phone.active_alert_screen].x = game.canvas.x - PHONE_SCREEN_X;
 						game.screens[game.phone.active_alert_screen].y = game.canvas.y - PHONE_SCREEN_Y;
-						drawDisplayObject(game.screens[game.phone.active_alert_screen], commands);						
+						drawDisplayObject(game.screens[game.phone.active_alert_screen], commands);
 					}
 				} else {
 					commands.push(["drawImage", "image/phone/screen/off", game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER]);
@@ -1473,7 +1480,7 @@ io.on('connection', function (socket) {
 
 		if (game.phone.visible && game.phone.raised && !game.phone.screen_on) {
 			commands.push(["clearImage", "image/phone/screen/off", game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER]);
-			
+
 			if (typeof game.phone.active_alert_screen === 'undefined') {
 				game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
 				game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
@@ -1712,70 +1719,70 @@ io.on('connection', function (socket) {
 			return false;
 		}
 	}
-	
+
 	// Pushes an "Alert" message to the player's phone.
 	// message should be a string; the message to display.
 	function pushPhoneAlert (message) {
 		var commands = [];
-	
+
 		var alert_log = game.screens["phoneAlertLogPage"].extras[0]; // This is the scrolling list element containing all the logs.
 		var current_time = new Date();
 		var current_time_string = (current_time.getMonth() + 1) + "/" + current_time.getDate() + " " + current_time.toLocaleTimeString();
-		
-		var notification_text_y_size = 90; 
+
+		var notification_text_y_size = 90;
 		var notification_text = new Text ("phone_notification_" + alert_log.display_elements.length, 0, 0, 173, notification_text_y_size, 0, current_time_string + ": " + message, "12px Times", "rgba(0,0,0,1)");
-	
+
 		addElementToScrollableList(alert_log, notification_text, notification_text_y_size, 0);
-		
+
 		if (typeof game.phone.active_alert_screen === 'undefined') {
 			game.screens["phoneAlertScreenName"] = createPhoneAlertScreen(message);
 			game.phone.active_alert_screen = "phoneAlertScreenName";
-			
+
 			if (game.phone.visible && game.phone.raised && game.phone.screen_on) {
 				game.screens["phoneAlertScreenName"].x = game.canvas.x - PHONE_SCREEN_X;
 				game.screens["phoneAlertScreenName"].y = game.canvas.y - PHONE_SCREEN_Y;
-				
+
 				clearDisplayObject(game.screens[game.phone.screen], commands);
 				drawDisplayObject(game.screens[game.phone.active_alert_screen], commands);
-			}			
+			}
 		} else {
 			game.phone.pending_alerts.push(message);
 		}
-		
+
 		socket.emit('command', commands);
 	}
-	
+
 	function dismissPhoneAlertPopup () {
 		var commands = [];
-		
+
 		// Dismiss the active phone alert; if there is another alert in the queue, show that alert, otherwise, show the regular phone screen.
 		if (game.phone.pending_alerts.length > 0) {
 			if (game.phone.visible && game.phone.raised && game.phone.screen_on) {
 				clearDisplayObject(game.screens["phoneAlertScreenName"], commands);
 			}
-		
+
 			game.screens["phoneAlertScreenName"] = createPhoneAlertScreen(game.phone.pending_alerts[0]);
 			game.screens["phoneAlertScreenName"].x = game.canvas.x - PHONE_SCREEN_X;
 			game.screens["phoneAlertScreenName"].y = game.canvas.y - PHONE_SCREEN_Y;
-			
+
 			game.phone.pending_alerts.splice(0, 1); // Remove the element that was just drawn from the queue.
-			
+
 			if (game.phone.visible && game.phone.raised && game.phone.screen_on) {
 				drawDisplayObject(game.screens["phoneAlertScreenName"], commands);
 			}
 		} else {
 			clearDisplayObject(game.screens["phoneAlertScreenName"], commands);
-			
+
 			game.screens[game.phone.screen].x = game.canvas.x - PHONE_SCREEN_X;
 			game.screens[game.phone.screen].y = game.canvas.y - PHONE_SCREEN_Y;
 			drawDisplayObject(game.screens[game.phone.screen], commands);
-			
+
 			delete game.phone.active_alert_screen;
 		}
-		
+
 		socket.emit('command', commands);
 	}
-	
+
 	function createPhoneAlertScreen(message) {
 		return new Screen (0, 0, PHONE_SCREEN_LAYER, new Image('image/phone/screen/on', 0, 0, 0), [
 			new Button ('phone-dismiss-active-alert', 20, 256, 153, 286, 1, "Dismiss", "24px Times", "rgba(0,0,0,1)")], [], [
@@ -1788,51 +1795,51 @@ io.on('connection', function (socket) {
 		// If this is the case, this location has not been seen before, so it must be added to the todo list main screen.
 		if (typeof game.todoList[task.locationOfTask] === 'undefined') {
 			game.todoList[task.locationOfTask] = {};
-			
+
 			game.todoList[task.locationOfTask].screen_name = "phoneTodoListAppScreenForLocation-" + task.locationOfTask;
 			game.screens[game.todoList[task.locationOfTask].screen_name] = new Screen (0, 0, 0, new Image('image/phone/screen/on', 0, 0, 0), [
 				new Button("phone-backto-locations", 0, 0, 173, 30, 1, "Back", "24px Times", "rgba(0,0,0,1)")
 				], [], [
 				new ScrollableList ("phone-todo-list-for-" + task.locationOfTask, 0, 30, 173, 291, 1, new Rectangle ("phone_todo_list_for_" + task.locationOfTask + "_backing_transparent_rectangle", 0, 0, 173, 261, 0, 'rgba(0,0,0,0)'))
 			]);
-			
+
 			console.log(game.todoList[task.locationOfTask].screen_name);
 			console.log(game.screens[game.todoList[task.locationOfTask].screen_name]);
-			
+
 			game.todoList[task.locationOfTask].taskList = [];
-			
-			var scrollableList = game.screens["phoneTodoListAppScreen"].extras[0]; // This is the scrollableList of all the locations. 
-			addElementToScrollableList(scrollableList, new Screen (0, 0, 0, 
+
+			var scrollableList = game.screens["phoneTodoListAppScreen"].extras[0]; // This is the scrollableList of all the locations.
+			addElementToScrollableList(scrollableList, new Screen (0, 0, 0,
 				new Rectangle(task.locationOfTask + "_todo_location_task_transparent_base_rectangle", 0, 0, 173, 291, 0, 'rgba(0,0,0,0)'), [
 				new Button ("phone-todo-list-open-location-" + task.locationOfTask, 0, 0, 173, 21, 1, task.locationOfTask, "18px Times", "rgba(0,0,0,1)") ], [], [
 			]), 21);
-		} 	
-		
+		}
+
 		game.todoList[task.locationOfTask].taskList.push(task);
 		addElementToScrollableList(game.screens[game.todoList[task.locationOfTask].screen_name].extras[0], createDisplayElementForTask(task), TASK_VERTICAL_SIZE);
 	}
-	
+
 	function removeFromTodoList (taskName, location) {
 		if (typeof game.todoList[location] === 'undefined') throw new Error ("Location was not defined in the Todo List: " + location);
-		
+
 		var removeCount = 0;
 		for (var i = 0; i < game.todoList[location].taskList.length; i++) {
 			if (game.todoList[location].taskList[i].name == taskName) {
 				game.todoList[location].taskList.splice(i, 1);
-				
+
 				var scrollableList = game.screens[game.todoList[location].screen_name].extras[0];
 				deleteElementFromScrollableList(scrollableList, scrollableList.display_elements[i]);
-				
+
 				removeCount++;
 			}
 		}
-		
+
 		if (removeCount != 1) console.log(username + " | Warning: removeFromTodoList(" + taskName + ", " + location + ") removed " + removeCount + " entries!");
 	}
-	
+
 	function removeAllAtLocationFromTodoList (location) {
 		if (typeof game.todoList[location] === 'undefined') throw new Error ("Location was not defined in the Todo List: " + location);
-		
+
 		for (var i = 0; i < game.todoList[location].taskList.length; i++) {
 			removeFromTodoList(game.todoList[location].taskList[i].name, location);
 			i--;
@@ -1841,24 +1848,24 @@ io.on('connection', function (socket) {
 
 	function markAsComplete(taskName, location, complete_status) {
 		if (typeof game.todoList[location] === 'undefined') throw new Error ("Location was not defined in the Todo List: " + location);
-		
+
 		var found = false;
 		for (var i = 0; i < game.todoList[location].taskList.length; i++) {
 			if (game.todoList[location].taskList[i].name == taskName) {
 				var task = game.todoList[location].taskList[i];
 				task.completed = complete_status;
-				
+
 				var scrollableList = game.screens[game.todoList[location].screen_name].extras[0];
 				deleteElementFromScrollableList(scrollableList, scrollableList.display_elements[i]);
 				addElementToScrollableList(scrollableList, createDisplayElementForTask(task), TASK_VERTICAL_SIZE, i);
-				
+
 				found = true;
 			}
 		}
-		
+
 		if (!found) console.log(username + " | Warning: no task found in " + location + " with name " + taskName);
 	}
-	
+
 	function createDisplayElementForTask(task) {
 		return new Text (task.name, 0, 0, 173, TASK_VERTICAL_SIZE, 1, task.task, "16px Times", task.completed ? "rgba(64,64,64,1)" : "rgba(0,0,0,1)");
 	}
@@ -1876,8 +1883,8 @@ io.on('connection', function (socket) {
 		var scrollableList = game.screens["phoneEmailAppScreen"].extras[0];
 		game.mailbox.splice(email_no, 1);
 		deleteElementFromScrollableList(scrollableList, scrollableList.display_elements[email_no]);
-		
-		/* Note: because of the way that emails were originally stored, the name of the buttons on each message is dependent on its position. 
+
+		/* Note: because of the way that emails were originally stored, the name of the buttons on each message is dependent on its position.
 		 * This means that all emails below the one being removed must be deleted and re-created
 		 */
 		for (var i = email_no; i < scrollableList.display_elements.length; i++) {
@@ -1890,7 +1897,7 @@ io.on('connection', function (socket) {
 	function markAsRead (email_no) {
 		if (game.mailbox[email_no].unread) {
 			game.mailbox[email_no].unread = false;
-			
+
 			// Unlock the location associated with reading this message, if appropriate.
 			if (typeof game.mailbox[email_no].location_to_unlock !== 'undefined')
 				unlockLocation(game.mailbox[email_no].location_to_unlock);
@@ -1899,7 +1906,7 @@ io.on('connection', function (socket) {
 			var scrollableList = game.screens["phoneEmailAppScreen"].extras[0]; // This is a reference to the scrolling list of emails.
 			deleteElementFromScrollableList(scrollableList, scrollableList.display_elements[email_no]);
 			addElementToScrollableList(scrollableList, createMessageScreen(email_no), EMAIL_VERTICAL_SIZE, email_no);
-			
+
 		}
 	}
 
@@ -1922,7 +1929,7 @@ io.on('connection', function (socket) {
 		if (game.phone.visible) {
 			hidePhone();
 		}
-		
+
 		if (typeof game.active_browser !== 'undefined') {
 			setup_dialog_screen(game.dialogs[dialog_name], {x:800, y:600 /* Canvas size when the browser is enabled */}, game.browsers[game.active_browser].screen);
 			clearDisplayObject(game.browsers[game.active_browser].screen, commands);
@@ -1961,7 +1968,7 @@ io.on('connection', function (socket) {
 		} else {
 			drawDisplayObject(game.screens[game.main_screen], commands);
 		}
-		
+
 		delete game.active_dialog;
 		socket.emit('command', commands);
 	}
@@ -1969,7 +1976,7 @@ io.on('connection', function (socket) {
 	/* Changes the phone screen, to the screen with the specified name */
 	function changePhoneScreen (name) {
 		var commands = [];
-		
+
 		game.screens[name].x = game.canvas.x - PHONE_SCREEN_X;
 		game.screens[name].y = game.canvas.y - PHONE_SCREEN_Y;
 		game.screens[name].layer = PHONE_SCREEN_LAYER;
@@ -1988,9 +1995,9 @@ io.on('connection', function (socket) {
 	function positionOfAppNo (app_no) {
 		return [58*(app_no % 3), 58*Math.floor(app_no / 3)];
 	}
-	
-	/* Installs the given app onto the phone. The purchase_screen_name argument is 
-	 * optional. If provided, this function will modify the purchase screen to 
+
+	/* Installs the given app onto the phone. The purchase_screen_name argument is
+	 * optional. If provided, this function will modify the purchase screen to
 	 * indicate that the user has the app already installed. */
 	function installPhoneApp (app) {
 		var app_no = game.phone_apps.length;
@@ -2001,10 +2008,10 @@ io.on('connection', function (socket) {
 		addElementToScreen(game.screens["phoneHomeScreen"], new Screen (x, y, 1, app.icon, [new Button (app.name + "_start_button", 0, 0, 56, 56, 0)], [], [])); // An event to handle this button clicked is handled already.
 		addButtonToScreen(game.screens["phoneSettingsUninstallPage"], new Button (app.name + "_uninstall_button", 0, 20*(app_no + 1), 173, 20*(app_no + 2), 2, "Uninstall " + app.name, "16px Times", "rgba(0, 0, 0, 1)"));
 		game.phone_apps.push(app);
-		
+
 		if (typeof app.purchase_screen_name !== 'undefined') {
 			var screen = game.screens[app.purchase_screen_name];
-			
+
 			// Remove download button.
 			for (var i = 0; i < screen.buttons.length; i++) {
 				if (screen.buttons[i].name == "app_purchase_screen_" + app.name + "_download") {
@@ -2012,10 +2019,10 @@ io.on('connection', function (socket) {
 					i--;
 				}
 			}
-			
+
 			// Replace download button with text indicating its already installed.
 			addElementToScreen(screen, new Text ("app_purchase_screen_" + app.name + "_already_installed", 5, 80, 84, 96, 3, "Installed", "11px Times", "rgba(64, 64, 64, 1)"));
-			
+
 			// Change cancel button's text to back.
 			for (var i = 0; i < screen.buttons.length; i++) {
 				if (screen.buttons[i].name.match(/app_purchase_screen_.*_cancel/) != null) {
@@ -2029,7 +2036,7 @@ io.on('connection', function (socket) {
 			}
 		}
 	}
-	
+
 	/* Removes the specified app from the phone. */
 	function uninstallPhoneApp(app) {
 		var app_no;
@@ -2037,7 +2044,7 @@ io.on('connection', function (socket) {
 			if (game.phone_apps[i] == app)
 				app_no = i;
 		}
-		
+
 		game.phone_apps.splice(app_no, 1); // Get rid of this app.
 
 		for (var i = 0; i < game.screens["phoneHomeScreen"].extras.length; i++) {
@@ -2046,11 +2053,11 @@ io.on('connection', function (socket) {
 				i--;
 			}
 		}
-		
+
 		// Mark the app as downloadable once again.
 		if (typeof app.purchase_screen_name !== 'undefined') {
 			var screen = game.screens[app.purchase_screen_name];
-		
+
 			// Delete the text element that indicates the app is installed.
 			for (var i = 0; i < screen.extras.length; i++) {
 				if (screen.extras[i].name == "app_purchase_screen_" + app.name + "_already_installed") {
@@ -2058,10 +2065,10 @@ io.on('connection', function (socket) {
 					i--;
 				}
 			}
-			
+
 			// Add the downloadable button back
 			addButtonToScreen(screen, new Button ("app_purchase_screen_" + app.name + "_download", 5, 80, 84, 96, 3, "  Download", "11px Times", "rgba(0, 0, 0, 1)"));
-		
+
 			// Change cancel button's text back to cancel (from back)
 			for (var i = 0; i < screen.buttons.length; i++) {
 				if (screen.buttons[i].name == "app_purchase_screen_" + app.name + "_cancel") {
@@ -2074,31 +2081,31 @@ io.on('connection', function (socket) {
 				}
 			}
 		}
-		
+
 		// Get rid of the app in the uninstall page.
 		for (var i = 0; i < game.screens["phoneSettingsUninstallPage"].buttons.length; i++) {
 			if (game.screens["phoneSettingsUninstallPage"].buttons[i].name == app.name + "_uninstall_button") {
 				removeButtonFromScreen(game.screens["phoneSettingsUninstallPage"], game.screens["phoneSettingsUninstallPage"].buttons[i]);
 			}
 		}
-		
-		// Re-position apps that came after the uninstalled one in the list to their new locations on the HomeScreen.		
+
+		// Re-position apps that came after the uninstalled one in the list to their new locations on the HomeScreen.
 		// Note that app_no is now the index of the first app that came after the app that was just uninstalled.
-		for (var i = app_no; i < game.phone_apps.length; i++) {			
+		for (var i = app_no; i < game.phone_apps.length; i++) {
 			for (var j = 0; j < game.screens["phoneHomeScreen"].extras.length; j++) {
-				if (game.screens["phoneHomeScreen"].extras[j].type == 'screen' && game.screens["phoneHomeScreen"].extras[j].buttons[0].name == game.phone_apps[i].name + "_start_button") {				
+				if (game.screens["phoneHomeScreen"].extras[j].type == 'screen' && game.screens["phoneHomeScreen"].extras[j].buttons[0].name == game.phone_apps[i].name + "_start_button") {
 					var app_start_button_screen = game.screens["phoneHomeScreen"].extras[j];
 					removeElementFromScreen(game.screens["phoneHomeScreen"], app_start_button_screen);
 					var new_position = positionOfAppNo(i);
-					
+
 					app_start_button_screen.x = new_position[0];
 					app_start_button_screen.y = new_position[1];
-					
+
 					addElementToScreen(game.screens["phoneHomeScreen"], app_start_button_screen);
 					break; // Need to bail out, or else we could encounter this screen again in the loop.
 				}
 			}
-			
+
 			// Repositions the uninstall button
 			for (var j = 0; j < game.screens["phoneSettingsUninstallPage"].buttons.length; j++) {
 				if (game.screens["phoneSettingsUninstallPage"].buttons[j].name == game.phone_apps[i].name + "_uninstall_button") {
@@ -2141,7 +2148,7 @@ io.on('connection', function (socket) {
 	 * If the screen is currently visible, it is redrawn appropriately */
 	function addElementToScreen (screen, element) {
 		var commands = [];
-		
+
 		if (screen["on_screen"]) {
 			drawDisplayObject(translate(element, screen.on_screen_x, screen.on_screen_y, screen.on_screen_layer), commands);
 		}
@@ -2236,37 +2243,37 @@ io.on('connection', function (socket) {
 		if (removeCount != 1) writeToServerLog(username + " | Warning, call to removeTextInputFieldFromScreen removed " + removeCount + " fields. Arguments were screen = " + screen + "field = " + field);
 		socket.emit('command', commands);
 	}
-	
-	/* Adds an element to a ScrollableList. 
+
+	/* Adds an element to a ScrollableList.
 	 * Note that the (x, y) position of an element added to a ScrollableList will be changed
 	 * based on the current scroll position of that list.
 	 * This method will work even if the ScrollableList is on the screen.
-	 
-	 * The final argument (new_element_index) is optional; if provided, it specifies which index in the scrollableList to insert 
-	 * the new element; if it is not provided, by default this function adds the element to the end of the scrollableList. 
+
+	 * The final argument (new_element_index) is optional; if provided, it specifies which index in the scrollableList to insert
+	 * the new element; if it is not provided, by default this function adds the element to the end of the scrollableList.
 	 */
 	function addElementToScrollableList (scrollableList, element, element_vertical_size, new_element_index) {
 		if (typeof new_element_index === 'undefined') {
 			var new_element_index = scrollableList.display_elements.length;
 			scrollableList.display_elements[new_element_index] = element;
 			scrollableList.display_element_sizes[new_element_index] = element_vertical_size;
-			
+
 			if (scrollableListElementDisplayable(scrollableList, new_element_index)) {
 				// Moves the object to the appropriate position, and adds it to the screen.
-				translateInPlace(element, -element.x, yPositionOfScrollableListElement(scrollableList, new_element_index) - element.y, 0);		
+				translateInPlace(element, -element.x, yPositionOfScrollableListElement(scrollableList, new_element_index) - element.y, 0);
 				addElementToScreen(scrollableList, element);
 			}
 		} else if (new_element_index >= 0 && new_element_index <= scrollableList.display_elements.length) {
 			scrollableList.display_elements.splice(new_element_index, 0, element);
 			scrollableList.display_element_sizes.splice(new_element_index, 0, element_vertical_size);
-			
+
 			// Refreshes the scrollableList element.
 			changeScrollPositionOfScrollableList(scrollableList, scrollableList.scroll_position);
 		} else {
 			throw new Error("addElementToScrollableList: ScrollableList index out of bounds: " + new_element_index + " size: " + scrollableList.display_elements.length);
 		}
 	}
-	
+
 	/* Changes the scroll position of a ScrollableList to a the specified new position.
 	 * This method will work even when the ScrollableList is on the screen.
 	 */
@@ -2276,10 +2283,10 @@ io.on('connection', function (socket) {
 			removeElementFromScreen(scrollableList, scrollableList.extras[i]);
 			i--;
 		}
-		
+
 		// Sets the new scroll position.
 		scrollableList.scroll_position = newScrollPosition;
-		
+
 		// Adds the elements that are now visible back to the screen in the appropriate places.
 		for (var i = 0; i < scrollableList.display_elements.length; i++) {
 			if (scrollableListElementDisplayable(scrollableList, i)) {
@@ -2288,13 +2295,13 @@ io.on('connection', function (socket) {
 			}
 		}
 	}
-	
+
 	/* Removes the specified element from the ScrollableList.
 	 * This method will work even when the ScrollableList is on the screen.
 	 */
 	function deleteElementFromScrollableList (scrollableList, element) {
 		var removeCount = 0;
-		// Find the given element in the scrollableList's display elements and delete it, as well as the 
+		// Find the given element in the scrollableList's display elements and delete it, as well as the
 		// record of its size.
 		for (var i = 0; i < scrollableList.display_elements.length; i++) {
 			if (scrollableList.display_elements[i] == element) {
@@ -2304,7 +2311,7 @@ io.on('connection', function (socket) {
 				removeCount++;
 			}
 		}
-		
+
 		// The scroll position may now need to be updated, if the removal of this element has caused the current scroll position to become invalid.
 		// The scroll position must always be 0 if the list is empty, or between 0 and the list's length - 1 if the list is not empty.
 		// Note that this direct modification of the scroll position is only safe because of the call below these conditional statements.
@@ -2313,11 +2320,11 @@ io.on('connection', function (socket) {
 		} else if (scrollableList.scroll_position >= scrollableList.display_elements.length) {
 			scrollableList.scroll_position = scrollableList.display_elements.length - 1;
 		}
-		
+
 		// There is of course a more efficient way to do this [redraw the components that moved as a result of the deletion], but this is the easiest.
 		changeScrollPositionOfScrollableList(scrollableList, scrollableList.scroll_position);
-		
-		if (removeCount != 1) 
+
+		if (removeCount != 1)
 			writeToServerLog(username + " | Warning: call to deleteElementFromScrollableList removed " + removeCount + " elements. Arguments were scrollableList = " + scrollableList + ", element = " + element);
 	}
 
@@ -2348,7 +2355,7 @@ io.on('connection', function (socket) {
 
 		socket.emit('command', commands);
 	}
-	
+
 	/* This function triggers the email-hacking incident */
 	function triggerEmailHack () {
 		var message;
@@ -2361,7 +2368,7 @@ io.on('connection', function (socket) {
 		}
 		addToMailbox(message);
 	}
-	
+
 	/* Function checks to see if the user has completed the game. If so, will show the game complete screen. */
 	function checkForGameCompletion () {
 		var total_score = game.coffee_shop_variables.score + game.library_variables.score + game.apartment_variables.score;
@@ -2381,7 +2388,7 @@ io.on('connection', function (socket) {
 				}
 			}
 		}
-		
+
 		if (game.coffee_shop_variables.score > 0 && game.library_variables.score > 0 && game.apartment_variables.score > 0) {
 			// Game is indeed complete.
 			resizeCanvas(1152, 648);
@@ -2404,7 +2411,7 @@ io.on('connection', function (socket) {
 
 		return false;
 	}
-	
+
 	// Returns a reference to the screen object that contains a button with the given name.
 	// Returns null if the requested button cannot be located.
 	function findScreenWithButton (button_name) {
@@ -2418,18 +2425,18 @@ io.on('connection', function (socket) {
 		} else {
 			retVal = findScreenWithButtonHelper(game.screens[game.main_screen], button_name);
 		}
-		
+
 		if (retVal != null) {
 			return retVal;
 		} else {
 			if (game.phone.visible && game.phone.raised && game.phone.screen_on) {
 				retVal = findScreenWithButtonHelper(game.screens[game.phone.screen], button_name);
-			} 
-			
+			}
+
 			return retVal;
-		}	
+		}
 	}
-	
+
 	// Helper function. Returns screen if the given screen directly contains the button.
 	// Otherwise, recursively searches for the button in the screens that are children of
 	// this screen.
@@ -2438,15 +2445,15 @@ io.on('connection', function (socket) {
 			if (screen.buttons[i].name == button_name)
 				return screen;
 		}
-		
+
 		for (var i = 0; i < screen.extras.length; i++) {
 			if (screen.extras[i].type == 'screen') {
 				var returnValue = findScreenWithButtonHelper(screen.extras[i], button_name);
-				if (returnValue != null) 
+				if (returnValue != null)
 					return returnValue;
 			}
 		}
-		
+
 		return null;
 	}
 
@@ -2489,8 +2496,8 @@ io.on('connection', function (socket) {
 				writeToServerLog(username + " | Received invalid click event -- the button \"" + button + "\" could not be found.");
 				return;
 			}
-		}		
-		
+		}
+
 		// Handle events in the modules, but only if they are loaded
 		if (game.scenes_loaded) {
 			if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, game.coffee_shop_variables, game)) {
@@ -2505,7 +2512,7 @@ io.on('connection', function (socket) {
 			if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables, game.browsers["rout"], displayBrowser, closeBrowser, changeBrowserWebPage, checkForGameCompletion, triggerEmailHack, game.screens["apartment_success"].extras[0])) {
 				return;
 			}
-			
+
 			if (police_station_onclick(button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, displayFileSystem, closeFileSystem, existsInFileSystem, displayBrowser, changeBrowserWebPage, closeBrowser, playVideo, game.browsers["police_station_browser"], game.police_station_variables)) {
 				return;
 			}
@@ -2522,7 +2529,7 @@ io.on('connection', function (socket) {
 				return;
 			} else if (button == game.phone_apps[i].name + "_uninstall_button") {
 				// Make some apps impossible to uninstall
-				if (game.phone_apps[i].name == "Map" || game.phone_apps[i].name == "Email" || game.phone_apps[i].name == "Settings") { 
+				if (game.phone_apps[i].name == "Map" || game.phone_apps[i].name == "Email" || game.phone_apps[i].name == "Settings") {
 					showDialog("invalidUninstallDialog");
 				} else {
 					uninstallPhoneApp(game.phone_apps[i]);
@@ -2546,12 +2553,12 @@ io.on('connection', function (socket) {
 				return;
 			}
 		}
-		
+
 		if (button.match(/app_purchase_screen_.*_cancel/) != null) {
 			changePhoneScreen("phoneHomeScreen");
 			return;
 		}
-		
+
 		if (button.match(/scrolling_list_.*_scroll_up/) != null) {
 			var scrolling_list = findScreenWithButton(button);
 			if (scrolling_list != null) {
@@ -2560,7 +2567,7 @@ io.on('connection', function (socket) {
 				return;
 			} else {
 				writeToServerLog(username + " | failed to find scrolling list with the button: " + button_name);
-			} 
+			}
 		} else if (button.match(/scrolling_list_.*_scroll_down/) != null) {
 			var scrolling_list = findScreenWithButton(button);
 			if (scrolling_list != null) {
@@ -2571,14 +2578,14 @@ io.on('connection', function (socket) {
 				writeToServerLog(username + " | failed to find scrolling list with the button: " + button_name);
 			}
 		}
-		
+
 		if (button.match(/phone-todo-list-open-location-.*/) != null) {
-			// Extract the location name from the button string and change the phone screen to the todoList for that location. 
+			// Extract the location name from the button string and change the phone screen to the todoList for that location.
 			var location = button.substring(30);
 			changePhoneScreen("phoneTodoListAppScreenForLocation-" + location);
 			return;
 		}
-		
+
 		if (typeof game.active_filesystem !== 'undefined') {
 			var current_folder = get_folder(game.filesystems[game.active_filesystem], game.filesystems[game.active_filesystem].currentDirectory);
 			for (var i = 0; i < current_folder.contents.length; i++) {
@@ -2696,7 +2703,7 @@ io.on('connection', function (socket) {
 			writeToServerLog(username + " | Received unhandled text-field-enter event with name, value = " + name + ", " + value);
 		}
 	});
-	
+
 	socket.on('animation-ended', function (name) {
 		writeToServerLog(username + " | Received animation ended event: " + name);
 		if (introduction_on_gif_ended(name, showDialog, changeMainScreen)) {
@@ -2705,7 +2712,7 @@ io.on('connection', function (socket) {
 			writeToServerLog(username + " | Received unhandled animated-GIF-ended event with name = " + name);
 		}
 	});
-	
+
 	socket.on('hard-reset', function () {
 		writeToServerLog(username + " | Performed a save file reset.");
 		makeNewGame();
