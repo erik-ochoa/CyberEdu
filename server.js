@@ -1287,12 +1287,6 @@ io.on('connection', function (socket) {
 
 		if (typeof location_to_unlock !== 'undefined') {
 
-			/*
-			TASK #2 from Ibrahim, Erik, and Omkar
-			This should push phone alert
-			*/
-			//pushPhoneAlert("You can now visit " + location_to_unlock);
-
 			if (location_to_unlock == "mall") {
 				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,150, 173, 180, 2, "Go to Mall", "18px Times", "rgba(0,0,0,1)"));
 			} else if (location_to_unlock == "coffee_shop") {
@@ -1315,17 +1309,26 @@ io.on('connection', function (socket) {
 	 */
 	function sendMissionEmail(location) {
 		if (location == "coffee_shop") {
-			addToMailbox(new EmailMessage ("Robberies at the Coffee Shop", "Coffee Shop Manager", "Hello, I am the manager of the local Starbuck’s, and recently, we have had a problem with a few of our customers getting robbed. We have never had this problem before, and some of our everyday customers have stopped coming. We won’t be able to stay open if this continues. Please figure out who the robber is!", [], "coffee_shop"));
+		addToMailbox(new EmailMessage ("Robberies at the Coffee Shop", "Coffee Shop Manager", "Hello, I am the manager of the local Starbuck’s, and recently, we have had a problem with a few of our customers getting robbed. We have never had this problem before, and some of our everyday customers have stopped coming. We won’t be able to stay open if this continues. Please figure out who the robber is!", [], "coffee_shop"));
+		//Task #2
+		pushPhoneAlert("New message from Starbuck's Manager")
 		} else if (location == "library") {
-			addToMailbox(new EmailMessage ("Computer Problems in the Library", "Librarian", "Hello, I am the manager of the local Starbuck’s, and recently, we have had a problem with a few of our customers getting robbed. We have never had this problem before, and some of our everyday customers have stopped coming. We won’t be able to stay open if this continues. Please figure out who the robber is!", [], "library"));
+		addToMailbox(new EmailMessage ("Computer Problems in the Library", "Librarian", "Hello, I am the manager of the local Starbuck’s, and recently, we have had a problem with a few of our customers getting robbed. We have never had this problem before, and some of our everyday customers have stopped coming. We won’t be able to stay open if this continues. Please figure out who the robber is!", [], "library"));
+		//Task #2
+		pushPhoneAlert("New message from Starbuck's Manager")
 		} else if (location == "apartment") {
-			addToMailbox(new EmailMessage ("I've been framed! Please help...", "Madeline", "Hey, yesterday I was contacted by the Music Protection Association, claiming that I had downloaded $1000 worth of songs illegally. I have watched Youtube videos of songs that I do not own, but I haven’t downloaded them. I swear somebody else is responsible. I don’t have the time or the money to go to court over this, can you please figure out who? I live in the apartments across the street from the shopping center.", [], "apartment"));
+		addToMailbox(new EmailMessage ("I've been framed! Please help...", "Madeline", "Hey, yesterday I was contacted by the Music Protection Association, claiming that I had downloaded $1000 worth of songs illegally. I have watched Youtube videos of songs that I do not own, but I haven’t downloaded them. I swear somebody else is responsible. I don’t have the time or the money to go to court over this, can you please figure out who? I live in the apartments across the street from the shopping center.", [], "apartment"));
+		//Task #2
+		pushPhoneAlert("New message from Madaline")
 		} else if (location == "police_station") {
-			addToMailbox(new EmailMessage("P.I. Application", "Police Station Receptionist", "Congratulations new detective, your application was reviewed and you have become an official licensed private investigator. Now that you have the equipment you need, come to the police station to pick up your badge.", [], "police_station"));
+		addToMailbox(new EmailMessage("P.I. Application", "Police Station Receptionist", "Congratulations new detective, your application was reviewed and you have become an official licensed private investigator. Now that you have the equipment you need, come to the police station to pick up your badge.", [], "police_station"));
+		//Task #2
+		pushPhoneAlert("New message from Police Station Receptionist")
 		} else {
-			writeToServerLog(username + " | Invalid call to sendMissionEmail(" + location + ").");
+		writeToServerLog(username + " | Invalid call to sendMissionEmail(" + location + ").");
 		}
 	}
+
 
 	/* Changes the canvas size to the specified arguments */
 	function resizeCanvas (newX, newY) {
