@@ -3,7 +3,8 @@ function load_police_station (game, addToFileSystem) {
 		new Button ("police_station_door1", 25, 210, 143, 451, 1),
 		new Button ("police_station_door2", 173, 210, 289, 451, 1),
 		new Button ("police_station_door3", 317, 210, 436, 451, 1),
-		new Button ("police_station_receptionist", 806, 293, 869, 421, 1)
+		new Button ("police_station_receptionist", 806, 293, 869, 421, 1),
+		new Button ("police_station_victim", 474, 334, 566, 488, 1)
 	], [], [
 		new Text ("police_station_nameplate1", 44, 233, 123, 253, 2, "P.D. Chief", "16px Arial", "rgba(0, 0, 0, 1)"),
 		new Text ("police_station_nameplate2", 190, 233, 266, 253, 2, game.partner_name, "16px Arial", "rgba(0, 0, 0, 1)"),
@@ -24,7 +25,7 @@ function load_police_station (game, addToFileSystem) {
 	]);
 
 	game.screens["player_office_victim"] = new Screen(0, 0, 0, new Image("image/police_station/player_office_victim", 0, 0, 0, 1.7), [
-		new Button ("player_office_exit_door", 985, 260, 1122, 648, 1)
+		new Button ("player_office_exit_door", 887, 260, 1000, 648, 1)
 	], [] ,[]);
 	
 	game.screens["player_office"] = new Screen(0, 0, 0, new Image("image/police_station/player_office", 0, 0, 0), [
@@ -38,7 +39,7 @@ function load_police_station (game, addToFileSystem) {
 
 	game.browsers["police_station_browser"] = new Browser();
 	
-	game.dialogs["police_station_receptionist_dialog_1"] = new Dialog ("police_station_receptionist_dialog_1", "Receptionist", "Hello, " + game.player_name + ". Welcome to the UMD Division of IT Headquarters. Here's your employee badge, access to the intern office. Your new office is the door on the right. From here on out, You'll receive notifications of missions to complete via email on your phone.", ["Got it."]);
+	game.dialogs["police_station_receptionist_dialog_1"] = new Dialog ("police_station_receptionist_dialog_1", "Receptionist", "Hello, " + game.player_name + ". Welcome to the UMD Division of IT Headquarters. Here's your employee badge, access to the intern office. Your new office is the door on the right and Michael from the email you received is waiting outside of your office. From here on out, You'll receive notifications of missions to complete via email on your phone.", ["Got it."]);
 	game.dialogs["police_station_receptionist_dialog_2"] = new Dialog ("police_station_receptionist_dialog_2", "Receptionist", "How are you doing, " + game.player_name + "? Remember, you get notifications of missions to complete via email. Once you get a mission, use the map to travel to the location and solve the case.", ["Got it."]);
 
 	game.dialogs["police_station_victim_name_dialog_1"] = new Dialog("police_station_victim_name_dialog_1", victim_name, "Hello, my name is " + victim_name + " I'm here because my internet browser is acting very strange and I am wondering if anyone could offer any assistance.", ["Help."]);
@@ -173,7 +174,11 @@ function police_station_onclick (button, changeMainScreen, resizeCanvas, sendMis
 			showDialog("police_station_receptionist_dialog_1");
 		}
 		return true;
-	} else if (button == "dialog_police_station_receptionist_dialog_1_Got it.") {
+	} else if (button =="police_station_victim") {
+		showDialog("police_station_victim_name_dialog_1");
+		return true;
+	}
+	 else if (button == "dialog_police_station_receptionist_dialog_1_Got it.") {
 		vars.spoken_to_receptionist_once = true;
 		sendMissionEmail("coffee_shop");
 		sendMissionEmail("apartment");
@@ -183,7 +188,7 @@ function police_station_onclick (button, changeMainScreen, resizeCanvas, sendMis
 	} else if (button == "dialog_police_station_receptionist_dialog_2_I'm doing fine.") {
 		closeDialog();
 		return true;
-	} /* Remove these two cases later!*/ else if (button == "police_station_door1" || button == "police_station_door2") {
+	}  else if (button == "police_station_door1" || button == "police_station_door2") {
 		changeMainScreen("player_office");
 		return true;
 	} else if(button == "police_station_door3" && vars.module_complete == false) {
@@ -315,8 +320,10 @@ function police_station_onclick (button, changeMainScreen, resizeCanvas, sendMis
 		changeMainScreen("player_office_victim");
 		showDialog("police_station_victim_name_dialog_4");
 		return true;
-	}
-	else {
+	} else if (button == "dialog_police_station_receptionist_dialog_2_Got it.") {
+		closeDialog();
+		return true;
+	} else {
 		return false;
 	}
 }

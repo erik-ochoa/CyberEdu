@@ -1314,7 +1314,8 @@ io.on('connection', function (socket) {
 		} else if (location == "apartment") {
 			addToMailbox(new EmailMessage ("I've been framed! Please help...", "Madeline", "Hey, yesterday I was contacted by the Music Protection Association, claiming that I had downloaded $1000 worth of songs illegally. I have watched Youtube videos of songs that I do not own, but I haven’t downloaded them. I swear somebody else is responsible. I don’t have the time or the money to go to court over this, can you please figure out who? I live in the apartments across the street from the shopping center.", [], "apartment"));
 		} else if (location == "police_station") {
-			addToMailbox(new EmailMessage("P.I. Application", "Police Station Receptionist", "Congratulations new detective, your application was reviewed and you have become an official licensed private investigator. Now that you have the equipment you need, come to the police station to pick up your badge.", [], "police_station"));
+			addToMailbox(new EmailMessage("P.I. Application", "Police Station Receptionist", "Congratulations new detective, your application was reviewed and you have become an official licensed private investigator. Now that you have the equipment you need, come to the police station to pick up your badge. In addition, we have your first case available here for you. Check your email for the forwarded details.", [], "police_station"));
+			addToMailbox(new EmailMessage("Computer Malware", "Michael Jones", "Hi, the receptionist at the police station gave me your email and said I should contact you about my computer problem. I am at the police station outside of your office now waiting.", [], "police_station"));
 		} else {
 			writeToServerLog(username + " | Invalid call to sendMissionEmail(" + location + ").");
 		} 
