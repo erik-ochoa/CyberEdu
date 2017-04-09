@@ -1321,9 +1321,14 @@ io.on('connection', function (socket) {
 		//Task #2
 		pushPhoneAlert("New message from Madaline")
 		} else if (location == "police_station") {
-		addToMailbox(new EmailMessage("P.I. Application", "Police Station Receptionist", "Congratulations new detective, your application was reviewed and you have become an official licensed private investigator. Now that you have the equipment you need, come to the police station to pick up your badge.", [], "police_station"));
+
+
 		//Task #2
 		pushPhoneAlert("New message from Police Station Receptionist")
+
+		addToMailbox(new EmailMessage("P.I. Application", "Police Station Receptionist", "Congratulations new detective, your application was reviewed and you have become an official licensed private investigator. Now that you have the equipment you need, come to the police station to pick up your badge. In addition, we have your first case available here for you. Check your email for the forwarded details.", [], "police_station"));
+		addToMailbox(new EmailMessage("Computer Malware", "Michael Jones", "Hi, the receptionist at the police station gave me your email and said I should contact you about my computer problem. I am at the police station outside of your office now waiting.", [], "police_station"));
+
 		} else {
 		writeToServerLog(username + " | Invalid call to sendMissionEmail(" + location + ").");
 		}
