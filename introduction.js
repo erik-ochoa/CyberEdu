@@ -59,6 +59,8 @@ function load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER) {
 	game.dialogs["introduction_phone_dialog_1a"] = new Dialog ("introduction_phone_dialog_1a", "Voice", "Congratulations! You just became a statistic by failing your first test, the classic phishing scam. Don't worry though, a lot of our first-time interns fall for this. Let's see if you'll do better on our other tests. Put on the VR headset when ready to continue your training.", ["Continue."]);
 	game.dialogs["introduction_phone_dialog_1b"] = new Dialog ("introduction_phone_dialog_1b", "Voice", "Congratulations on passing our first test. You would be surprised how many of our interns fall for that phishing scam test. You might be able to pull this off.", ["Continue."]);
 	game.dialogs["introduction_forward"] = new Dialog ("introduction_forward", "", "Forward this email to spam@umd.edu?", ["Yes.", "No."]);
+	game.dialogs["introduction_must_enter_password"] = new Dialog("introduction_must_enter_password", "", "You must enter a password", ["Okay."]);
+	game.dialogs["introduction_incorrect_mfa_code"] = new Dialog("introduction_incorrect_mfa_code", "", "Incorrect authentication code entered. Try again.", ["Okay."]);
 
 	game.browsers["introduction_computer_browser"] = new Browser ();
 
@@ -81,6 +83,18 @@ function load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER) {
 			new Rectangle("introduction_registration_2_partner_name_entry_fill", 100, 250, 750, 300, 2, "rgba(255,255,255,1)"),
 			new Text("introduction_registration_enter_name", 50, 50, 750, 100, 1, "Enter your name:", "18px Arial", "rgba(0,0,0,1)"),
 			new Text("introduction_registration_enter_partner_name", 50, 200, 750, 250, 1, "Enter your best friend's name:", "18px Arial", "rgba(0,0,0,1)")
+		]
+	);
+	
+	game.webpages["2b"] = new Screen(0, 70, 0, new Rectangle ("introduction_registration_2b_background", 0, 0, 800, 600, 0, "rgba(255,255,255,1)"),
+		[ /*Buttons */	
+			new Button ("introduction_registration_2b_continue_button", 500, 430, 700, 530, 1, "Continue", "18px Arial", "rgba(0,0,255,1)")
+		], [ /* Text Fields */
+			new Button ("introduction_password_text_entry", 100, 100, 750, 150, 3, "", "24px Arial", "rgba(0,0,0,1)", "Enter a password...")
+		], [ /* Extras */
+			new Text("introduction_registration_create_password", 50, 50, 750, 100, 1, "Create a password for your account:", "18px Arial",	"rgba(0,0,0,1)"),
+			new Rectangle("introduction_registration_password_entry_outline", 98, 98, 752, 152, 1, "rgba(0,0,0,1)"),
+			new Rectangle("introduction_registration_password_entry_fill", 100, 100, 750, 150, 2, "rgba(255,255,255,1)")
 		]
 	);
 
@@ -135,7 +149,10 @@ function load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER) {
 		mfa_code:"0",
 		player_mfa_code_entry:"#####",
 		clicked_bad_link:false,
-		ignored_bad_email:false
+		ignored_bad_email:false,
+		passwords_video_played:true, // TODO Temp. code until video format is changed!
+		phishing_video_played:false,
+		entered_password:false
 	};
 }
 
@@ -150,7 +167,7 @@ function load_introduction_part2 (game) {
 	game.dialogs["introduction_phone_dialog_9"] = new Dialog ("introduction_phone_dialog_9", "Phone", "Well good luck then. Try not to get lost - there is quite a big world in there.", ["Continue."]);
 }
 
-function introduction_onclick (button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, hidePhone, showPhone, pushPhoneAlert, browser, vars) {
+function introduction_onclick (button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, hidePhone, showPhone, pushPhoneAlert, playVideo, browser, vars) {
 	if (button == "introduction_dorm_room_computer") {
 		changeMainScreen("introduction_computer");
 		return true;
@@ -168,7 +185,21 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 		changeBrowserWebPage(browser, "2");
 		return true;
 	} else if (button == "introduction_registration_2_continue_button") {
-		changeBrowserWebPage(browser, "3");
+		changeBrowserWebPage(browser, "2b");
+		return true;
+	}  else if (button == "introduction_registration_2b_continue_button") {
+		if (!vars.entered_password) {
+			showDialog("introduction_must_enter_password");
+		} else { 
+			if (!vars.passwords_video_played) {
+				vars.passwords_video_played = true;
+				playVideo("video/passwords");
+			}
+			changeBrowserWebPage(browser, "3");
+		}
+		return true;
+	} else if (button == "dialog_introduction_must_enter_password_Okay.") {
+		closeDialog();
 		return true;
 	} else if (button == "mfa_no_button") {
 		vars.finished_registration = true;
@@ -192,8 +223,11 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 			changePhoneScreen("phoneAppStoreButtonScreen");
 			changeBrowserWebPage(browser, "4");
 		} else {
-			// TODO if code is incorrect, need to display something and prompt user to re-enter code.
+			showDialog("introduction_incorrect_mfa_code");
 		}
+		return true;
+	} else if (button == "dialog_introduction_incorrect_mfa_code_Okay.") {
+		closeDialog();
 		return true;
 	} else if (button == "introduction_app_store_button") {
 		showDialog("introduction_phone_dialog_1");
@@ -234,6 +268,11 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 		return true;
 	} else if (button == "good_link") {
 		if (vars.forwarded_phishing_email == true) {
+			if (!vars.phishing_video_played) {
+				vars.phishing_video_played = true;
+				playVideo("video/phishing");
+			}
+			
 			if (vars.clicked_bad_link == false) {
 				showDialog("introduction_phone_dialog_1b"); //passed
 				hidePhone();
@@ -324,6 +363,11 @@ function introduction_text_field_edit (name, value, game) {
 		return true;
 	} else if (name == "mfa_code_text_entry") {
 		game.introduction_variables.player_mfa_code_entry = value;
+		return true;
+	} else if (name == "introduction_password_text_entry") {
+		// Sending this value here is actually insecure, since it is transmitted in the clear.
+		game.introduction_variables.entered_password = true;
+		// Don't store this value in the game object either, to avoid storing this information in plaintext inside the game JSON object.
 		return true;
 	} else {
 		return false;

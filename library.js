@@ -60,7 +60,9 @@ function load_library (game, addToFileSystem) {
   game.dialogs["red3_dialog"] = new Dialog ("red3_dialog", game.player_name, "Well hurry up and finish then so I can check this computer.", ["Continue."]);
   game.dialogs["red4_dialog"] = new Dialog ("red4_dialog", "Red Shirt", "Beleive me I am working as fast as I can", ["Continue."]);
 
-  game.dialogs["stripe_dialog"] = new Dialog ("stripe_dialog", "Striped Shirt", "What's the integral of sin^2(x)?", ["Continue."]);
+  game.dialogs["stripe_dialog"] = new Dialog ("stripe_dialog", "Striped Shirt", "What's the integral of sin^2(x)?", ["0.5x + 0.25cos(2x)", "0.5x - 0.25sin(2x)", "I don't know."]);
+  game.dialogs["stripe2_dialog"] = new Dialog ("stripe2_dialog", "Striped Shirt", "I don't think that's right.", ["Okay."]);
+  game.dialogs["stripe3_dialog"] = new Dialog ("stripe3_dialog", "Striped Shirt", "I think that's right. You really know your stuff, " + game.player_name + ".", ["Okay."]);
 
   game.dialogs["files1_dialog"] = new Dialog ("files1_dialog", "", "It's a red flash drive", ["Take it", "Plug it in the computer"]);
   game.dialogs["files2_dialog"] = new Dialog ("files2_dialog", game.partner_name, "We shouldn't leave suspicious flash drives lying around", ["Continue."]);
@@ -287,9 +289,27 @@ function library_onclick (button, showDialog, closeDialog, changeMainScreen, res
     showDialog("stripe_dialog");
     return true;
   }
-  else if (button == "dialog_stripe_dialog_Continue.") {
+  else if (button == "dialog_stripe_dialog_0.5x + 0.25cos(2x)") {
+	closeDialog();
+	showDialog("stripe2_dialog"); // Incorrect answer
+	return true;
+  }
+  else if (button == "dialog_stripe_dialog_0.5x - 0.25sin(2x)") {
+	closeDialog();
+	showDialog("stripe3_dialog"); // Correct answer
+	return true;
+  }
+  else if (button == "dialog_stripe_dialog_I don't know.") {
     closeDialog();
     return true;
+  }
+  else if (button == "dialog_stripe2_dialog_Okay.") {
+	closeDialog();
+	return true;
+  } 
+  else if (button == "dialog_stripe3_dialog_Okay.") {
+	closeDialog();
+	return true;
   }
   else if (button == "files") {
     changeMainScreen("files_gamescreen");
