@@ -5,6 +5,10 @@
 function load_apartment (game) {
 
 	game.apartment_variables = {
+		router_pwd_entry:"abcdef",
+		ssid_entry:"ssidabc",
+		new_ssid:"MyRouter100",
+		theSpotofdot20: "theSpotofdot20",
 		score:0,
 		metMadeline:false,
 		metEmily:false,
@@ -13,16 +17,16 @@ function load_apartment (game) {
 		metAll:false,
 		routerChecked:false,
 		sawHistory:false,
-		askedRouter:false,
+		askedAboutRouter:false,
 		leftMadeline:false,
 		inHerRoom:false,
 		ethicsWithBilly:false,
 		ratBilly:false,
 		helpBilly:false,
 		accusedJacob:false,
-		newPassowrd:false,
+		changedSSID:false,
+		changedPassword:false,
 		firstTry:true,
-		matchedPassword:false,
 		wifi_config_video_played:false,
 		piracy_video_played:false,
 		background_music_audio_id:"audio/mall",
@@ -55,6 +59,11 @@ function load_apartment (game) {
 	[new Button ("router_password_entry", 100, 130, 500, 200, 2, "********", "24px Arial", "rgba(64,64,64,1)")],
 	[new Text ("router_instruction_enter_password_", 100, 100, 500, 150, 1, "Enter your new password:", "24px Arial", "rgba(0,0,0,1)")]);
 
+	game.webpages["http://192.168.0.1/wireless/ssid"] = new Screen (0, 70, 0, new Rectangle ("router_2_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"),
+	[new Button ("ssid_finish_button", 100, 200, 200, 300, 2,"Save and Go Back >", "18px Arial", "rgba(0,0,0,1)")],
+	[new Button ("ssid_page_entry", 100, 130, 500, 200, 2, "********", "24px Arial", "rgba(64,64,64,1)")],
+	[new Text ("router_instruction_enter_ssid_", 100, 100, 500, 150, 1, "Enter your new SSID:", "24px Arial", "rgba(0,0,0,1)")]);
+
 	game.screens["apartment"] = new Screen (0, 0, 0, new Image ("image/hallway", 0, 0, 0), [
 		new Button ("apartment_manager", 268, 313, 328, 396, 0),
 		new Button ("madeline_door", 120, 360, 200, 400, 0),
@@ -80,7 +89,7 @@ function load_apartment (game) {
 	], [], []);
 
 	game.screens["madeline_room"] = new Screen (0, 0, 0, new Image ("image/madelinea", 0, 0, 0), [
-		new Button ("door3", 106, 379, 140, 397, 0),
+		new Button ("door3", 258, 360, 290, 373, 0),
 		new Button ("mad_laptop", 930, 410, 1090, 550, 0),
 		new Button ("mad", 643, 155, 780, 455, 0)
 	], [], []);
@@ -111,11 +120,14 @@ function load_apartment (game) {
 	game.dialogs["apartment_partner_dialog_6"] = new Dialog ("apartment_partner_dialog_6", game.partner_name, "Let's see if we can get anymore information from the router history and then do some investigating.", ["Okay."]);
 	game.dialogs["apartment_partner_dialog_7"] = new Dialog ("apartment_partner_dialog_7", game.partner_name, "We've talked to all possible suspects. Let's check in on Madeline.", ["Okay."]);
 	game.dialogs["apartment_partner_dialog_8"] = new Dialog ("apartment_partner_dialog_8", game.partner_name, "Not broadcasting the SSID is a bad idea since it forces the laptops remembering the router to transmit the SSID wherever they go, meaning snoopers could end up seeing it.", ["Okay."]);
-	game.dialogs["apartment_partner_dialog_9"] = new Dialog ("apartment_partner_dialog_9", game.partner_name, "Her SSID is currently 'Madeline's Wi-Fi' - there isn't any reason to change it.", ["Okay."]);
+	game.dialogs["apartment_partner_dialog_9"] = new Dialog ("apartment_partner_dialog_9", game.partner_name, "Her SSID is currently 'Madeline's Wi-Fi' - we should change it to something like MyRouter100 so people don't easily find out it's tied to her.", ["Okay."]);
 	game.dialogs["apartment_partner_dialog_10"] = new Dialog ("apartment_partner_dialog_10", game.partner_name, "There isn't any reason to change these, but you could block certain websites and put on time of day restrictions.", ["Okay."]);
 	game.dialogs["apartment_partner_dialog_11"] = new Dialog ("apartment_partner_dialog_11", game.partner_name, "We need a password so neighbors can't easily connect to your network. What would you like to be set as your password, Madeline?", ["Okay."]);
 	game.dialogs["apartment_partner_dialog_12"] = new Dialog ("apartment_partner_dialog_12", game.partner_name, "We already set her password the way she wanted.", ["Okay."]);
 	game.dialogs["apartment_partner_dialog_13"] = new Dialog ("apartment_partner_dialog_13", game.partner_name, "According to the router history, Jacob and Billy used at least 1 GB of data -- seems like a lot in just a couple hours.", ["Okay."]);
+	game.dialogs["apartment_partner_dialog_14"] = new Dialog ("apartment_partner_dialog_14", game.partner_name, "Hold on. You didn't enter theSpotofdot20 as her password.", ["Okay."]);
+	game.dialogs["apartment_partner_dialog_15"] = new Dialog ("apartment_partner_dialog_15", game.partner_name, "I think it should be MyRouter100.", ["Okay."]);
+
 
 	game.dialogs["madeline_dialog"] = new Dialog ("madeline_dialog", game.player_name, "Hello Madeline. We're the detectives you contacted about this music piracy problem. How can we help?", ["Continue."]);
 	game.dialogs["madeline_dialog_2"] = new Dialog ("madeline_dialog_2", resident_4_name, "Thank you so much for coming. Like I said, the Music Protection Association is claiming I illegally downloaded a thousand dollars worth of songs. I'm incredibly stressed right now, since I know they've got this all wrong. You could even look" +
@@ -131,7 +143,7 @@ function load_apartment (game) {
 	game.dialogs["madeline_dialog_7"] = new Dialog ("madeline_dialog_7", resident_4_name, "Perfect timing! The Music Protection Association just emailed me saying all the illegally downloaded files were songs by country artists.", ["Continue."]);
 	game.dialogs["madeline_dialog_8"] = new Dialog ("madeline_dialog_8", game.player_name, "Thanks Madeline. With that, I believe our investigation lets us conclude that our culprit is ", ["Emily.", "Jacob.", "Billy."]);
 	game.dialogs["madeline_dialog_9"] = new Dialog ("madeline_dialog_9", game.player_name, "Actually, the culprit is ", ["Emily.", "Jacob.", "Billy."]);
-	game.dialogs["madeline_dialog_10"] = new Dialog ("madeline_dialog_10", resident_4_name, "I'll let them know immediately about this situation and talk to Jacob about what he almost caused. I'm just glad I can avoid a random lawsuit - student loans are already tough enough.", ["Continue."]); 
+	game.dialogs["madeline_dialog_10"] = new Dialog ("madeline_dialog_10", resident_4_name, "I'll let them know immediately about this situation and talk to Jacob about what he almost caused. I'm just glad I can avoid a random lawsuit - student loans are already tough enough.", ["Continue."]);
 	game.dialogs["madeline_dialog_11"] = new Dialog ("madeline_dialog_11", resident_4_name, "By the way, they also told me to secure my network since I'm responsible for the traffic on it. Could you help me with that?", ["Okay."]);
 	game.dialogs["madeline_dialog_12"] = new Dialog ("madeline_dialog_12", resident_4_name, "Please help me secure my network!", ["Okay."]);
 	game.dialogs["madeline_dialog_13"] = new Dialog ("madeline_dialog_13", resident_4_name, "I want it set as 'theSpotofdot20'", ["Okay."]);
@@ -159,6 +171,7 @@ function load_apartment (game) {
 	game.dialogs["billy_dialog_3"] = new Dialog ("billy_dialog_3", resident_1_name, "Could you let this one slide? I can't afford these expenses.", ["Sure.", "Sorry."]); //ethical decision probably
 	game.dialogs["billy_dialog_4"] = new Dialog ("billy_dialog_4", resident_1_name, "Awesome, you're the best!", ["Okay."]);
 	game.dialogs["billy_dialog_5"] = new Dialog ("billy_dialog_5", resident_1_name, "Wait what? That's not cool.", ["Okay."]);
+	game.dialogs["billy_dialog_6"] = new Dialog ("billy_dialog_6", resident_1_name, "Please don't tell her!", ["Maybe."]);
 }
 
 function pickCulprit (accused, showDialog, closeDialog, vars) {
@@ -225,9 +238,9 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		changeBrowserWebPage(browser, "http://192.168.0.1");
 
 		displayBrowser("rout");
-		if (!vars.routerChecked && !vars.askedRouter) {
+		if (!vars.routerChecked && !vars.askedAboutRouter) {
 			showDialog("apartment_partner_dialog_5");
-			vars.askedRouter = true;
+			vars.askedAboutRouter = true;
 		}
 		return true;
 	} else if (button == "mad_laptop" && vars.accusedJacob) {
@@ -292,9 +305,25 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		closeDialog();
 		return true;
 	} else if (button == "change_ssid") {
-		showDialog("apartment_partner_dialog_9");
+		if (!vars.changedSSID) {
+			showDialog("apartment_partner_dialog_9");
+			changeBrowserWebPage(browser, "http://192.168.0.1/wireless/ssid");
+		} else {
+			showDialog("rout2");
+		}
 		return true;
 	} else if (button == "dialog_apartment_partner_dialog_9_Okay.") {
+		closeDialog();
+		return true;
+	} else if (button == "ssid_finish_button") {
+		if (vars.ssid_entry == vars.new_ssid) {
+			vars.changedSSID = true;
+			changeBrowserWebPage(browser, "http://192.168.0.1/wireless");
+		} else {
+			showDialog("apartment_partner_dialog_15");
+		}
+		return true;
+	} else if (button == "dialog_apartment_partner_dialog_15_Okay.") {
 		closeDialog();
 		return true;
 	} else if (button == "parental") {
@@ -304,7 +333,7 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		closeDialog();
 		return true;
 	} else if (button == "set_pwd") {
-		if (!vars.newPassword) {
+		if (!vars.changedPassword) {
 			changeBrowserWebPage(browser, "http://192.168.0.1/wireless/password");
 			showDialog("apartment_partner_dialog_11");
 			return true;
@@ -387,7 +416,7 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		showDialog("apartment_partner_dialog_4");
 		return true;
 	} else if (button == "door3" && vars.metAll) {
-		showDialog("rout1");
+		showDialog("rout2");
 		return true;
 
 
@@ -516,6 +545,9 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 	} else if (button == "bill" && vars.metBilly && !vars.ethicsWithBilly) {
 		showDialog("billy_dialog_3");
 		return true;
+	} else if (button == "bill" && vars.ethicsWithBilly) {
+		showDialog("billy_dialog_6");
+		return true;
 	} else if (button == "dialog_billy_dialog_3_Sure.") {
 		vars.helpBilly = true;
 		closeDialog();
@@ -526,7 +558,8 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		closeDialog();
 		showDialog("billy_dialog_5");
 		return true;
-	} else if (button == "dialog_billy_dialog_4_Okay." || button == "dialog_billy_dialog_5_Okay.") {
+	} else if (button == "dialog_billy_dialog_4_Okay." || button == "dialog_billy_dialog_5_Okay." ||
+		button == "dialog_billy_dialog_6_Maybe.") {
 		vars.ethicsWithBilly = true;
 		closeDialog();
 		return true;
@@ -584,16 +617,25 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		closeDialog();
 		return true;
 	} else if (button == "router_password_finish_button") {
-		vars.newPassword = true;
-		changeBrowserWebPage(browser, "http://192.168.0.1/wireless");
+		if (vars.router_pwd_entry == vars.theSpotofdot20) {
+			vars.changedPassword = true;
+			changeBrowserWebPage(browser, "http://192.168.0.1/wireless");
+			return true;
+		} else {
+			showDialog("apartment_partner_dialog_14");
+			return true;
+		}
+	} else if (button == "dialog_apartment_partner_dialog_14_Okay.") {
+		closeDialog();
 		return true;
 	} else if (button == "finish_secure") {
-		if (!vars.newPassword) {
+		if (!vars.changedPassword || !vars.changedSSID) {
 			showDialog("rout1");
 			return true;
 		} else {
 			closeBrowser();
 			changeMainScreen("madeline_room");
+			resizeCanvas(1153, 648.5);
 			showDialog("madeline_dialog_14");
 			return true;
 		}
@@ -604,7 +646,7 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 	} else if (button == "dialog_madeline_dialog_15_Okay.") {
 		closeDialog();
 		resizeCanvas(1153, 648.5);
-		
+
 		finishApartment(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo, triggerEmailHack, checkForGameCompletion);
 		return true;
 	} else if (button == "apartment_failed_quit") {
@@ -617,12 +659,24 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 	}
 }
 
+function apartment_text_field_edit (name, value, game) {
+	if (name == "ssid_page_entry") {
+		game.apartment_variables.ssid_entry = value;
+		return true;
+	} else if (name == "router_password_entry") {
+		game.apartment_variables.router_pwd_entry = value;
+		return true;
+	} else {
+		return false;
+	}
+}
+
 function finishApartment (vars, score_text_element, resizeCanvas, changeMainScreen, playVideo, triggerEmailHack, checkForGameCompletion) {
-	// var score = (vars.firstTry ? 10 : 0) + (vars.helpBilly ? 5 : 0) + (vars.ratBilly ? 5 : 0) + (vars.matchedPassword ? 10 : 0) + 5 /* 5 baseline; prevents scoring negative points and brings total to 30. */;
+	// var score = (vars.firstTry ? 10 : 0) + (vars.helpBilly ? 5 : 0) + (vars.ratBilly ? 5 : 0) + 5 /* 5 baseline; prevents scoring negative points and brings total to 30. */;
 	var score = 50;
 	if (score > vars.score)
 	  vars.score = score;
-	score_text_element.text = "You Scored " + vars.score + " Points (out of 30)!";
+	score_text_element.text = "You Scored " + vars.score + " Points (out of 50)!";
 	resizeCanvas(1153, 648.5);
 	changeMainScreen("apartment_success");
 	if (!vars.wifi_config_video_played) {
