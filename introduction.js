@@ -150,7 +150,7 @@ function load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER) {
 		player_mfa_code_entry:"#####",
 		clicked_bad_link:false,
 		ignored_bad_email:false,
-		passwords_video_played:true, // TODO Temp. code until video format is changed!
+		passwords_video_played:false, 
 		phishing_video_played:false,
 		entered_password:false
 	};

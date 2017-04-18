@@ -175,7 +175,7 @@ function pickCulprit (accused, showDialog, closeDialog, vars) {
 // Returns true if the input event is consumed by this function, false if it does not.
 // Takes the name of the button and whatever other arguments it needs from the server.js in order to work.
 // Here vars is game.apartment_variables as assigned above.
-function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, vars, browser, displayBrowser, closeBrowser, changeBrowserWebPage, triggerEmailHack, checkForGameCompletion, score_text_element) {
+function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, vars, browser, displayBrowser, closeBrowser, changeBrowserWebPage, triggerEmailHack, checkForGameCompletion, returnToPlayerOffice, score_text_element) {
 	if (button == "go_to_apartment") { // Button on the phone's map app.
 		resizeCanvas(1153, 648.5);
 		changeMainScreen("apartment");
@@ -608,8 +608,7 @@ function apartment_onclick (button, showDialog, closeDialog, changeMainScreen, r
 		finishApartment(vars, score_text_element, resizeCanvas, changeMainScreen, playVideo, triggerEmailHack, checkForGameCompletion);
 		return true;
 	} else if (button == "apartment_failed_quit") {
-		changeMainScreen("player_office");
-		resizeCanvas(1308, 837);
+		returnToPlayerOffice();
 		return true;
 	}
 

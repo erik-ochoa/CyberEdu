@@ -2376,6 +2376,12 @@ io.on('connection', function (socket) {
 		}
 		addToMailbox(message);
 	}
+	
+	/* This function returns the player to their office (this occurs after completion/failure of a mission). */
+	function returnToPlayerOffice () {
+		changeMainScreen("player_office");
+		resizeCanvas(1099, 549);
+	}
 
 	/* Function checks to see if the user has completed the game. If so, will show the game complete screen. */
 	function checkForGameCompletion () {
@@ -2508,16 +2514,16 @@ io.on('connection', function (socket) {
 
 		// Handle events in the modules, but only if they are loaded
 		if (game.scenes_loaded) {
-			if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, game.coffee_shop_variables, game)) {
+			if (coffee_shop_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, returnToPlayerOffice, game.coffee_shop_variables, game)) {
 				return;
 			} else if(mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, installPhoneApp, addButtonToScreen, changePhoneScreen, addToTodoList, markAsComplete, removeElementFromScreen, showPhone, raisePhone, phoneScreenOn, game, game.mall_scene_variables)) {
 				return;
 			}
-			if (library_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFileSystem, existsInFileSystem, triggerEmailHack, checkForGameCompletion, game.library_variables, game.screens["library_success"].extras[1])) {
+			if (library_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFileSystem, existsInFileSystem, triggerEmailHack, checkForGameCompletion, returnToPlayerOffice, game.library_variables, game.screens["library_success"].extras[1])) {
 				return;
 			}
 
-			if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables, game.browsers["rout"], displayBrowser, closeBrowser, changeBrowserWebPage, checkForGameCompletion, triggerEmailHack, game.screens["apartment_success"].extras[0])) {
+			if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables, game.browsers["rout"], displayBrowser, closeBrowser, changeBrowserWebPage, checkForGameCompletion, triggerEmailHack, returnToPlayerOffice, game.screens["apartment_success"].extras[0])) {
 				return;
 			}
 

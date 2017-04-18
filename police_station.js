@@ -29,7 +29,11 @@ function load_police_station (game, addToFileSystem) {
 	], [] ,[]);
 	
 	game.screens["player_office"] = new Screen(0, 0, 0, new Image("image/police_station/player_office", 0, 0, 0), [
-		new Button ("player_office_exit_door", 985, 260, 1122, 648, 1)
+		new Button ("player_office_exit_door", 727, 168, 820, 475, 1)
+	], [] ,[]);
+	
+	game.screens["other_office"] = new Screen(0, 0, 0, new Image("image/police_station/other_office", 0, 0, 0, 0.70), [
+		new Button ("other_office_exit_door", 689, 182, 788, 508, 1)
 	], [] ,[]);
 
 	game.screens["ads_broswer"] = new Screen(0, 0, 0, new Image("image/police_station/ads", 0, 0, 0, 0.37), [
@@ -157,7 +161,7 @@ function load_police_station (game, addToFileSystem) {
 function police_station_onclick (button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, displayFileSystem, closeFileSystem, existsInFileSystem, displayBrowser, changeBrowserWebPage, closeBrowser, playVideo, browser, vars) {
 	if (button == "police_station_door3") {
 		changeMainScreen("player_office");
-		resizeCanvas(1308, 837);
+		resizeCanvas(1099, 549);
 		return true;
 	} else if(button == "player_office_exit_door" && vars.module_complete == true) {
 		changeMainScreen("office_lobby_no_victim");
@@ -165,6 +169,14 @@ function police_station_onclick (button, changeMainScreen, resizeCanvas, sendMis
 		return true;
 	} else if (button == "player_office_exit_door") {
 		changeMainScreen("office_lobby");
+		resizeCanvas(1152, 648);
+		return true;
+	} else if (button == "other_office_exit_door") {
+		if (vars.module_complete) {
+			changeMainScreen("office_lobby_no_victim");
+		} else {
+			changeMainScreen("office_lobby");
+		}
 		resizeCanvas(1152, 648);
 		return true;
 	} else if (button == "police_station_receptionist") {
@@ -189,7 +201,8 @@ function police_station_onclick (button, changeMainScreen, resizeCanvas, sendMis
 		closeDialog();
 		return true;
 	}  else if (button == "police_station_door1" || button == "police_station_door2") {
-		changeMainScreen("player_office");
+		changeMainScreen("other_office");
+		resizeCanvas(914, 585);
 		return true;
 	} else if(button == "police_station_door3" && vars.module_complete == false) {
 		showDialog("police_station_victim_name_dialog_1");

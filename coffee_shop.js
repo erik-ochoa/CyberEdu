@@ -53,7 +53,7 @@ function load_coffee_shop (game, addElementToScreen, removeElementFromScreen) {
 	
 	var ERROR_STRING = "If you see this message, Jonathan Hansford wrote code that didn't work and should be ashamed of it.";
 	
-	game.dialogs["coffee_shop_manager_dialog"] = new Dialog ("coffee_shop_manager_dialog", game.player_name, "Hello ma'am. We're the detectives you called for. Do you have any leads?", ["Continue."]);
+	game.dialogs["coffee_shop_manager_dialog"] = new Dialog ("coffee_shop_manager_dialog", game.player_name, "Hello sir. We're the detectives you called for. Do you have any leads?", ["Continue."]);
 	game.dialogs["coffee_shop_manager_dialog_2"] = new Dialog ("coffee_shop_manager_dialog_2", manager_name, "The man in the top hat, the man wearing a purple tie, and the woman in a white sweater all told me that they had financial information stolen from them sometime after they left here.", ["Continue."], manager_voice);
 	game.dialogs["coffee_shop_manager_dialog_3"] = new Dialog ("coffee_shop_manager_dialog_3", game.partner_name, "Let's go talk to the victims, " + game.player_name + ".", ["Okay."]);
 	game.dialogs["coffee_shop_manager_dialog_4"] = new Dialog ("coffee_shop_manager_dialog_4", manager_name, "Do you know who did it?", ["Yes.", "Not yet."], manager_voice);
@@ -93,7 +93,7 @@ function load_coffee_shop (game, addElementToScreen, removeElementFromScreen) {
 	game.dialogs["coffee_shop_culprit_3_dialog"] = new Dialog ("coffee_shop_culprit_3_dialog", game.player_name, "Hello, sir. I'm working on a case involving robberies at this cafe. Do you know anything pertinent to that matter?", ["Continue."]);
 	game.dialogs["coffee_shop_culprit_3_dialog_2"] = new Dialog ("coffee_shop_culprit_3_dialog_2", culprit_3_name, "No, I don't. I've never been robbed here. I just lost my job in Cincinnati, and I came here. I'm playing Words with Friends while I wait for job application responses.", ["Okay."], culprit_3_voice);
 	
-	game.dialogs["coffee_shop_partner_dialog"] = new Dialog ("coffee_shop_partner_dialog", game.partner_name, "Let's speak to the manager and let her know we are here. She's behind the counter.", ["Okay."]);
+	game.dialogs["coffee_shop_partner_dialog"] = new Dialog ("coffee_shop_partner_dialog", game.partner_name, "Let's speak to the manager and let him know we are here. He's behind the counter.", ["Okay."]);
 	game.dialogs["coffee_shop_partner_dialog_2"] = new Dialog ("coffee_shop_partner_dialog_2", game.partner_name, "Let's interview everyone else in here we haven't yet, they might have information or be the one responsible for these robberies.", ["Okay."]);
 	game.dialogs["coffee_shop_partner_dialog_3"] = new Dialog ("coffee_shop_partner_dialog_3", game.partner_name, "Let's talk to the manager and tell her who did it.", ["Okay."]);
 	
@@ -258,7 +258,7 @@ function enterCoffeeShop (resizeCanvas, changeMainScreen, showDialog, addToTodoL
 // Returns true if the input event is consumed by this function, false if it does not.
 // Takes the name of the button and whatever other arguments it needs from the server.js in order to work.
 // Here vars is game.coffee_shop_variables as assigned above.
-function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, vars, game) {
+function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, returnToPlayerOffice, vars, game) {
 	if (button == "coffee_shop_manager") {
 		if (!vars.spoken_to_manager) {			
 			showDialog("coffee_shop_manager_dialog");
@@ -555,8 +555,7 @@ function coffee_shop_onclick (button, showDialog, closeDialog, changeMainScreen,
 		enterCoffeeShop(resizeCanvas, changeMainScreen, showDialog, addToTodoList, vars);
 		return true; // This may need to be modified in the future.
 	} else if (button == "coffee_shop_failed_quit") {
-		changeMainScreen("player_office");
-		resizeCanvas(1308, 837);
+		returnToPlayerOffice();
 		return true;
 	} else
 		return false;

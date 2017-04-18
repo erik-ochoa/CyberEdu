@@ -42,27 +42,27 @@ function load_library (game, addToFileSystem) {
   
   
   game.dialogs["yellow1_dialog"] = new Dialog ("yellow1_dialog", game.player_name, "Do you know if there is anything wrong with this computer?", ["Continue."]);
-  game.dialogs["yellow2_dialog"] = new Dialog ("yellow2_dialog", "Pale Yellow Shirt", "I'm pretty sure it's working fine. I haven't had any problems with it yet. I just got here though. I have a paper due tonight and I haven't started yet. But if something strange happens while you are here, I'll let you know", ["Continue."]);
+  game.dialogs["yellow2_dialog"] = new Dialog ("yellow2_dialog", "Pale Yellow Shirt", "I'm pretty sure it's working fine. I haven't had any problems with it yet. I just got here though. I have a paper due tonight that I haven't started yet. But if something strange happens while you're here, I'll let you know", ["Continue."]);
 
   game.dialogs["glasses1_dialog"] = new Dialog ("glasses1_dialog", game.player_name, "Do you have any papers due today?", ["Continue."]);
   game.dialogs["glasses2_dialog"] = new Dialog ("glasses2_dialog", "Glasses", "No I'm just here to work on a programming project.", ["Continue."]);
   game.dialogs["glasses3_dialog"] = new Dialog ("glasses3_dialog", "Glasses", "What?! What the heck?! <Furious banging on keyboard>", ["Continue."]);
   game.dialogs["glasses4_dialog"] = new Dialog ("glasses4_dialog", "Glasses", "ARGH! It's totally locked up! I don't have time for this!", ["Continue."]);
   game.dialogs["glasses5_dialog"] = new Dialog ("glasses5_dialog", game.player_name, "What did you do to it?", ["Continue."]);
-  game.dialogs["glasses6_dialog"] = new Dialog ("glasses6_dialog", "Glasses", "All I've done is login and plugin a flashdrive. Someone else must have messed with it.", ["Continue."]);
+  game.dialogs["glasses6_dialog"] = new Dialog ("glasses6_dialog", "Glasses", "All I did was login and plugin a flashdrive. Someone else must have messed with it.", ["Continue."]);
   game.dialogs["glasses7_dialog"] = new Dialog ("glasses7_dialog", game.player_name, "Is the USB yours?", ["Continue."]);
-  game.dialogs["glasses8_dialog"] = new Dialog ("glasses8_dialog", "Glasses", "No I just found it here lying around. Figured I check what was on it to see whose it was.", ["Continue."]);
-  game.dialogs["glasses9_dialog"] = new Dialog ("glasses9_dialog", game.partner_name, "Can I have that? It might have caused the virus that just infected the computer. The autorun could be setup to automatically execute malware files.", ["Continue."]);
+  game.dialogs["glasses8_dialog"] = new Dialog ("glasses8_dialog", "Glasses", "No, I just found it here lying around. I figured I'd check what was on it to see whose it was.", ["Continue."]);
+  game.dialogs["glasses9_dialog"] = new Dialog ("glasses9_dialog", game.partner_name, "Can I have that? It might have caused the virus that just infected the computer. It is possible the drive could have an autorun file setup to automatically execute malware files. It is even possible for the device to have malicious firmware.", ["Continue."]);
   game.dialogs["glasses10_dialog"] = new Dialog ("glasses10_dialog", "Glasses", "Sure, take it. I don't need it.", ["Continue."]);
 
   game.dialogs["red1_dialog"] = new Dialog ("red1_dialog", game.player_name, "Have you been experiencing any difficulty with these computers?", ["Continue."]);
-  game.dialogs["red2_dialog"] = new Dialog ("red2_dialog", "Red Shirt", "I don't think so and I don't have time to check. I've been working all night on this paper! It's due at the start of class, in one hour.", ["Continue."]);
-  game.dialogs["red3_dialog"] = new Dialog ("red3_dialog", game.player_name, "Well hurry up and finish then so I can check this computer.", ["Continue."]);
-  game.dialogs["red4_dialog"] = new Dialog ("red4_dialog", "Red Shirt", "Beleive me I am working as fast as I can", ["Continue."]);
+  game.dialogs["red2_dialog"] = new Dialog ("red2_dialog", "Red Shirt", "I don't think so. I don't have time to check. I've been working all night on this paper! It's due at the start of class, in one hour.", ["Continue."]);
+  game.dialogs["red3_dialog"] = new Dialog ("red3_dialog", game.player_name, "Well hurry up and finish so I can check this computer.", ["Continue."]);
+  game.dialogs["red4_dialog"] = new Dialog ("red4_dialog", "Red Shirt", "Believe me, I am working as fast as I can!", ["Continue."]);
 
   game.dialogs["stripe_dialog"] = new Dialog ("stripe_dialog", "Striped Shirt", "What's the integral of sin^2(x)?", ["0.5x + 0.25cos(2x)", "0.5x - 0.25sin(2x)", "I don't know."]);
   game.dialogs["stripe2_dialog"] = new Dialog ("stripe2_dialog", "Striped Shirt", "I don't think that's right.", ["Okay."]);
-  game.dialogs["stripe3_dialog"] = new Dialog ("stripe3_dialog", "Striped Shirt", "I think that's right. You really know your stuff, " + game.player_name + ".", ["Okay."]);
+  game.dialogs["stripe3_dialog"] = new Dialog ("stripe3_dialog", "Striped Shirt", "Yep, that's right. You really know your stuff, " + game.player_name + ".", ["Okay."]);
 
   game.dialogs["files1_dialog"] = new Dialog ("files1_dialog", "", "It's a red flash drive", ["Take it", "Plug it in the computer"]);
   game.dialogs["files2_dialog"] = new Dialog ("files2_dialog", game.partner_name, "We shouldn't leave suspicious flash drives lying around", ["Continue."]);
@@ -150,7 +150,7 @@ function finishLibrary (vars, score_text_element, resizeCanvas, changeMainScreen
 	checkForGameCompletion();
 }
 
-function library_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFilesystem, existsInFileSystem, triggerEmailHack, checkForGameCompletion, vars, score_text_element) {
+function library_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFilesystem, existsInFileSystem, triggerEmailHack, checkForGameCompletion, returnToPlayerOffice, vars, score_text_element) {
   if (button == "librarian") {
     changeMainScreen("librarian");
 	if (!vars.librarian_start_dialog_shown) {
@@ -428,8 +428,7 @@ function library_onclick (button, showDialog, closeDialog, changeMainScreen, res
 
 	return true;
   } else if (button == "library_quit") {
-	changeMainScreen("player_office");
-	resizeCanvas(1308, 837);
+	returnToPlayerOffice();
 	return true;
   }
 
