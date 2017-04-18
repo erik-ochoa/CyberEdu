@@ -2527,7 +2527,7 @@ io.on('connection', function (socket) {
 
 		}
 
-		if (introduction_onclick(button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, hidePhone, showPhone, pushPhoneAlert, game.browsers["introduction_computer_browser"], game.introduction_variables)) {
+		if (introduction_onclick(button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, hidePhone, showPhone, pushPhoneAlert, playVideo, game.browsers["introduction_computer_browser"], game.introduction_variables)) {
 			return;
 		}
 
