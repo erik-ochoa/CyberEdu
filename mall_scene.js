@@ -45,7 +45,6 @@ function load_mall(game) {
 	game.dialogs["map_talk_1"] = new Dialog ("map_talk_1", game.player_name, "Maybe I should download it directly from the Navigation store instead.", ["Continue."]);
 	game.dialogs["map_talk_2"] = new Dialog ("map_talk_2", game.player_name, "Oh wait, Emma sent me the Map app via Bluetooth. I should decide to download it or not.", ["Continue."]);
 	game.dialogs["map_talk_3"] = new Dialog ("map_talk_3", game.player_name, "I should check out all these stores before I try to use this Map app.", ["Continue."]);
-	game.dialogs["todo_talk"] = new Dialog ("todo_talk", game.player_name, "Aren't they giving out the To-Do list app for free?", ["Continue."]);
 
 	game.dialogs["inside_female_dialog_1"] = new Dialog ("inside_female_dialog_1", inside_female, "Now lets see where I am, don't want to get lost again like last time. Where was that map app again?", ["Continue."]);
 	game.dialogs["inside_female_dialog_2"] = new Dialog ("inside_female_dialog_2", game.player_name, "Hm, that lady over there just mentioned something about a map of this place. Might come in handy later, I should ask her about it.", ["Continue."]);
@@ -61,11 +60,11 @@ function load_mall(game) {
 	game.dialogs["final_countdown_poster_content"] = new Dialog ("final_countdown_poster_content", "Final Countdown!", "Never be late for any of your finals again! Find your university and courses and we will make reminders and a countdown timer for each of your finals! Create notifications and reminders as far as 1 month before you take your finals. Download?", ["Yes.", "No."]);
 	game.dialogs["throw_me_poster_content"] = new Dialog ("throw_me_poster_content", "Throw Me!", "This app measure the distance you just threw your phone using your phone’s built in accelerometer. Post your distance and compare it with the world. Download?", ["Yes.", "No."]);
 	game.dialogs["iread_stand_content"] = new Dialog ("iread_stand_content", "iRead", "Point and read! Read any text out loud using OCR technology so you will never have to read again!", ["Yes.", "No."]);
-	game.dialogs["navigation_manager_dialog_1"] = new Dialog ("navigation_manager_dialog_1", navigation_employee, "Welcome to Navigate, where we put you in the driver seat of your life. Currently our most popular app is iUmbrella. Go Figure! If you have any questions feel free to ask.", ["Continue."]);
+	game.dialogs["navigation_manager_dialog_1"] = new Dialog ("navigation_manager_dialog_1", navigation_employee, "Welcome to Navigate, where we put you in the driver seat of your life. Our Map app is our most popular app by a mile. Let me know if you didn't like that joke or if you have any questions.", ["Continue."]);
 	game.dialogs["iUmbrella_poster_content"] = new Dialog ("iUmbrella_poster_content", "iUmbrella", "Never be without an umbrella again! When it’s raining open the app and you’ll instantly have an umbrella to cover your head with! Download?", ["Yes.", "No."]);
 
 	game.dialogs["social_hub_employee_dialog"] = new Dialog ("social_hub_employee_dialog", social_employee, "Would you like to leave?", ["Yes.", "No, I'll shop a little more."]);
-	
+
 	game.dialogs["check_email_dialog"] = new Dialog ("check_email_dialog", game.player_name, "Why don't I check my email?", ["Okay."]);
 
 	game.screens["map_download_screen"] = new AppPurchaseScreen(0, 0, 0, "image/phone/icon/map", "Map", "Navigation", "Infinity", 752589, "Maps, GPS", "Find your way throughout the world, so you can visit other places with this map application.");
@@ -140,7 +139,6 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "dialog_map_talk_2_Continue.") {
 		closeDialog();
-		vars.made_decision_on_map = true;
 		return true;
 	} else if (button == "productivity_store" && vars.made_decision_on_map) {
 		changeMainScreen("Productivity_Store");
@@ -152,14 +150,8 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 	} else if (button == "exit_store") {
 		changeMainScreen("mall_inside");
 		return true;
-	} else if (button == "exit_productivity" && vars.downloaded_todo) {
+	} else if (button == "exit_productivity") {
 		changeMainScreen("mall_inside");
-		return true;
-	} else if (button == "exit_productivity" && !vars.downloaded_todo) {
-		showDialog("todo_talk");
-		return true;
-	} else if (button == "dialog_todo_talk_Continue.") {
-		closeDialog();
 		return true;
 	} else if (button == "navigation_store" && vars.made_decision_on_map) {
 		changeMainScreen("Navigation_Store");
@@ -260,7 +252,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email_2", 0, 0, 0, 56.0/32.0), "phoneEmailAppScreen", "email_download_screen_2"));
 		changeMainScreen("Productivity_Store");
 		showDialog("check_email_dialog");
-		
+
 		// Play the video in each of these cases.
 		if (!vars.app_security_video_played) {
 			playVideo("video/appSecurity");
@@ -319,7 +311,6 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		changeToAndShowPhoneScreen("todo_download_screen");
 		return true;
 	} else if (button == "app_purchase_screen_To-Do_download") {
-		vars.downloaded_todo = true;
 		installPhoneApp(new PhoneApp ("To-Do", new Image ("image/phone/icon/todo", 0, 0, 0, 56.0/57.0), "phoneTodoListAppScreen", "todo_download_screen"));
 		return true;
 	} else if (button == "dialog_navigation_manager_dialog_1_Continue.") {
@@ -341,15 +332,10 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		vars.made_decision_on_map = true;
 		installPhoneApp(new PhoneApp ("Map ", new Image ("image/phone/icon/map_emma", 0, 0, 0, 56.0/32.0), "phoneMapAppScreen", "map_emma_download_screen"));
 		changeToAndShowPhoneScreen("phoneHomeScreen");
-		showDialog("map_talk_3");
 		return true;
 	} else if (button == "app_purchase_screen_Map_download") { // previously included && vars.entry_to_navigation, but that is not necessary b/c the app purchase screen is now unique
 		installPhoneApp(new PhoneApp ("Map", new Image ("image/phone/icon/map", 0, 0, 0, 56.0/57.0), "phoneMapAppScreen", "map_download_screen"));
 		changeToAndShowPhoneScreen("phoneHomeScreen");
-		showDialog("map_talk_3");
-		return true;
-	} else if (button == "dialog_map_talk_3_Continue.") {
-		closeDialog();
 		return true;
 	} else if (button == "social_hub_employee") {
 		showDialog("social_hub_employee_dialog");

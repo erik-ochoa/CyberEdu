@@ -1319,7 +1319,7 @@ io.on('connection', function (socket) {
 		} else if (location == "apartment") {
 		addToMailbox(new EmailMessage ("I've been framed! Please help...", "Madeline", "Hey, yesterday I was contacted by the Music Protection Association, claiming that I had downloaded $1000 worth of songs illegally. I have watched Youtube videos of songs that I do not own, but I haven’t downloaded them. I swear somebody else is responsible. I don’t have the time or the money to go to court over this, can you please figure out who? I live in the apartments across the street from the shopping center.", [], "apartment"));
 		//Task #2
-		pushPhoneAlert("New message from Madaline")
+		pushPhoneAlert("New message from Madeline")
 		} else if (location == "police_station") {
 
 
@@ -2527,7 +2527,7 @@ io.on('connection', function (socket) {
 
 		}
 
-		if (introduction_onclick(button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, hidePhone, showPhone, pushPhoneAlert, playVideo, game.browsers["introduction_computer_browser"], game.introduction_variables)) {
+		if (introduction_onclick(button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, hidePhone, showPhone, pushPhoneAlert, game.browsers["introduction_computer_browser"], game.introduction_variables)) {
 			return;
 		}
 
@@ -2691,6 +2691,8 @@ io.on('connection', function (socket) {
 	socket.on('text-field-edit', function(name, value) {
 		writeToServerLog(username + " | edited a text field: " + name + ", " + value);
 		if (introduction_text_field_edit (name, value, game)) {
+			return;
+		} else if (apartment_text_field_edit (name, value, game)) {
 			return;
 		} else if (name == 'browser-bar' && typeof game.active_browser !== 'undefined') {
 			for (var i = 0; i < game.browsers[game.active_browser].screen.textFields.length; i++) {
