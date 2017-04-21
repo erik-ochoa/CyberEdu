@@ -21,6 +21,7 @@ eval(fs.readFileSync(__dirname + '/library.js').toString());
 eval(fs.readFileSync(__dirname + '/apartment.js').toString());
 eval(fs.readFileSync(__dirname + '/introduction.js').toString());
 eval(fs.readFileSync(__dirname + '/police_station.js').toString());
+eval(fs.readFileSync(__dirname + '/final_module.js').toString());
 
 // Prevent entire server from crashing in the event a single user causes an error.
 process.on('uncaughtException', function (err) {
@@ -1252,6 +1253,7 @@ io.on('connection', function (socket) {
 		load_apartment (game);
 		load_introduction_part2(game);
 		load_police_station(game, addToFileSystem);
+		load_final_module(game);
 		game.scenes_loaded = true;
 
 		// Decide after which scene should the MFA sequence occur (when the player gets hacked)
@@ -2376,7 +2378,7 @@ io.on('connection', function (socket) {
 		}
 		addToMailbox(message);
 	}
-	
+
 	/* This function returns the player to their office (this occurs after completion/failure of a mission). */
 	function returnToPlayerOffice () {
 		changeMainScreen("player_office");
@@ -2519,6 +2521,7 @@ io.on('connection', function (socket) {
 			} else if(mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, installPhoneApp, addButtonToScreen, changePhoneScreen, addToTodoList, markAsComplete, removeElementFromScreen, showPhone, raisePhone, phoneScreenOn, game, game.mall_scene_variables)) {
 				return;
 			}
+
 			if (library_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, displayFileSystem, closeFileSystem, existsInFileSystem, triggerEmailHack, checkForGameCompletion, returnToPlayerOffice, game.library_variables, game.screens["library_success"].extras[1])) {
 				return;
 			}
@@ -2528,6 +2531,10 @@ io.on('connection', function (socket) {
 			}
 
 			if (police_station_onclick(button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, displayFileSystem, closeFileSystem, existsInFileSystem, displayBrowser, changeBrowserWebPage, closeBrowser, playVideo, game.browsers["police_station_browser"], game.police_station_variables)) {
+				return;
+			}
+
+			if (final_module_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, returnToPlayerOffice, game.final_module_variables, game)) {
 				return;
 			}
 
@@ -2668,6 +2675,7 @@ io.on('connection', function (socket) {
 		} else if (button == 'go_to_office_lobby') {
 			resizeCanvas(1152, 648);
 			changeMainScreen("office_lobby");
+			//changeMainScreen("final_room");
 		} else if (button == 'phone-exit-app') {
 			changePhoneScreen("phoneHomeScreen");
 		} else if (button == 'go_to_mall') {
