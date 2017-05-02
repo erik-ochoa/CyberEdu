@@ -2708,6 +2708,8 @@ io.on('connection', function (socket) {
 			return;
 		} else if (apartment_text_field_edit (name, value, game)) {
 			return;
+		} else if (final_module_text_field_edit (name, value, game)) {
+			return;
 		} else if (name == 'browser-bar' && typeof game.active_browser !== 'undefined') {
 			for (var i = 0; i < game.browsers[game.active_browser].screen.textFields.length; i++) {
 				if (game.browsers[game.active_browser].screen.textFields[i].name == name)
