@@ -330,7 +330,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		return true;
 	} else if (button == "app_purchase_screen_Map _download") { // previously included && !vars.entry_to_navigation, but that is not necessary b/c the app purchase screen is now unique
 		vars.made_decision_on_map = true;
-		installPhoneApp(new PhoneApp ("Map ", new Image ("image/phone/icon/map_emma", 0, 0, 0, 56.0/32.0), "phoneMapAppScreen", "map_emma_download_screen"));
+		installPhoneApp(new PhoneApp ("Map ", new Image ("image/phone/icon/map_emma", 0, 0, 0, 56.0/32.0), "phoneMapSpoofAppScreen", "map_emma_download_screen"));
 		changeToAndShowPhoneScreen("phoneHomeScreen");
 		return true;
 	} else if (button == "app_purchase_screen_Map_download") { // previously included && vars.entry_to_navigation, but that is not necessary b/c the app purchase screen is now unique
