@@ -2550,7 +2550,7 @@ io.on('connection', function (socket) {
 				return;
 			}
 
-			if (final_module_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, returnToPlayerOffice, game.final_module_variables, game)) {
+			if (final_module_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, displayBrowser, changeBrowserWebPage, closeBrowser, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, returnToPlayerOffice, game.final_module_variables, game.browsers["final_browser"], game)) {
 				return;
 			}
 
@@ -2698,8 +2698,7 @@ io.on('connection', function (socket) {
 			resizeCanvas(1152, 648);
 			changeMainScreen("office_lobby");
 		} else if (button == 'go_to_dorm_room') {
-			resizeCanvas(1152, 648);
-			changeMainScreen("final_room");
+			// Handled in final_module.js file.
 		} else if (button == 'phone-exit-app') {
 			changePhoneScreen("phoneHomeScreen");
 		} else if (button == 'go_to_mall') {

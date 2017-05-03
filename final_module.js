@@ -35,7 +35,7 @@ function load_final_module (game) {
 	new Button ("set_pwd", 310, 260, 490, 290, 2, "Set Password", "28px Arial", "rgba(0,0,0,1)"),
 	new Button ("finish_secure", 360, 400, 435, 430, 2, "Finish", "28px Arial", "rgba(0,0,0,1)")],
 	[],
-	[];
+	[]);
 	//not sure how to reflect the newly changed SSID on the webpage
 	//[new Text ("router_name", 200, 55, 720, 85, 2,     game.final_modules_variables.ssid_entry)]);
 
@@ -64,10 +64,12 @@ function final_module_text_field_edit (name, value, game) {
 	}
 }
 
-function final_module_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, returnToPlayerOffice, vars, game) {
-	//handle if (button == go_to_final_module) like we did in other modules??
-
-	if (button == "final_router") {
+function final_module_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, displayBrowser, changeBrowserWebPage, closeBrowser, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, returnToPlayerOffice, vars, browser, game) {
+	if (button == 'go_to_dorm_room') {
+		resizeCanvas(1152, 648);
+		changeMainScreen("final_room");
+		return false; // so this can be also be processed in server.js
+	} else if (button == "final_router") {
 		changeMainScreen("final_router_box");
 		return true;
 	} else if (button == "router_cancel") {
