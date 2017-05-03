@@ -705,16 +705,17 @@ var FileSystem = function () {
 /* A message in the player's email inbox.
 Subject, sender, and message are strings. attachments is an array of strings.
 
-The last argument, location_to_unlock, is optional, and is a string. If provided, it specifies that when this email is read, unlockLocation will be called to unlock that location.
+The last argument, command_on_read, is optional, and is a string. If provided, it specifies that when this email is read, some code will be executed when the email is read.
+See the markAsRead function for examples of usage of this field.
 */
-var EmailMessage = function (subject, sender, message, attachments, location_to_unlock) {
+var EmailMessage = function (subject, sender, message, attachments, command_on_read) {
 	this.subject = subject;
 	this.sender = sender;
 	this.message = message;
 	this.attachments = attachments;
 	this.unread = true;
 
-	this.location_to_unlock = location_to_unlock;
+	this.command_on_read = command_on_read;
 }
 
 /*  Name: the name of this app
@@ -1108,7 +1109,7 @@ io.on('connection', function (socket) {
 
 	/* Creates a fresh game object, for a player who has never played before. */
 	function makeNewGame () {
-		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneHomeScreen", pending_alerts:[]}, phone_apps:[], mailbox:[], todoList:{}, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Anonymous Player", partner_name:"Ashley", scenes_loaded:false, locked_locations:["mall", "police_station", "coffee_shop", "library", "apartment", "dorm_room"]};
+		game = { canvas:{x:1224, y:688}, screens:{}, browsers:{}, dialogs:{}, filesystems:{}, webpages:{}, background_music:{}, phone:{visible:true, raised:true, screen_on:true, screen:"phoneHomeScreen", pending_alerts:[]}, phone_apps:[], mailbox:[], todoList:{}, main_screen:"introduction_dorm_room", active_dialog:{name:"introduction_dialog", replace_phone:false}, player_name:"Anonymous Player", partner_name:"Ashley", scenes_loaded:false, locked_locations:["Mall", "Police Station", "Coffee Shop", "Library", "Apartment", "Dorm Room"]};
 		game.screens["phoneBlankScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [new Button("testButton", 50, 50, 100, 100, 0)], [], [new Rectangle("testRect", 50, 50, 100, 100, 1, "rgba(0,0,0,1)")]);
 		game.screens["testMainScreen"] = new Screen(0, 0, 0, new Rectangle("bigRedRectangle", 0, 0, game.canvas.x, game.canvas.y, 0, 'rgba(255,0,0,1)'), [], [], []);
 		game.screens["phoneHomeScreen"] = new Screen(game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER, new Image ("image/phone/screen/on", 0, 0, 0), [], [], []);
@@ -1153,6 +1154,11 @@ io.on('connection', function (socket) {
 		// This element should also never be moved or deleted from the 0th position of the extras list.
 		addElementToScreen(game.screens["phoneTodoListAppScreen"], new ScrollableList ("phone-todo-locations-list", 0, 30, 173, 291, 2, new Rectangle("phone_todo_locations_list_backing_transparent_rectangle", 0, 0, 173, 261, 0, 'rgba(0,0,0,0)')));
 
+		// Dialogs related to the MFA/email hacking incident
+		game.dialogs["email_hack_mfa_enabled_dialog"] = new Dialog ("email_hack_mfa_enabled_dialog", "", "The email you just got indiciates somehow, some stranger managed to acquire your email password and tried to access your email account. However, because you had multi-factor authentication enabled, you thwarted the hacker's attempt to gain access because he or she did not have access to your cell phone, which received the special code needed to complete the login attempt.", ["Continue."]);
+		game.dialogs["email_hack_mfa_disabled_dialog"] = new Dialog ("email_hack_mfa_disabled_dialog", "", "The email you just got indicates somehow, some stranger managed to acquire your email password and was successful in logging into your account. However, you could have prevented this attack if you had enabled multi-factor authentication, which would have required the hacker to input an access code sent to your cell phone in addition to your password, which the hacker would not be able to do unless he or she had also compromised your cell phone.", ["Continue."]);
+		game.dialogs["email_hack_dialog_2"] = new Dialog ("email_hack_dialog_2", "", "In a real life scenario, you'd want to change your password immediately if this ever occurred, even if you had enabled multi-factor authentication.", ["Okay."]);
+		
 		game.browsers["testBrowser"] = new Browser();
 
 		game.dialogs["testDialog"] = new Dialog ("Title", "Title", "Text", ["close", "browser"]);
@@ -1270,8 +1276,8 @@ io.on('connection', function (socket) {
 			game.apartment_variables.on_completion_trigger_email_hack = true;
 		}
 
-		unlockLocation("mall");
-		unlockLocation("dorm_room"); // TODO For debugging purposes only! Must beat all other modules to unlock this one.
+		unlockLocation("Mall");
+		unlockLocation("Dorm Room"); // TODO For debugging purposes only! Must beat all other modules to unlock this one.
 
 		sendMissionEmail("police_station");
 	}
@@ -1287,31 +1293,31 @@ io.on('connection', function (socket) {
 				location_to_unlock = game.locked_locations[i];
 				game.locked_locations.splice(i, 1);
 				if (isPhoneAppInstalled("Map")) {
-					pushPhoneAlert("You may now visit the " + location_to_unlock);
+					pushPhoneAlert("You may now visit the " + location_to_unlock + ".");
 				}
 			}
 		}
 
 		if (typeof location_to_unlock !== 'undefined') {
 			// Note: must add a button to the actual map application AND to the spoof application.
-			// TODO: Fix the actual application's buttons to use the images.
+			// TODO: Fix the actual application's buttons to use the image icons for the locations.
 
-			if (location_to_unlock == "mall") {
+			if (location_to_unlock == "Mall") {
 				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,150, 173, 180, 2, "Go to Mall", "18px Times", "rgba(0,0,0,1)"));
 				addButtonToScreen(game.screens["phoneMapSpoofAppScreen"], new Button ("go_to_mall", 0,150, 173, 180, 2, "Go to Mall", "18px Times", "rgba(0,0,0,1)"));
-			} else if (location_to_unlock == "coffee_shop") {
+			} else if (location_to_unlock == "Coffee Shop") {
 				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, 2, "Go to Coffee Shop", "18px Times", "rgba(0,0,0,1)"));
 				addButtonToScreen(game.screens["phoneMapSpoofAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, 2, "Go to Coffee Shop", "18px Times", "rgba(0,0,0,1)"));
-			} else if (location_to_unlock == "library") {
+			} else if (location_to_unlock == "Library") {
 				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, 2, "Go to Library", "18px Times", "rgba(0,0,0,1)"));
 				addButtonToScreen(game.screens["phoneMapSpoofAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, 2, "Go to Library", "18px Times", "rgba(0,0,0,1)"));
-			} else if (location_to_unlock == "apartment") {
+			} else if (location_to_unlock == "Apartment") {
 				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(0,0,0,1)"));
 				addButtonToScreen(game.screens["phoneMapSpoofAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(0,0,0,1)"));
-			} else if (location_to_unlock == "police_station") {
+			} else if (location_to_unlock == "Police Station") {
 				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_office_lobby", 0, 30, 173, 60, 2, "Go to Police Station", "18px Times", "rgba(0,0,0,1)"));
 				addButtonToScreen(game.screens["phoneMapSpoofAppScreen"], new Button ("go_to_office_lobby", 0, 30, 173, 60, 2, "Go to Police Station", "18px Times", "rgba(0,0,0,1)"));
-			} else if (location_to_unlock == "dorm_room") {
+			} else if (location_to_unlock == "Dorm Room") {
 				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_dorm_room", 0, 180, 173, 210, 2, "Go to Dorm Room", "18px Times", "rgba(0,0,0,1)"));
 				addButtonToScreen(game.screens["phoneMapSpoofAppScreen"], new Button ("go_to_dorm_room", 0, 180, 173, 210, 2, "Go to Dorm Room", "18px Times", "rgba(0,0,0,1)"));
 			} else {
@@ -1326,14 +1332,14 @@ io.on('connection', function (socket) {
 	 */
 	function sendMissionEmail(location) {
 		if (location == "coffee_shop") {
-			addToMailbox(new EmailMessage ("Robberies at the Coffee Shop", "Coffee Shop Manager", "Hello, I am the manager of the local Starbuck’s, and recently, we have had a problem with a few of our customers getting robbed. We have never had this problem before, and some of our everyday customers have stopped coming. We won’t be able to stay open if this continues. Please figure out who the robber is!", [], "coffee_shop"));
+			addToMailbox(new EmailMessage ("Robberies at the Coffee Shop", "Coffee Shop Manager", "Hello, I am the manager of the local Starbuck’s, and recently, we have had a problem with a few of our customers getting robbed. We have never had this problem before, and some of our everyday customers have stopped coming. We won’t be able to stay open if this continues. Please figure out who the robber is!", [], "unlock_Coffee Shop"));
 		} else if (location == "library") {
-			addToMailbox(new EmailMessage ("Computer Problems in the Library", "Librarian", "Hello, I am the manager of the local Starbuck’s, and recently, we have had a problem with a few of our customers getting robbed. We have never had this problem before, and some of our everyday customers have stopped coming. We won’t be able to stay open if this continues. Please figure out who the robber is!", [], "library"));
+			addToMailbox(new EmailMessage ("Computer Problems in the Library", "Librarian", "Hello, I am the manager of the local Starbuck’s, and recently, we have had a problem with a few of our customers getting robbed. We have never had this problem before, and some of our everyday customers have stopped coming. We won’t be able to stay open if this continues. Please figure out who the robber is!", [], "unlock_Library"));
 		} else if (location == "apartment") {
-			addToMailbox(new EmailMessage ("I've been framed! Please help...", "Madeline", "Hey, yesterday I was contacted by the Music Protection Association, claiming that I had downloaded $1000 worth of songs illegally. I have watched Youtube videos of songs that I do not own, but I haven’t downloaded them. I swear somebody else is responsible. I don’t have the time or the money to go to court over this, can you please figure out who? I live in the apartments across the street from the shopping center.", [], "apartment"));
+			addToMailbox(new EmailMessage ("I've been framed! Please help...", "Madeline", "Hey, yesterday I was contacted by the Music Protection Association, claiming that I had downloaded $1000 worth of songs illegally. I have watched Youtube videos of songs that I do not own, but I haven’t downloaded them. I swear somebody else is responsible. I don’t have the time or the money to go to court over this, can you please figure out who? I live in the apartments across the street from the shopping center.", [], "unlock_Apartment"));
 		} else if (location == "police_station") {
-			addToMailbox(new EmailMessage("P.I. Application", "Police Station Receptionist", "Congratulations new detective, your application was reviewed and you have become an official licensed private investigator. Now that you have the equipment you need, come to the police station to pick up your badge. In addition, we have your first case available here for you. Check your email for the forwarded details.", [], "police_station"));
-			addToMailbox(new EmailMessage("Computer Malware", "Michael Jones", "Hi, the receptionist at the police station gave me your email and said I should contact you about my computer problem. I am at the police station outside of your office now waiting.", [], "police_station"));
+			addToMailbox(new EmailMessage("P.I. Application", "Police Station Receptionist", "Congratulations new detective, your application was reviewed and you have become an official licensed private investigator. Now that you have the equipment you need, come to the police station to pick up your badge. In addition, we have your first case available here for you. Check your email for the forwarded details.", [], "unlock_Police Station"));
+			addToMailbox(new EmailMessage("Computer Malware", "Michael Jones", "Hi, the receptionist at the police station gave me your email and said I should contact you about my computer problem. I am at the police station outside of your office now waiting.", [], "unlock_Police Station"));
 		} else {
 		writeToServerLog(username + " | Invalid call to sendMissionEmail(" + location + ").");
 		}
@@ -1354,10 +1360,17 @@ io.on('connection', function (socket) {
 				commands.push(["deleteButton", "lower-phone-button"]);
 				commands.push(["addButton", "lower-phone-button", newX - PHONE_X, newY - PHONE_Y_RAISED, newX, newY - PHONE_Y_RAISED + PHONE_Y_LOWERED, PHONE_LAYER]);
 				if (game.phone.screen_on) {
-					clearDisplayObject(game.screens[game.phone.screen], commands);
-					game.screens[game.phone.screen].x = newX - PHONE_SCREEN_X;
-					game.screens[game.phone.screen].y = newY - PHONE_SCREEN_Y;
-					drawDisplayObject(game.screens[game.phone.screen], commands);
+					if (typeof game.phone.active_alert_screen !== 'undefined') {
+						clearDisplayObject(game.screens[game.phone.active_alert_screen], commands);
+						game.screens[game.phone.active_alert_screen].x = newX - PHONE_SCREEN_X;
+						game.screens[game.phone.active_alert_screen].y = newY - PHONE_SCREEN_Y;
+						drawDisplayObject(game.screens[game.phone.active_alert_screen], commands);
+					} else {
+						clearDisplayObject(game.screens[game.phone.screen], commands);
+						game.screens[game.phone.screen].x = newX - PHONE_SCREEN_X;
+						game.screens[game.phone.screen].y = newY - PHONE_SCREEN_Y;
+						drawDisplayObject(game.screens[game.phone.screen], commands);
+					}
 				} else {
 					commands.push(["clearImage", "image/phone/screen/off", game.canvas.x - PHONE_SCREEN_X, game.canvas.y - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER]);
 					commands.push(["drawImage", "image/phone/screen/off", newX - PHONE_SCREEN_X, newY - PHONE_SCREEN_Y, PHONE_SCREEN_LAYER]);
@@ -1909,21 +1922,29 @@ io.on('connection', function (socket) {
 		}
 	}
 
-	/* Marks the item in the player's mailbox at the specified index as read */
+	/* Marks the item in the player's mailbox at the specified index as read. */
 	function markAsRead (email_no) {
 		if (game.mailbox[email_no].unread) {
 			game.mailbox[email_no].unread = false;
 
-			// Unlock the location associated with reading this message, if appropriate.
-			// TODO: sort-of bug: this displays when the user clicks an email, forcing them to dismiss it before they read the email.
-			if (typeof game.mailbox[email_no].location_to_unlock !== 'undefined')
-				unlockLocation(game.mailbox[email_no].location_to_unlock);
+			// Perform the action that is supposed to occur after reading this message, if there is one.
+			if (typeof game.mailbox[email_no].command_on_read !== 'undefined') {
+				var command = game.mailbox[email_no].command_on_read;
+				if (command.match(/unlock_.*/)) {
+					location_to_unlock = command.substring(7);
+					unlockLocation(location_to_unlock);
+				} else if (command == "email_hacked_mfa_enabled") {
+					showDialog("email_hack_mfa_disabled_dialog");
+				} else if (command == "email_hacked_mfa_disabled") {
+					showDialog("email_hack_mfa_disabled_dialog");
+				}
+				
+			}
 
 			// Remove the old element representing this email and replace it with a new one, which will display the email marked as read.
 			var scrollableList = game.screens["phoneEmailAppScreen"].extras[0]; // This is a reference to the scrolling list of emails.
 			deleteElementFromScrollableList(scrollableList, scrollableList.display_elements[email_no]);
 			addElementToScrollableList(scrollableList, createMessageScreen(email_no), EMAIL_VERTICAL_SIZE, email_no);
-
 		}
 	}
 
@@ -2387,10 +2408,10 @@ io.on('connection', function (socket) {
 		var message;
 		if (game.introduction_variables.mfa_enabled) {
 			var mfa_code = Math.random(10).toString().substring(2, 7);
-			message = new EmailMessage("New Account Activity", "No-Reply", "A login attempt was detected from 222.186.161.215 [China - Nanjing].", []);
+			message = new EmailMessage("New Account Activity", "No-Reply", "A login attempt was detected from 222.186.161.215 [China - Nanjing].", [], "email_hacked_mfa_enabled");
 			pushPhoneAlert("Login attempted from 222.186.161.215 [China - Nanjing]. Enter this code when prompted to proceed: " + mfa_code);
 		} else {
-			message = new EmailMessage("New Account Activity", "No-Reply", "A new login was detected from 222.186.161.215 [China - Nanjing].", []);
+			message = new EmailMessage("New Account Activity", "No-Reply", "A new login was detected from 222.186.161.215 [China - Nanjing].", [], "email_hacked_mfa_disabled");
 		}
 		addToMailbox(message);
 	}
@@ -2720,6 +2741,14 @@ io.on('connection', function (socket) {
 			closeDialog();
 		} else if (button == 'game_complete_take_survey') {
 			socket.emit('command', [["changeWebpage", SURVEY_URL]]);
+		} else if (button == 'dialog_email_hack_mfa_disabled_dialog_Continue.') {
+			closeDialog();
+			showDialog('email_hack_dialog_2');
+		} else if (button == 'dialog_email_hack_mfa_enabled_dialog_Continue.') {
+			closeDialog();
+			showDialog('email_hack_dialog_2');
+		} else if (button == 'dialog_email_hack_dialog_2_Okay.') {
+			closeDialog();
 		} else {
 			writeToServerLog(username + " | Received unhandled click event: " + button);
 		}
