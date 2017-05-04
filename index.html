@@ -48,9 +48,6 @@
 				<td> Music Volume (0 - 100): </td>
 				<td> <input id="settings/music_volume" type="range" name="Music Volume" min="0" max="100" value="50" onchange="setMusicVolume()"/> </td>
 			</tr> <tr>
-				<td> Voice Volume (0 - 100): </td>
-				<td> <input id="settings/voice_volume" type="range" name="Voice Volume" min="0" max="100" value="50" onchange="setSpeechVolume()"/> </td>
-			</tr> <tr>
 				<td colspan="2"> <input type="button" value="Return To Game" onclick="exitSettingsPage()"/> </td>
 			</tr> <tr>
 				<td colspan="2"> <input type="button" value="Reset Save File" onclick="hardReset()" /> </td>
@@ -172,7 +169,9 @@
 		<img id="image/police_station/office_lobby_no_victim" src="/images/Lobby-2_2.jpg" width="0" height="0"/>
 
 		<img id="image/final_room" src="/images/Dorm-Module.jpg" width="0" height="0"/>
-		<img id="image/final_router" src="/images/Dorm-Router.jpg" width="0" height="0"/>
+		<img id="image/final_router" src="/images/Dorm-Router.png" width="0" height="0"/>
+		<img id="image/final_computer_screen/backup_required" src="/images/computer-01.png" width="0" height="0"/>
+		<img id="image/final_computer_screen/no_backup_warning" src="/images/computer-02.png" width="0" height="0"/>
 
 		<img id="image/final_cpu_system" src="/images/computer_file_system.png" width="0" height="0">
 
@@ -180,9 +179,6 @@
 		<script src="/gifParser.js"></script>
 		<script src="/socket.io/socket.io.js"></script>
 		<script src="/index.js"></script>
-
-		<!-- Attribution of Responsive Voice. Code copied from their webpage. -->
-		<div><a href="http://responsivevoice.org">ResponsiveVoice-NonCommercial</a> licensed under <a href="http://creativecommons.org/licenses/by-nc-nd/4.0/"><img title="ResponsiveVoice Text To Speech" src="https://responsivevoice.org/wp-content/uploads/2014/08/95x15.png" alt="95x15" width="95" height="15" /></a></div>
 
 	</body>
 </html>

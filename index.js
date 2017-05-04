@@ -275,9 +275,6 @@ var activeTextInputField = null;
 // True if the user is currently holding down the shift key.
 var shiftHeld = false;
 
-// Volume (ranging from 0.0 to 1.0) of the text-to-speech elements
-var textToSpeechVolume = 1.0;
-
 // A structure (containing the elements x and y) which is the last known position of the mouse.
 var lastKnownMousePosition = {x:0.0, y:0.0}
 
@@ -584,19 +581,6 @@ socket.on('command', function (array) {
 			
 			// must redraw entire display
 			redrawAll();
-		} else if (command_name == 'speakText') {
-			if (array[i].length == 2) {
-				var text = array[i][1];
-				
-				responsiveVoice.speak(text, "UK English Female", {volume:textToSpeechVolume});
-			} else {
-				var text = array[i][1];
-				var voice = array[i][2];
-				
-				responsiveVoice.speak(text, voice, {volume:textToSpeechVolume});
-			}
-		} else if (command_name == 'stopSpeakingText') {
-			responsiveVoice.cancel();
 		} else if (command_name == 'drawAnimation') {
 			var id = array[i][1];
 			var x1 = array[i][2];
@@ -931,17 +915,6 @@ function setMusicVolume () {
 			audio_elements[i].volume = music_volume / 100.0;
 		}
 	} 
-}
-
-var speech_volume_input_field = document.getElementById("settings/voice_volume");
-var speech_volume = 100;
-function setSpeechVolume (newVolume) {
-	var newVolume = parseFloat(speech_volume_input_field.value);
-	
-	if (0 <= newVolume && newVolume <= 100) {
-		speech_volume = newVolume;
-		textToSpeechVolume = speech_volume / 100.0;
-	}
 }
 
 function hardReset () {
