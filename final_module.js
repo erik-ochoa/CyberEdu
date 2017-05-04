@@ -8,7 +8,10 @@ function load_final_module (game) {
 		configured_router:false,
 		selected_external_hard_drive:false,
 		system_backed_up:false,
-		email_fixed:true // TODO Debugging: this portion not yet added.
+		email_fixed:false,
+		email_menu_down:false,
+		email_mfa_enabled:false,
+		email_recovery_phone_set:false
 	};
 
 	game.browsers["final_browser"] = new Browser();
@@ -57,14 +60,15 @@ function load_final_module (game) {
 	// Computer is not backed up.
 	game.screens["final_computer_screen"] = new Screen(0, 0, 0, new Image("image/final_computer_screen/backup_required", 0, 0, 0), 
 		[ /* Buttons */
-			new Button ("final_computer_set_up_backup_button", 765, 464, 1066, 517, 1, "Set up backup", "18px Arial", "rgba(64,64,255,1)"),
+			new Button ("final_computer_set_up_backup_button", 880, 494, 1095, 517, 1, "Set up backup", "18px Arial", "rgba(64,64,255,1)"),
 			new Button ("final_computer_open_browser_button", 57, 200, 186, 290, 2),
 			new Button ("final_computer_exit_button", 30, 555, 150, 593, 1, "Exit", "38px Times", "rgba(255,255,255,1)")
 		], 
 		[ /* Text Input Fields */], 
 		[ /* Extras */
-			new Rectangle("final_computer_highlight_google_chrome", 57, 220, 186, 290, 1, "rgba(216,255,0,0.30)"),
-			new Text ("final_computer_screen_backup_message_header", 772, 434, 1059, 455, 1, "1 Important Message", "18px Arial Bold", "rgba(0,0,255,1)")
+			makeGoogleChromeHighlightRectangle(),
+			new Text ("final_computer_screen_backup_message_header", 772, 434, 1059, 455, 1, "1 Important Message", "18px Arial Bold", "rgba(0,0,255,1)"),
+			new Text ("final_computer_screen_backup_message_description", 765, 464, 1066, 489, 1, "Your files are not being backed up.", "18px Arial", "rgba(0,0,0,1)")
 		]
 	
 	);
@@ -75,7 +79,7 @@ function load_final_module (game) {
 			new Button ("final_computer_exit_button", 30, 555, 150, 593, 1, "Exit", "38px Times", "rgba(255,255,255,1)")
 		], [], 
 		[
-			new Rectangle("final_computer_highlight_google_chrome", 57, 220, 186, 290, 1, "rgba(216,255,0,0.30)"),
+			makeGoogleChromeHighlightRectangle()
 		]
 	);
 	
@@ -126,6 +130,57 @@ function load_final_module (game) {
 	);
 	
 	game.dialogs["final_partner_dialog_2"] = new Dialog ("final_partner_dialog_2", game.partner_name, "We haven't fixed everything yet.", ["Okay."]);
+	// End computer not backed up sub-module.
+	// Email account hacked (MFA portion)
+	game.dialogs["final_partner_email_dialog"] = new Dialog ("final_partner_email_dialog", game.partner_name, "Look's like Elijah's email account has been compromised recently. We should enable MFA in the settings so that doesn't happen again.", ["Okay."]);	
+	game.dialogs["final_partner_email_dialog_need_recovery_phone"] = new Dialog ("final_partner_email_dialog_need_recovery_phone", game.partner_name, "We'll need to add a recovery phone first.", ["Okay."]);
+	
+	game.dialogs["final_recovery_phone_dialog_1"] = new Dialog ("final_recovery_phone_dialog_1", game.player_name, "Hey Elijah, what is your phone number? I need to set a recovery phone for your email account.", ["Continue."]);
+	game.dialogs["final_recovery_phone_dialog_2"] = new Dialog ("final_recovery_phone_dialog_2", "Elijah", "My phone number is 333-444-5555.", ["Got it, thanks."]);
+	
+	game.screens["final_module_email"] = new Screen(0, 0, 0, new Image ("image/emailbody", 0 , 0 , 0, 0.35), 
+	[
+		new Button("final_module_email_settings_button", 22, 22, 68, 58, 2),
+		new Button("final_module_email_exit_button", 1065, 20, 1115, 55, 2, "Exit", "24px Arial", "rgba(255,255,255,1)")
+	], [], [
+		new Text ("final_email_subject", 285, 100, 645, 130, 1, "Unusual Account Activity Detected", "24px Arial", "rgba(0,0,0,1)"),
+		new Text ("final_email_sender", 285, 140, 980, 170, 1, "Sent From: no-reply@accounts.google.com at 11:39AM", "20px Arial", "rgba(0,0,0,1)"),
+		new Text ("final_email_line_1", 285, 190, 980, 250, 1, "New sign-in from Google Chrome on Linux.", "20px Arial", "rgba(0,0,0,1)"),
+		new Text ("final_email_line_2", 285, 255, 980, 275, 1, "Hello Elijah,", "20px Arial", "rgba(0,0,0,1)"),
+		new Text ("final_email_line_3", 285, 290, 980, 335, 1, "Your Google Account elijah1998@gmail.com was just used to sign in from Google Chrome on Linux.", "20px Arial", "rgba(0,0,0,1)"),
+		new Text ("final_email_line_4", 285, 340, 980, 365, 1, "IP address: 86.106.103.73 [Bucharest, Romania].", "20px Arial", "rgba(0,0,0,1)"),
+		new Text ("final_email_line_5", 285, 370, 980, 395, 1, "Sincerely,", "20px Arial", "rgba(0,0,0,1)"),
+		new Text ("final_email_line_6", 285, 400, 980, 435, 1, "The Google Accounts Team", "20px Arial", "rgba(0,0,0,1)"),
+		new Text ("final_email_reply", 850, 140, 900, 170, 1, "Reply", "18px Arial", "rgba(0,0,0,1)"),
+		new Text ("final_email_forward", 925, 140, 1000, 170, 3, "Forward", "18px Arial", "rgba(0,0,0,1)"),
+		new Rectangle ("final_email_reply_bg", 845, 140, 900, 165, 2, "rgba(0,0,255,0.1)"),
+		new Rectangle ("final_email_forward_bg", 920, 140, 995, 165, 2, "rgba(0,0,255,0.1)"),
+		new Rectangle ("final_email_highlight_settings", 22, 22, 68, 58, 1, "rgba(255,255,128,0.3)"),
+		new Rectangle ("final_email_exit_button_background", 1065, 20, 1115, 55, 1, "rgba(39,132,199,1")
+	]);
+
+	game.screens["final_module_email_settings"] = new Screen(0, 0, 0, new Rectangle("empty_background", 0, 0, 1165, 600, 0, "rgba(255,255,255,0)"),
+		[
+			new Button ("final_email_menu_mfa_toggle_button", 290, 125, 385, 175, 6),
+			new Button ("final_email_menu_set_recovery_phone_button", 245, 65, 385, 115, 6)
+		], [], 
+		[
+			new Rectangle ("final_email_menu_block1", 23, 60, 391, 119, 5, "rgba(240, 240, 240, 1)"),
+			new Rectangle ("final_email_menu_border1", 22, 59, 392, 120, 4, "rgba(0,0,0,1)"),
+			new Rectangle ("final_email_menu_block2", 23, 121, 391, 179, 5, "rgba(240,240,240,1)"),
+			new Rectangle ("final_email_menu_border2", 22, 120, 392, 180, 4, "rgba(0,0,0,1)"),
+			new Text ("final_module_recovery_phone", 32, 65, 240, 115, 6, "Recovery Phone #: ", "24px Arial", "rgba(0,0,0,1)"),
+			new Text ("final_module_recovery_phone_number", 240, 65, 385, 115, 6, "Not set", "24px Arial", "rgba(255,0,0,1)"), 
+			new Text ("final_email_menu_mfa_text", 32, 125, 290, 175, 6, "2-Factor Authentication: ", "24px Arial", "rgba(0,0,0,1)"),
+			new Text ("final_email_menu_mfa_status_text", 290, 125, 385, 175, 6, "Disabled", "24px Arial", "rgba(255,0,0,1)")
+		]
+		
+		
+	);
+}
+
+function makeGoogleChromeHighlightRectangle () {
+	return new Rectangle("final_computer_highlight_google_chrome", 57, 220, 186, 290, 1, "rgba(216,255,0,0.30)");
 }
 
 function final_module_text_field_edit (name, value, game) {
@@ -143,7 +198,7 @@ function final_module_text_field_edit (name, value, game) {
 	}
 }
 
-function final_module_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, displayBrowser, changeBrowserWebPage, closeBrowser, addElementToScreen, removeElementFromScreen, showPhone, hidePhone, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, returnToPlayerOffice, vars, browser, game) {
+function final_module_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, displayBrowser, changeBrowserWebPage, closeBrowser, addElementToScreen, removeElementFromScreen, removeButtonFromScreen, showPhone, hidePhone, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, returnToPlayerOffice, vars, browser, game) {
 	if (button == 'go_to_dorm_room') {
 		resizeCanvas(1152, 648);
 		changeMainScreen("final_room");
@@ -268,6 +323,11 @@ function final_module_onclick (button, showDialog, closeDialog, changeMainScreen
 		changeMainScreen("final_computer_screen_backup_done");
 		return true;
 	} else if (button == "final_computer_open_browser_button") {
+		resizeCanvas(1165, 600);
+		changeMainScreen("final_module_email");
+		if (!vars.email_fixed) {
+			showDialog("final_partner_email_dialog");
+		}
 		return true;
 	} else if (button == "final_computer_exit_button") {
 		if (vars.system_backed_up && vars.email_fixed) {
@@ -279,6 +339,133 @@ function final_module_onclick (button, showDialog, closeDialog, changeMainScreen
 		}
 		return true;
 	} else if (button == "dialog_final_partner_dialog_2_Okay.") {
+		closeDialog();
+		return true;
+	} else if (button == "dialog_final_partner_email_dialog_Okay.") {
+		closeDialog();
+		return true;
+	} else if (button == "final_module_email_settings_button") {
+		if (!vars.email_menu_down) {
+			vars.email_menu_down = true;
+			vars.email_menu_screen_index = game.screens["final_module_email"].extras.length;
+			addElementToScreen(game.screens["final_module_email"], game.screens["final_module_email_settings"]);
+		} else {
+			vars.email_menu_down = false;
+			removeElementFromScreen(game.screens["final_module_email"], game.screens["final_module_email"].extras[vars.email_menu_screen_index]);
+		}
+		return true;
+	} else if (button == "final_module_email_exit_button") {
+		resizeCanvas(1200, 600);
+		if (!vars.system_backed_up) {
+			changeMainScreen("final_computer_screen");
+		} else {
+			changeMainScreen("final_computer_screen_backup_done");
+		}
+		return true;
+	} else if (button == "final_email_menu_mfa_toggle_button") {
+		var extras_list = game.screens["final_module_email_settings"].extras;
+		if (!vars.email_recovery_phone_set) {
+			showDialog("final_partner_email_dialog_need_recovery_phone");
+			return true;
+		} else {			
+			for (var i = 0; i < extras_list.length; i++) {
+				if (extras_list[i].type == 'text' && extras_list[i].name == "final_email_menu_mfa_status_text") {
+					var mfa_status_element = extras_list[i];
+					// TODO: For future maintainers of the code: this next line is a work-around to a bug: addElementToScreen/removeElementFromScreen don't work properly for nested screens
+					removeElementFromScreen(game.screens["final_module_email"], game.screens["final_module_email"].extras[vars.email_menu_screen_index]);
+					removeElementFromScreen(game.screens["final_module_email_settings"], mfa_status_element);
+					if (vars.email_mfa_enabled) {
+						mfa_status_element.text = "Disabled";
+						mfa_status_element.font_color = "rgba(255,0,0,1)";
+						vars.email_mfa_enabled = false;
+					} else {
+						mfa_status_element.text = "Enabled";
+						mfa_status_element.font_color = "rgba(0,255,0,1)";
+						vars.email_mfa_enabled = true;
+					}
+					addElementToScreen(game.screens["final_module_email_settings"], mfa_status_element);
+					// TODO: 2 next lines, same work around
+					vars.email_menu_screen_index = game.screens["final_module_email"].extras.length;
+					addElementToScreen(game.screens["final_module_email"], game.screens["final_module_email_settings"]);			
+					break; // Must bailout, to avoid encountering the same element again.
+				}
+			}
+			
+			var previously_fixed = vars.email_fixed;
+			vars.email_fixed = vars.email_mfa_enabled && vars.email_recovery_phone_set;
+			// If the email is fixed, remove the yellow highlight from Google Chrome on the main page.
+			console.log(vars.email_mfa_enabled);
+			console.log(vars.email_recovery_phone_set);
+			console.log(previously_fixed);
+			console.log(vars.email_fixed);
+			
+			if (vars.email_fixed && !previously_fixed) {
+				console.log('remove highlight');
+				for (var i = 0; i < game.screens["final_computer_screen"].extras.length; i++) {
+					if (game.screens["final_computer_screen"].extras[i].type == 'rectangle' && game.screens["final_computer_screen"].extras[i].name == 'final_computer_highlight_google_chrome') {
+						removeElementFromScreen(game.screens["final_computer_screen"], game.screens["final_computer_screen"].extras[i]);
+						i--;
+					}
+				} 
+				for (var i = 0; i < game.screens["final_computer_screen_backup_done"].extras.length; i++) {
+					if (game.screens["final_computer_screen_backup_done"].extras[i].type == 'rectangle' && game.screens["final_computer_screen_backup_done"].extras[i].name == 'final_computer_highlight_google_chrome') {
+						removeElementFromScreen(game.screens["final_computer_screen_backup_done"], game.screens["final_computer_screen_backup_done"].extras[i]);
+						i--;
+					}
+				}
+				
+			} else if (!vars.email_fixed && previously_fixed) {
+				console.log('reseting highlight');
+				addElementToScreen(game.screens["final_computer_screen"], makeGoogleChromeHighlightRectangle());
+				addElementToScreen(game.screens["final_computer_screen_backup_done"], makeGoogleChromeHighlightRectangle());
+			}
+			
+			return true;
+		}
+	} else if (button == "final_email_menu_set_recovery_phone_button") {
+		showDialog("final_recovery_phone_dialog_1");
+	
+		vars.email_fixed = vars.email_mfa_enabled && vars.email_recovery_phone_set;
+		return true;
+	} else if (button == "dialog_final_partner_email_dialog_need_recovery_phone_Okay." ) {
+		closeDialog();
+		return true;
+	} else if (button == "dialog_final_recovery_phone_dialog_1_Continue.") {
+		closeDialog();
+		showDialog("final_recovery_phone_dialog_2");
+		return true;
+	} else if (button == "dialog_final_recovery_phone_dialog_2_Got it, thanks.") {
+		// TODO: For future maintainers of the code: this next line is a work-around to a bug: addElementToScreen/removeElementFromScreen don't work properly for nested screens
+		removeElementFromScreen(game.screens["final_module_email"], game.screens["final_module_email"].extras[vars.email_menu_screen_index]);
+		
+		// Get rid of the button on the recovery phone #.
+		var button_list = game.screens["final_module_email_settings"].buttons;
+		for (var i = 0; i < button_list.length; i++) {
+			if (button_list[i].name == 'final_email_menu_set_recovery_phone_button') {
+				removeButtonFromScreen(game.screens["final_module_email_settings"], button_list[i]);
+				i--;
+			}
+		}
+	
+		// Now change the text of the recovery phone #.
+		var extras_list = game.screens["final_module_email_settings"].extras;
+		for (var i = 0; i < extras_list.length; i++) {
+			if (extras_list[i].type == 'text' && extras_list[i].name == "final_module_recovery_phone_number") {
+				var phone_number_element = extras_list[i];
+				removeElementFromScreen(game.screens["final_module_email_settings"], phone_number_element);
+				phone_number_element.text = "333-444-5555";
+				phone_number_element.font_color = "rgba(0,255,0,1)";
+				addElementToScreen(game.screens["final_module_email_settings"], phone_number_element);
+				break; // Must bailout, to avoid encountering the same element again.
+			}
+		}
+		
+		// TODO: 2 next lines, same work around
+		vars.email_menu_screen_index = game.screens["final_module_email"].extras.length;
+		addElementToScreen(game.screens["final_module_email"], game.screens["final_module_email_settings"]);			
+		
+		vars.email_recovery_phone_set = true;
+		console.log(vars.email_recovery_phone_set);
 		closeDialog();
 		return true;
 	} else {
