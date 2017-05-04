@@ -1170,10 +1170,6 @@ io.on('connection', function (socket) {
 
 		// Load the introduction scene into the game state object.
 		load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER);
-		
-		// TODO Debug:
-		loadScenes();
-		changeMainScreen("final_room");
 	}
 
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
@@ -1282,7 +1278,6 @@ io.on('connection', function (socket) {
 		}
 
 		unlockLocation("Mall");
-		unlockLocation("Dorm Room"); // TODO For debugging purposes only! Must beat all other modules to unlock this one.
 
 		sendMissionEmail("police_station");
 	}
@@ -1345,6 +1340,9 @@ io.on('connection', function (socket) {
 		} else if (location == "police_station") {
 			addToMailbox(new EmailMessage("P.I. Application", "Police Station Receptionist", "Congratulations new detective, your application was reviewed and you have become an official licensed private investigator. Now that you have the equipment you need, come to the police station to pick up your badge. In addition, we have your first case available here for you. Check your email for the forwarded details.", [], "unlock_Police Station"));
 			addToMailbox(new EmailMessage("Computer Malware", "Michael Jones", "Hi, the receptionist at the police station gave me your email and said I should contact you about my computer problem. I am at the police station outside of your office now waiting.", [], "unlock_Police Station"));
+		} else if (location == "dorm_room") {
+			addToMailbox(new EmailMessage("Training Almost Complete", "VR SYSTEM", "You are almost finished with your training. There is one final task that will test everything you have learned thus far. Read the email from Elijah.", []));
+			addToMailbox(new EmailMessage("Help Me!!!", "Elijah", "Hello, recently my life has just become a complete disaster; I've been hacked multiple times and everything is just going wrong. Please help me!", [], "unlock_Dorm Room"));
 		} else {
 		writeToServerLog(username + " | Invalid call to sendMissionEmail(" + location + ").");
 		}
@@ -1939,7 +1937,7 @@ io.on('connection', function (socket) {
 					location_to_unlock = command.substring(7);
 					unlockLocation(location_to_unlock);
 				} else if (command == "email_hacked_mfa_enabled") {
-					showDialog("email_hack_mfa_disabled_dialog");
+					showDialog("email_hack_mfa_enabled_dialog");
 				} else if (command == "email_hacked_mfa_disabled") {
 					showDialog("email_hack_mfa_disabled_dialog");
 				}
@@ -2441,10 +2439,14 @@ io.on('connection', function (socket) {
 			}
 		}
 
-		if (game.coffee_shop_variables.score > 0 && game.library_variables.score > 0 && game.apartment_variables.score > 0) {
+		if (game.final_module_variables.final_module_complete) {
 			// Game is indeed complete.
 			resizeCanvas(1152, 648);
 			changeMainScreen("gameCompleteScreen");
+		} else if (game.coffee_shop_variables.score > 0 && game.library_variables.score > 0 && game.apartment_variables.score > 0 && game.police_station_variables.module_complete) {
+			// All modules except the final are complete.
+			// Send message to unlock the final module's location.
+			sendMissionEmail("dorm_room");
 		}
 	}
 
@@ -2566,7 +2568,7 @@ io.on('connection', function (socket) {
 				return;
 			}
 
-			if (police_station_onclick(button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, displayFileSystem, closeFileSystem, existsInFileSystem, displayBrowser, changeBrowserWebPage, closeBrowser, playVideo, game.browsers["police_station_browser"], game.police_station_variables)) {
+			if (police_station_onclick(button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, displayFileSystem, closeFileSystem, existsInFileSystem, displayBrowser, changeBrowserWebPage, closeBrowser, playVideo, checkForGameCompletion, game.browsers["police_station_browser"], game.police_station_variables)) {
 				return;
 			}
 

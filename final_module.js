@@ -13,7 +13,8 @@ function load_final_module (game) {
 		email_fixed:false,
 		email_menu_down:false,
 		email_mfa_enabled:false,
-		email_recovery_phone_set:false
+		email_recovery_phone_set:false,
+		final_module_complete:false
 	};
 
 	game.browsers["final_browser"] = new Browser();
@@ -23,7 +24,8 @@ function load_final_module (game) {
 		new Button ("final_router", 780, 280, 820, 300, 0),
 		new Button ("final_laptop", 830, 255, 895, 330, 0),
 		new Button ("final_CD", 885, 342, 930, 357, 0),
-		new Button ("final_printer", 935, 310, 1060, 365, 0)
+		new Button ("final_printer", 935, 310, 1060, 365, 0),
+		new Button ("final_elijah", 640, 120, 750, 535, 0)
 	], [], []);
 
 	game.screens["final_router_box"] = new Screen(0, 0, 0, new Image ("image/final_router", 0, 0, 0),
@@ -65,7 +67,7 @@ function load_final_module (game) {
 	new Button ("final_set_pwd", 310, 260, 490, 290, 2, "Set Password", "28px Arial", "rgba(0,0,0,1)"),
 	new Button ("final_finish", 360, 400, 435, 430, 2, "Finish", "28px Arial", "rgba(0,0,0,1)")],
 	[],
-	[new Text ("router_name", 200, 55, 720, 85, 2,     "Elijah's Router (Unlocked/Open)")]);
+	[new Text ("router_name", 200, 55, 720, 85, 2,     "Elijah's Router (Unlocked/Open)", "28px Arial", "rgba(0,0,0,1)")]);
 
 	game.webpages["http://192.168.1.1/wireless2"] = new Screen (0, 70, 0, new Rectangle ("router_1_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"),
 	[new Button ("final_change_ssid_2", 310, 210, 490, 240, 2, "Change SSID", "28px Arial", "rgba(0,0,0,1)"),
@@ -83,11 +85,10 @@ function load_final_module (game) {
 
 	game.webpages["http://192.168.1.1/wireless/password"] = new Screen (0, 70, 0, new Rectangle ("router_2_background", 0, 0, 1224, 688, 0, "rgba(255,255,255,1)"),
 	[new Button ("final_router_password_finish", 100, 200, 200, 300, 2,"Save and Go Back >", "18px Arial", "rgba(0,0,0,1)")],
-	[new Button ("final_router_password_entry", 100, 130, 500, 200, 2, "********", "24px Arial", "rgba(64,64,64,1)")],
+	[new Button ("final_router_password_entry", 100, 130, 500, 200, 2, "", "24px Arial", "rgba(64,64,64,1)")],
 	[new Text ("final_router_instruction_enter_password", 100, 100, 500, 150, 1, "Enter your new password:", "24px Arial", "rgba(0,0,0,1)")]);
 
-	game.dialogs["final_partner_dialog"] = new Dialog ("final_partner_dialog", game.partner_name, "I think you should click on your password and change it. It might be too long or still contain Eli or Elijah", ["Okay."]);
-	game.dialogs["final_partner_dialog_2"] = new Dialog("final_partner_dialog_2", game.partner_name, "That isn't a very good idea. I doubt a local musician created a brand new audio format. This is probably trying to autorun a malicious program. I think it would be best if we removed it.", ["Continue."]);
+	game.dialogs["final_partner_dialog_2"] = new Dialog("final_partner_dialog_2", game.partner_name, "That isn't a very good idea. I doubt a local musician created a brand new audio format. This is probably trying to autorun a malicious program. I think it would be best if we removed it.", ["Remove CD."]);
 	game.dialogs["final_partner_dialog_3"] = new Dialog("final_partner_dialog_3", game.partner_name, "That is a good idea. We are not sure why we need to install a new, custom music player to play his music. I'm thinking this musician had different plans for us.", ["Continue."]);
 	game.dialogs["final_partner_dialog_4"] = new Dialog("final_partner_dialog_4", game.partner_name, "Thats a good choice. Even though that guys music was pretty good, we shouldn't auto media from sources that we do not trust.", ["Continue."]);
 	game.dialogs["final_partner_dialog_5"] = new Dialog("final_partner_dialog_5", game.partner_name, "Hey check it out, Its one of those new wireless printers! I heard this thing could do all sorts of cool things, supports dual band frequencies and allows for WPA2 network protocol. Thats strange, I was able to connect without entering a password. Maybe you should check it out.", ["Continue."]);
@@ -97,6 +98,12 @@ function load_final_module (game) {
 	game.dialogs["final_player_dialog_2"] = new Dialog("final_player_dialog_2", game.player_name, "Thats strange. The CD is trying to install its own custom music player. Maybe the audio is in an unique audio format or maybe its something else.", ["Install.", "Remove CD."]);
 	game.dialogs["final_player_dialog_3"] = new Dialog("final_player_dialog_3", game.player_name, "There I changed the password.", ["Continue."]);
 	game.dialogs["final_partner_dialog"] = new Dialog ("final_partner_dialog", game.partner_name, "I think you should choose a different SSID. It might be too long or still contain Eli or Elijah", ["Okay."]);
+	
+	game.dialogs["final_elijah_dialog_1"] = new Dialog ("final_elijah_dialog_1", "Elijah", "Everything is messed up. Please help me straighten out my cyber-life.", ["Will do."]);
+	game.dialogs["final_elijah_dialog_2"] = new Dialog ("final_elijah_dialog_2", game.player_name, "I think we fixed everything. You should be good to go now. Best of luck.", ["Continue."]);
+	game.dialogs["final_elijah_dialog_3"] = new Dialog ("final_elijah_dialog_3", "Elijah", "Thank you so much!", ["Continue."]);
+	
+	game.dialogs["final_vr_system_dialog"] = new Dialog ("final_vr_system_dialog", "VR SYSTEM", "Well congratulations, " + game.player_name + ". You just completed the Division of Information Technology's intern training program. Hopefully you learned some skills to apply to the real world.", ["Okay."]);
 	
 	// Computer is not backed up.
 	game.screens["final_computer_screen"] = new Screen(0, 0, 0, new Image("image/final_computer_screen/backup_required", 0, 0, 0), 
@@ -170,7 +177,7 @@ function load_final_module (game) {
 		]
 	);
 	
-	game.dialogs["final_partner_dialog_2"] = new Dialog ("final_partner_dialog_2", game.partner_name, "We haven't fixed everything yet.", ["Okay."]);
+	game.dialogs["final_partner_dialog_haven't_fixed_everything"] = new Dialog ("final_partner_dialog_haven't_fixed_everything", game.partner_name, "We haven't fixed everything yet.", ["Okay."]);
 	// End computer not backed up sub-module.
 	// Email account hacked (MFA portion)
 	game.dialogs["final_partner_email_dialog"] = new Dialog ("final_partner_email_dialog", game.partner_name, "Look's like Elijah's email account has been compromised recently. We should enable MFA in the settings so that doesn't happen again.", ["Okay."]);	
@@ -239,6 +246,17 @@ function final_module_text_field_edit (name, value, game) {
 	}
 }
 
+function final_module_finish_if_complete (checkForGameCompletion, vars) {
+	if (final_module_check_completion(vars)) {
+		checkForGameCompletion();
+	}
+}
+
+/* Returns true if the user has completed all the sub-modules, false otherwise. */
+function final_module_check_completion (vars) {
+	return vars.configured_router && vars.email_fixed && vars.system_backed_up && vars.played_cd && vars.player_printer;
+}
+
 function final_module_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, displayBrowser, changeBrowserWebPage, closeBrowser, addElementToScreen, removeElementFromScreen, removeButtonFromScreen, showPhone, hidePhone, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, returnToPlayerOffice, vars, browser, game) {
 	if (button == 'go_to_dorm_room') {
 		resizeCanvas(1152, 648);
@@ -273,6 +291,8 @@ function final_module_onclick (button, showDialog, closeDialog, changeMainScreen
 	} else if (button == "final_ssid_finish") {
 		if (vars.final_ssid_entry.length < 28) {
 			if (vars.final_ssid_entry.indexOf("Eli") == -1 && vars.final_ssid_entry.indexOf("eli") == -1) {
+				// Should we use this?
+				//addElementToScreen(game.webpages["http://192.168.1.1/wireless2"], new Text ("router_name", 200, 55, 720, 85, 2,  vars.final_ssid_entry, "28px Arial", "rgba(0,0,0,1)"));
 				changeBrowserWebPage(browser, "http://192.168.1.1/wireless2");
 				vars.changed_ssid = true;
 				return true;
@@ -313,6 +333,7 @@ function final_module_onclick (button, showDialog, closeDialog, changeMainScreen
 			vars.configured_router = true;
 			return true;
 		} else if (!vars.changed_ssid || !vars.changed_pwd) {
+			showDialog("final_partner_dialog_haven't_fixed_everything");
 			return true;
 		}
 	} else if(button == "final_CD") {
@@ -329,9 +350,9 @@ function final_module_onclick (button, showDialog, closeDialog, changeMainScreen
 		closeDialog();
 		showDialog("final_partner_dialog_2");
 		return true;
-	} else if(button == "dialog_final_partner_dialog_2_Continue.") {
+	} else if(button == "dialog_final_partner_dialog_2_Remove CD.") {
 		closeDialog();
-		changeMainScreen("final_room");
+		showDialog("final_partner_dialog_3");
 		vars.played_cd = true;
 		return true;
 	} else if(button == "dialog_final_player_dialog_2_Remove CD.") {
@@ -435,10 +456,10 @@ function final_module_onclick (button, showDialog, closeDialog, changeMainScreen
 			changeMainScreen("final_room");
 			showPhone();
 		} else {
-			showDialog("final_partner_dialog_2");
+			showDialog("final_partner_dialog_haven't_fixed_everything");
 		}
 		return true;
-	} else if (button == "dialog_final_partner_dialog_2_Okay.") {
+	} else if (button == "dialog_final_partner_dialog_haven't_fixed_everything_Okay.") {
 		closeDialog();
 		return true;
 	} else if (button == "dialog_final_partner_email_dialog_Okay.") {
@@ -567,6 +588,32 @@ function final_module_onclick (button, showDialog, closeDialog, changeMainScreen
 		vars.email_recovery_phone_set = true;
 		console.log(vars.email_recovery_phone_set);
 		closeDialog();
+		return true;
+	} else if (button == "final_elijah") {
+		if (final_module_check_completion(vars)) {
+			showDialog("final_elijah_dialog_2");
+			return true;
+		} else {
+			showDialog("final_elijah_dialog_1");
+			return true;
+		}
+	} else if (button == "dialog_final_elijah_dialog_1_Will do.") {
+		closeDialog();
+		return true;
+	} else if (button == "dialog_final_elijah_dialog_2_Continue.") {
+		// This can only be reached if the player is done.
+		closeDialog();
+		showDialog("final_elijah_dialog_3");
+		return true;
+	} else if (button == "dialog_final_elijah_dialog_3_Continue.") {
+		closeDialog();
+		showDialog("final_vr_system_dialog");
+		return true;
+	} else if (button == "dialog_final_vr_system_dialog_Okay.") {
+		closeDialog();
+		vars.final_module_complete = true;
+		returnToPlayerOffice();	
+		checkForGameCompletion(); // This will finish the game.
 		return true;
 	} else {
 		return false;
