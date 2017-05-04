@@ -66,7 +66,7 @@ function load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER) {
 
 	game.webpages["1"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_1_background", 0, 0, 800, 600, 0, "rgba(255,255,255,1)"), [
 		new Button ("introduction_registration_1_continue_button", 500, 430, 700, 530, 1, "Continue", "18px Arial", "rgba(0,0,255,1)")], [], [
-		new Text ("introduction_registration_1_instructions_text", 100, 50, 700, 430, 1, "Congratulations on your acceptance into the Division of Information Technology student internship program. All DIT interns are required an email account on the department's email server to be used for work purposes. To begin the process of creating this account, press the continue button at the bottom of this page.", "14px Arial", "rgba(0,0,0,1)")
+		new Text ("introduction_registration_1_instructions_text", 100, 50, 700, 430, 1, "Congratulations on your acceptance into the Division of Information Technology (DIT) student internship program. All DIT interns are required an email account on the department's email server to be used for work purposes. To begin the process of creating this account, press the continue button at the bottom of this page.", "14px Arial", "rgba(0,0,0,1)")
 	]);
 
 	game.webpages["2"] = new Screen (0, 70, 0, new Rectangle ("introduction_registration_2_background", 0, 0, 800, 600, 0, "rgba(255,255,255,1)"),

@@ -92,7 +92,7 @@ function load_final_module (game) {
 	game.dialogs["final_partner_dialog_3"] = new Dialog("final_partner_dialog_3", game.partner_name, "That is a good idea. We are not sure why we need to install a new, custom music player to play his music. I'm thinking this musician had different plans for us.", ["Continue."]);
 	game.dialogs["final_partner_dialog_4"] = new Dialog("final_partner_dialog_4", game.partner_name, "Thats a good choice. Even though that guys music was pretty good, we shouldn't auto media from sources that we do not trust.", ["Continue."]);
 	game.dialogs["final_partner_dialog_5"] = new Dialog("final_partner_dialog_5", game.partner_name, "Hey check it out, Its one of those new wireless printers! I heard this thing could do all sorts of cool things, supports dual band frequencies and allows for WPA2 network protocol. Thats strange, I was able to connect without entering a password. Maybe you should check it out.", ["Continue."]);
-	game.dialogs["final_partner_dialog_6"] = new Dialog("final_partner_dialog_6", game.partner_name, "Great. Even for devices like wireless printers and Chromecast, you still shoudld set a password so unwanted guests can use your device, or view what you have been doing. Talk about an invasion of privacy.", ["Continue."]);
+	game.dialogs["final_partner_dialog_6"] = new Dialog("final_partner_dialog_6", game.partner_name, "Great. Even for devices like wireless printers and Chromecast, you should still set a password so unwanted guests can't use your device, or view what you have been doing. Talk about an invasion of privacy.", ["Continue."]);
 
 	game.dialogs["final_player_dialog_1"] = new Dialog("final_player_dialog", game.player_name, "Hmm. Isn't that the CD the struggling musician on the mall gave me? He sounded pretty good, maybe I should give it a listen.", ["Insert CD."]);
 	game.dialogs["final_player_dialog_2"] = new Dialog("final_player_dialog_2", game.player_name, "Thats strange. The CD is trying to install its own custom music player. Maybe the audio is in an unique audio format or maybe its something else.", ["Install.", "Remove CD."]);
@@ -232,9 +232,6 @@ function makeGoogleChromeHighlightRectangle () {
 }
 
 function final_module_text_field_edit (name, value, game) {
-	console.log("Final module text field edit received");
-	console.log(name);
-	console.log(value);
 	if (name == "final_ssid_page_entry") {
 		game.final_module_variables.final_ssid_entry = value;
 		return true;
