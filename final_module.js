@@ -1,7 +1,7 @@
 function load_final_module (game) {
 
 	game.final_module_variables = {
-		final_router_pwd_entry:"abcdef",
+		final_router_pwd_entry:"",
 		final_ssid_entry:"Elijah's Router",
 		changed_ssid:false,
 		changed_pwd:false,
@@ -204,7 +204,9 @@ function final_module_onclick (button, showDialog, closeDialog, changeMainScreen
 		changeMainScreen("final_room");
 		return false; // so this can be also be processed in server.js
 	} else if (button == "final_router") {
-		changeMainScreen("final_router_box");
+		if (!vars.configured_router) {
+			changeMainScreen("final_router_box");
+		}
 		return true;
 	} else if (button == "router_cancel") {
 		changeMainScreen("final_room");
@@ -252,7 +254,9 @@ function final_module_onclick (button, showDialog, closeDialog, changeMainScreen
 			return true;
 		}
 	} else if (button == "final_router_password_finish") {
-		if (vars.changed_ssid) {
+		if (vars.final_router_pwd_entry.length <= 0) {
+			return true;
+		} else if (vars.changed_ssid) {
 			changeBrowserWebPage(browser, "http://192.168.1.1/wireless2");
 			vars.changed_pwd = true;
 			return true;
