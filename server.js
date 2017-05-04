@@ -678,7 +678,7 @@ var Browser = function () {
  * The array of options is the replies available to the user. The click event received when an option is click is dialog_<title>_<option text>
  * The usage convention of this object is not to display its screen directly, because the main screen's buttons will still be present under it.
  * It should be displayed via the showDialog() function, which will handle clearing out the underlying buttons, and cleared with the closeDialog() function, which will restore them. */
-var Dialog = function (name, title, text, options, voice) {
+var Dialog = function (name, title, text, options) {
 	this.name = name;
 	this.title = title;
 	this.text = text;
@@ -1154,10 +1154,11 @@ io.on('connection', function (socket) {
 		// This element should also never be moved or deleted from the 0th position of the extras list.
 		addElementToScreen(game.screens["phoneTodoListAppScreen"], new ScrollableList ("phone-todo-locations-list", 0, 30, 173, 291, 2, new Rectangle("phone_todo_locations_list_backing_transparent_rectangle", 0, 0, 173, 261, 0, 'rgba(0,0,0,0)')));
 
-		// Dialogs related to the MFA/email hacking incident
+		// Stuff related to the MFA/email hacking incident
 		game.dialogs["email_hack_mfa_enabled_dialog"] = new Dialog ("email_hack_mfa_enabled_dialog", "", "The email you just got indiciates somehow, some stranger managed to acquire your email password and tried to access your email account. However, because you had multi-factor authentication enabled, you thwarted the hacker's attempt to gain access because he or she did not have access to your cell phone, which received the special code needed to complete the login attempt.", ["Continue."]);
 		game.dialogs["email_hack_mfa_disabled_dialog"] = new Dialog ("email_hack_mfa_disabled_dialog", "", "The email you just got indicates somehow, some stranger managed to acquire your email password and was successful in logging into your account. However, you could have prevented this attack if you had enabled multi-factor authentication, which would have required the hacker to input an access code sent to your cell phone in addition to your password, which the hacker would not be able to do unless he or she had also compromised your cell phone.", ["Continue."]);
 		game.dialogs["email_hack_dialog_2"] = new Dialog ("email_hack_dialog_2", "", "In a real life scenario, you'd want to change your password immediately if this ever occurred, even if you had enabled multi-factor authentication.", ["Okay."]);
+		game.mfa_video_played = false;
 		
 		game.browsers["testBrowser"] = new Browser();
 
@@ -1169,6 +1170,10 @@ io.on('connection', function (socket) {
 
 		// Load the introduction scene into the game state object.
 		load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER);
+		
+		// TODO Debug:
+		loadScenes();
+		changeMainScreen("final_room");
 	}
 
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
@@ -1981,9 +1986,6 @@ io.on('connection', function (socket) {
 
 		drawDisplayObject(game.dialogs[dialog_name].screen, commands);
 
-		if (typeof game.dialogs[dialog_name].voice !== 'undefined') {
-			commands.push(['speakText', game.dialogs[dialog_name].text, game.dialogs[dialog_name].voice]);
-		}
 		socket.emit('command', commands);
 	}
 
@@ -1992,9 +1994,6 @@ io.on('connection', function (socket) {
 		var commands = [];
 
 		clearDisplayObject(game.dialogs[game.active_dialog.name].screen, commands);
-		if (typeof game.dialogs[game.active_dialog.name].voice !== 'undefined') {
-			commands.push(["stopSpeakingText"]);
-		}
 		if (game.active_dialog.replace_phone) {
 			showPhone();
 		}
@@ -2571,7 +2570,7 @@ io.on('connection', function (socket) {
 				return;
 			}
 
-			if (final_module_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, displayBrowser, changeBrowserWebPage, closeBrowser, addElementToScreen, removeElementFromScreen, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, returnToPlayerOffice, game.final_module_variables, game.browsers["final_browser"], game)) {
+			if (final_module_onclick (button, showDialog, closeDialog, changeMainScreen, resizeCanvas, displayBrowser, changeBrowserWebPage, closeBrowser, addElementToScreen, removeElementFromScreen, showPhone, hidePhone, playVideo, addToTodoList, removeFromTodoList, removeAllAtLocationFromTodoList, markAsComplete, checkForGameCompletion, triggerEmailHack, returnToPlayerOffice, game.final_module_variables, game.browsers["final_browser"], game)) {
 				return;
 			}
 
@@ -2748,6 +2747,9 @@ io.on('connection', function (socket) {
 			closeDialog();
 			showDialog('email_hack_dialog_2');
 		} else if (button == 'dialog_email_hack_dialog_2_Okay.') {
+			if (!game.mfa_video_played) {
+				playVideo("video/mfa");
+			}
 			closeDialog();
 		} else {
 			writeToServerLog(username + " | Received unhandled click event: " + button);
