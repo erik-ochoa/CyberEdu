@@ -152,7 +152,8 @@ function load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER) {
 		ignored_bad_email:false,
 		passwords_video_played:false, 
 		phishing_video_played:false,
-		entered_password:false
+		entered_password:false,
+		score:0
 	};
 }
 
@@ -307,6 +308,15 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 		hidePhone();
 		return true;
 	} else if (button == "dialog_introduction_phone_dialog_1a_Continue." || button == "dialog_introduction_phone_dialog_1b_Continue.") {
+		// Calculate the player's score for this module. (out of 30)
+		if (vars.clicked_bad_link) {
+			vars.score = 15;
+		} else if (vars.ignored_bad_email) {
+			vars.score = 25;
+		} else {
+			vars.score = 30;
+		}
+	
 		closeDialog();
 		loadScenes();
 		resizeCanvas(1152, 648);

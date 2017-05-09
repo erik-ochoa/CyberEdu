@@ -3,6 +3,7 @@ function load_final_module (game) {
 	game.final_module_variables = {
 		final_router_pwd_entry:"",
 		final_ssid_entry:"Elijah's Router",
+		printer_pwd_entry:"",
 		changed_ssid:false,
 		changed_pwd:false,
 		configured_router:false,
@@ -238,6 +239,9 @@ function final_module_text_field_edit (name, value, game) {
 	} else if (name == "final_router_password_entry") {
 		game.final_module_variables.final_router_pwd_entry = value;
 		return true;
+	} else if (name == "password_entry") {
+		game.final_module_variables.printer_pwd_entry = value;
+		return true;
 	} else {
 		return false;
 	}
@@ -377,8 +381,13 @@ function final_module_onclick (button, showDialog, closeDialog, changeMainScreen
 		closeDialog();
 		return true;
 	} else if(button == "apply_button") {
-		showDialog("final_player_dialog_3");
-		return true;
+		if (vars.printer_pwd_entry.length > 0) {
+			showDialog("final_player_dialog_3");
+			return true;
+		} else {
+			// Ignore click; user did not enter a password.
+			return true;
+		}
 	} else if(button == "dialog_final_player_dialog_3_Continue.") {
 		closeDialog();
 		showDialog("final_partner_dialog_6");
@@ -512,13 +521,7 @@ function final_module_onclick (button, showDialog, closeDialog, changeMainScreen
 			var previously_fixed = vars.email_fixed;
 			vars.email_fixed = vars.email_mfa_enabled && vars.email_recovery_phone_set;
 			// If the email is fixed, remove the yellow highlight from Google Chrome on the main page.
-			console.log(vars.email_mfa_enabled);
-			console.log(vars.email_recovery_phone_set);
-			console.log(previously_fixed);
-			console.log(vars.email_fixed);
-			
 			if (vars.email_fixed && !previously_fixed) {
-				console.log('remove highlight');
 				for (var i = 0; i < game.screens["final_computer_screen"].extras.length; i++) {
 					if (game.screens["final_computer_screen"].extras[i].type == 'rectangle' && game.screens["final_computer_screen"].extras[i].name == 'final_computer_highlight_google_chrome') {
 						removeElementFromScreen(game.screens["final_computer_screen"], game.screens["final_computer_screen"].extras[i]);
@@ -533,7 +536,6 @@ function final_module_onclick (button, showDialog, closeDialog, changeMainScreen
 				}
 				
 			} else if (!vars.email_fixed && previously_fixed) {
-				console.log('reseting highlight');
 				addElementToScreen(game.screens["final_computer_screen"], makeGoogleChromeHighlightRectangle());
 				addElementToScreen(game.screens["final_computer_screen_backup_done"], makeGoogleChromeHighlightRectangle());
 			}

@@ -120,8 +120,8 @@ function load_library (game, addToFileSystem) {
 	virus_file:library_computer_virus_file,
 	fixed_virus:false,
 	score:0,
-	video_shown:false,
-	on_completion_trigger_email_hack:false
+	on_completion_trigger_email_hack:false,
+	video_shown:false
   };
 }
 
@@ -134,7 +134,7 @@ function enterLibrary (resizeCanvas, changeMainScreen, showDialog, vars) {
 }
 
 function finishLibrary (vars, score_text_element, resizeCanvas, changeMainScreen, playVideo, checkForGameCompletion, triggerEmailHack) {
-	var score = (vars.usb1 ? 10 : 0) + (vars.usb2 ? 10 : 0) + (vars.fixed_virus ? 10 : 0);
+	var score = (vars.usb1 ? 15 : 0) + (vars.usb2 ? 15 : 0) + (vars.fixed_virus ? 5 : 0);
 	if (score > vars.score)
 	  vars.score = score;
 	score_text_element.text = "You Scored " + vars.score + " Points (out of 30)!";

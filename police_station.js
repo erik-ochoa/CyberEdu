@@ -159,6 +159,15 @@ function load_police_station (game, addToFileSystem) {
 }
 
 function police_station_onclick (button, changeMainScreen, resizeCanvas, sendMissionEmail, showDialog, closeDialog, displayFileSystem, closeFileSystem, existsInFileSystem, displayBrowser, changeBrowserWebPage, closeBrowser, playVideo, checkForGameCompletion, browser, vars) {
+	if (button == "go_to_office_lobby") {
+		resizeCanvas(1152, 648);
+		if (vars.module_complete) {
+			changeMainScreen("office_lobby_no_victim");
+		} else {
+			changeMainScreen("office_lobby");
+		}
+		return false; // Allow server.js to also handle this event, if desired.
+	}
 	if (button == "police_station_door3") {
 		changeMainScreen("player_office");
 		resizeCanvas(1099, 549);

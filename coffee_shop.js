@@ -37,7 +37,7 @@ function load_coffee_shop (game, addElementToScreen, removeElementFromScreen) {
 	var customer_5_name = "Black Suit";
 	var culprit_1_name = "Pink Shirt";
 	var culprit_2_name = "White Shirt";
-	var culprit_3_name = "Plaid shirt";
+	var culprit_3_name = "Brown Sweatshirt";
 	
 	var ERROR_STRING = "If you see this message, Jonathan Hansford wrote code that didn't work and should be ashamed of it.";
 	

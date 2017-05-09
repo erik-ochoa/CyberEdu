@@ -405,12 +405,16 @@ function updateLeaderboard () {
 			outputStream.write('\t\ttable, th, td {\r\n\t\t\tborder: 1px solid black;\r\n\t\t}\r\n'); // Creates a border around each cell, and the entire table.
 			outputStream.write('\t\ttable td:last-child {\r\n\t\t\ttext-align: right;\r\n\t\t}\r\n'); // Aligns the text in the total score column to the right.
 			outputStream.write('\t</style>\r\n</head>\r\n<body>\r\n\t<table>\r\n');
-			outputStream.write('\t\t<tr> <th>Name</th> <th>Coffee Shop</th> <th>Apartment</th> <th>Library</th> <th>Total</th> </tr>\r\n');
+			outputStream.write('\t\t<tr> <th>Name</th> <th>Introduction </th> <th> Mall </th> <th>Coffee Shop</th> <th>Apartment</th> <th>Library</th> <th>Police Station</th> <th>Dorm Room</th> <th>Total</th> </tr>\r\n');
 			for (var i = 0; i < leaderboard_row.length; i++) {
 				outputStream.write('\t\t<tr> <td> '	+ leaderboard_row[i].player_name + '</td> <td>'
+				+ leaderboard_row[i].introduction_score + '</td> <td>'
+				+ leaderboard_row[i].mall_score + '</td> <td>'
 				+ leaderboard_row[i].coffee_shop_score + '</td> <td>'
 				+ leaderboard_row[i].apartment_score + '</td> <td>'
 				+ leaderboard_row[i].library_score + '</td> <td>'
+				+ leaderboard_row[i].police_station_score + '</td> <td>'
+				+ leaderboard_row[i].dorm_room_score + '</td> <td>'
 				+ leaderboard_row[i].total_score + '</td> </tr>\r\n');
 			}
 
@@ -435,11 +439,15 @@ function updateLeaderboard () {
 
 					leaderboard_row[i] = {};
 					leaderboard_row[i].player_name = game_object.player_name;
+					leaderboard_row[i].introduction_score = typeof game_object.introduction_variables === 'undefined' ? 0 : game_object.introduction_variables.score;
+					leaderboard_row[i].mall_score = typeof game_object.mall_scene_variables === 'undefined' ? 0 : game_object.mall_scene_variables.score;
 					leaderboard_row[i].coffee_shop_score = typeof game_object.coffee_shop_variables === 'undefined' ? 0 : game_object.coffee_shop_variables.score;
 					leaderboard_row[i].apartment_score = typeof game_object.apartment_variables === 'undefined' ? 0 : game_object.apartment_variables.score;
 					leaderboard_row[i].library_score = typeof game_object.library_variables === 'undefined' ? 0 : game_object.library_variables.score;
+					leaderboard_row[i].police_station_score = typeof game_object.police_station_variables === 'undefined' ? 0 : (game_object.police_station_variables.module_complete ? 1 : 0);
+					leaderboard_row[i].dorm_room_score = typeof game_object.final_module_variables === 'undefined' ? 0 : (game_object.final_module_variables.final_module_complete ? 1 : 0);
 
-					leaderboard_row[i].total_score = leaderboard_row[i].coffee_shop_score + leaderboard_row[i].apartment_score + leaderboard_row[i].library_score;
+					leaderboard_row[i].total_score = leaderboard_row[i].introduction_score + leaderboard_row[i].mall_score + leaderboard_row[i].coffee_shop_score + leaderboard_row[i].apartment_score + leaderboard_row[i].library_score + leaderboard_row[i].police_station_score + leaderboard_row[i].dorm_room_score;
 
 					files_processed++;
 					if (files_processed == files.length) {
@@ -1030,7 +1038,7 @@ io.on('connection', function (socket) {
 
 		// If the game object is defined, save it.
 		if (typeof game !== 'undefined') {
-			fs.writeFile(save_file, JSON.stringify(game), function (err) {
+			fs.writeFile(save_file, JSON.stringify(game, null, 2), function (err) {
 				endSession();
 				if (err) {
 					writeToServerLog(username + " | An error occurred trying to write a save file: " + save_file + ". Game state was " + JSON.stringify(game));
@@ -1245,13 +1253,17 @@ io.on('connection', function (socket) {
 	/* Loads all the additional scenes into the game object. */
 	function loadScenes () {
 		game.screens["gameCompleteScreen"] = new Screen (0, 0, 0, new Image ("image/mission/complete", 0, 0, 0), [
-			new Button ("game_complete_take_survey", 400, 400, 800, 450, 2, "Take Our Survey", "40px Arial", "rgba(255, 255, 255, 1)")
+			new Button ("game_complete_take_survey", 400, 425, 800, 475, 2, "Take Our Survey", "40px Arial", "rgba(255, 255, 255, 1)")
 		], [], [
-			new Text ("game_complete_coffee_shop_score", 0, 0, 1000, 50, 1, "Coffee Shop: ", "30px Arial", "rgba(255, 255, 255, 1)"),
+			new Text ("game_complete_introduction_score", 0, 0, 280, 50, 1, "Introduction: ", "30px Arial", "rgba(255, 255, 255, 1)"),
+			new Text ("game_complete_mall_score", 436, 0, 716, 50, 1, "Mall: ", "30px Arial", "rgba(255, 255, 255, 1)"),
+			new Text ("game_complete_coffee_shop_score", 872, 0, 1152, 50, 1, "Coffee Shop: ", "30px Arial", "rgba(255, 255, 255, 1)"),
 			new Text ("game_complete_library_score", 0, 50, 1000, 100, 1, "Library: ", "30px Arial", "rgba(255, 255, 255, 1)"),
-			new Text ("game_complete_apartment_score", 0, 100, 1000, 150, 1, "Apartment: ", "30px Arial", "rgba(255, 255, 255, 1)"),
-			new Text ("game_complete_total_score", 0, 150, 1000, 200, 1, "Total Score: ", "30px Arial", "rgba(255, 255, 255, 1)"),
-			new Rectangle ("game_complete_take_survey_backing_rectangle", 400, 400, 800, 450, 1, "rgba(255, 255, 255, 0.5)"),
+			new Text ("game_complete_apartment_score", 436, 50, 716, 100, 1, "Apartment: ", "30px Arial", "rgba(255, 255, 255, 1)"),
+			new Text ("game_complete_police_station_score", 872, 50, 1152, 100, 1, "Police Station: ", "30px Arial", "rgba(255, 255, 255, 1)"),
+			new Text ("game_complete_dorm_room_score", 0, 100, 280, 150, 1, "Dorm Room: ", "30px Arial", "rgba(255, 255, 255, 1)"),
+			new Text ("game_complete_total_score", 436, 150, 716, 200, 1, "Total Score: ", "30px Arial", "rgba(255, 255, 255, 1)"),
+			new Rectangle ("game_complete_take_survey_backing_rectangle", 400, 425, 800, 475, 1, "rgba(255, 255, 255, 0.5)"),
 			new Text ("game_complete_screen_message", 100, 500, 1000, 700, 1, "That's all there is to play right now. Congratulations on making it to the end! We'd appreciate it if you take our survey to help make the game better. Sincerely, The CyberEDU Team", "18px Times", "rgba(255, 255, 255, 1)")
 		]);
 
@@ -2421,7 +2433,9 @@ io.on('connection', function (socket) {
 
 	/* Function checks to see if the user has completed the game. If so, will show the game complete screen. */
 	function checkForGameCompletion () {
-		var total_score = game.coffee_shop_variables.score + game.library_variables.score + game.apartment_variables.score;
+		score_mall (game.mall_scene_variables);
+	
+		var total_score = game.coffee_shop_variables.score + game.library_variables.score + game.apartment_variables.score + game.introduction_variables.score + game.mall_scene_variables.score + (game.police_station_variables.module_complete ? 1 : 0) + (game.final_module_variables.final_module_complete ? 1 : 0);
 		// Update text entries on the game complete screen
 		for (var i = 0; i < game.screens["gameCompleteScreen"].extras.length; i++) {
 			var text_score_element = game.screens["gameCompleteScreen"].extras[i];
@@ -2432,9 +2446,17 @@ io.on('connection', function (socket) {
 				} else if (text_score_element.name == 'game_complete_library_score') {
 					text_score_element.text = "Library: " + game.library_variables.score + " / 30";
 				} else if (text_score_element.name == 'game_complete_apartment_score') {
-					text_score_element.text = "Apartment: " + game.apartment_variables.score + " / 50";
+					text_score_element.text = "Apartment: " + game.apartment_variables.score + " / 30";
 				} else if (text_score_element.name == 'game_complete_total_score') {
-					text_score_element.text = "Total Score: " + total_score + " / 110";
+					text_score_element.text = "Total Score: " + total_score + " / 152";
+				} else if (text_score_element.name == 'game_complete_introduction_score') {
+					text_score_element.text = "Introduction: " + game.introduction_variables.score + " / 30";
+				} else if (text_score_element.name == 'game_complete_mall_score') {
+					text_score_element.text = "Mall: " + game.mall_scene_variables.score + " / 30";
+				} else if (text_score_element.name == 'game_complete_police_station_score') {
+					text_score_element.text = "Police Station: " + (game.police_station_variables.module_complete ? 1 : 0) + " / 1";
+				} else if (text_score_element.name == 'game_complete_dorm_room_score') {
+					text_score_element.text = "Dorm Room: " + (game.final_module_variables.final_module_complete ? 1 : 0) + " / 1";
 				}
 			}
 		}
@@ -2443,7 +2465,7 @@ io.on('connection', function (socket) {
 			// Game is indeed complete.
 			resizeCanvas(1152, 648);
 			changeMainScreen("gameCompleteScreen");
-		} else if (game.coffee_shop_variables.score > 0 && game.library_variables.score > 0 && game.apartment_variables.score > 0 && game.police_station_variables.module_complete) {
+		} else if (game.coffee_shop_variables.score > 0 && game.library_variables.score > 0 && game.apartment_variables.score > 0 && game.introduction_variables.score > 0 && game.mall_scene_variables.score > 0 && game.police_station_variables.module_complete) {
 			// All modules except the final are complete.
 			// Send message to unlock the final module's location.
 			sendMissionEmail("dorm_room");
@@ -2564,7 +2586,7 @@ io.on('connection', function (socket) {
 				return;
 			}
 
-			if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables, game.browsers["rout"], displayBrowser, closeBrowser, changeBrowserWebPage, checkForGameCompletion, triggerEmailHack, returnToPlayerOffice, game.screens["apartment_success"].extras[0])) {
+			if (apartment_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, game.apartment_variables, game.browsers["rout"], displayBrowser, closeBrowser, changeBrowserWebPage, triggerEmailHack, checkForGameCompletion, returnToPlayerOffice, game.screens["apartment_success"].extras[0])) {
 				return;
 			}
 
@@ -2713,12 +2735,11 @@ io.on('connection', function (socket) {
 		} else if (button == 'go_to_coffee_shop') {
 			// Handled in coffee_shop.js file.
 		} else if (button == 'go_to_library') {
-			//Handled in library.js file.
+			// Handled in library.js file.
 		} else if (button == 'go_to_apartment') {
-			//Handled in apartment.js file.
+			// Handled in apartment.js file.
 		} else if (button == 'go_to_office_lobby') {
-			resizeCanvas(1152, 648);
-			changeMainScreen("office_lobby");
+			// Handled in police_station.js file.
 		} else if (button == 'go_to_dorm_room') {
 			// Handled in final_module.js file.
 		} else if (button == 'phone-exit-app') {

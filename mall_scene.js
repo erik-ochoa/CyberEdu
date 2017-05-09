@@ -89,8 +89,10 @@ function load_mall(game) {
 		downloaded_from_emma: false,
 		did_not_trust_emma: false,
 		downloaded_spoof: false,
+		downloaded_good_email_app: false,
 		made_decision_on_map: false,
 		app_security_video_played: false,
+		score:0,
 		list_of_people: {inside_female:inside_female, social_employee:social_employee, social_male:social_male, social_female:social_female, productivity_employee:productivity_employee, productivity_female:productivity_female, navigation_employee:navigation_employee, navigation_male:navigation_male}
 	};
 }
@@ -103,8 +105,26 @@ function resetMallVariables (vars) {
 	vars.did_not_trust_emma = false;
 	vars.made_decision_on_map = false;
 	vars.downloaded_spoof = false;
+	vars.downloaded_good_email_app = false;
 	vars.downloaded_from_emma = false;
+	vars.score = 0;
+}
 
+// Note: (JRH) I actually decided to call this function from checkForGameCompletion, rather than in this module.
+// So the score will be zero even after some objectives are completed. 
+function score_mall (vars) {
+	vars.score = 0;
+	if (vars.did_not_trust_emma) {
+		vars.score += 15;
+	} else if (vars.downloaded_from_emma) {
+		vars.score += 3;
+	}
+	
+	if (vars.downloaded_good_email_app) {
+		vars.score += 15;
+	} else if (vars.downloaded_spoof) {
+		vars.score += 3;
+	}
 }
 
 function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, resizeCanvas, addElementToScreen, playVideo, installPhoneApp, addButtonToScreen, changePhoneScreen, addToTodoList, markAsComplete, removeElementFromScreen, showPhone, raisePhone, phoneScreenOn, game, vars) {
@@ -237,6 +257,7 @@ function mall_scene_onclick(button, showDialog, closeDialog, changeMainScreen, r
 		changeMainScreen("Spoof");
 		return true;
 	} else if (button == "infinity_email") {
+		vars.downloaded_good_email_app = true;
 		installPhoneApp(new PhoneApp ("Email", new Image ("image/phone/icon/email", 0, 0, 0, 56.0/57.0), "phoneEmailAppScreen", "email_download_screen"));
 		changeMainScreen("Productivity_Store");
 		showDialog("check_email_dialog");

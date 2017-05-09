@@ -30,8 +30,8 @@ function load_apartment (game) {
 		wifi_config_video_played:false,
 		piracy_video_played:false,
 		background_music_audio_id:"audio/mall",
-		names_of_people:{billy:resident_1_name, jacob:resident_2_name, emily:resident_3_name, madeline:resident_4_name},
-		on_completion_trigger_email_hack:false
+		on_completion_trigger_email_hack:false,
+		names_of_people:{billy:resident_1_name, jacob:resident_2_name, emily:resident_3_name, madeline:resident_4_name}
 	};
 
 	game.browsers["rout"] = new Browser();
@@ -672,11 +672,10 @@ function apartment_text_field_edit (name, value, game) {
 }
 
 function finishApartment (vars, score_text_element, resizeCanvas, changeMainScreen, playVideo, triggerEmailHack, checkForGameCompletion) {
-	// var score = (vars.firstTry ? 10 : 0) + (vars.helpBilly ? 5 : 0) + (vars.ratBilly ? 5 : 0) + 5 /* 5 baseline; prevents scoring negative points and brings total to 30. */;
-	var score = 50;
+	var score = 15 + (vars.firstTry ? 15 : 0) + (vars.helpBilly ? 0 : 0) + (vars.ratBilly ? 0 : 0);
 	if (score > vars.score)
 	  vars.score = score;
-	score_text_element.text = "You Scored " + vars.score + " Points (out of 50)!";
+	score_text_element.text = "You Scored " + vars.score + " Points (out of 30)!";
 	resizeCanvas(1153, 648.5);
 	changeMainScreen("apartment_success");
 	if (!vars.wifi_config_video_played) {
