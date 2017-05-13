@@ -1158,8 +1158,6 @@ io.on('connection', function (socket) {
 
 		// Load the introduction scene into the game state object.
 		load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER);
-		loadScenes();
-		changeMainScreen("final_room");
 	}
 
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.

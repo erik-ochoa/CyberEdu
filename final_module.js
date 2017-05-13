@@ -104,7 +104,7 @@ function load_final_module (game) {
 	game.dialogs["final_elijah_dialog_2"] = new Dialog ("final_elijah_dialog_2", game.player_name, "I think we fixed everything. You should be good to go now. Best of luck.", ["Continue."]);
 	game.dialogs["final_elijah_dialog_3"] = new Dialog ("final_elijah_dialog_3", "Elijah", "Thank you so much!", ["Continue."]);
 	
-	game.dialogs["final_vr_system_dialog"] = new Dialog ("final_vr_system_dialog", "VR SYSTEM", "Well congratulations, " + game.player_name + ". You just completed the Division of Information Technology's intern training program. Hopefully you learned some skills to apply to the real world.", ["Okay."]);
+	game.dialogs["final_vr_system_dialog"] = new Dialog ("final_vr_system_dialog", "Voice", "Well congratulations, " + game.player_name + ". You just completed the Division of Information Technology's intern training program. Hopefully you learned some skills to apply to the real world.", ["Okay."]);
 	
 	// Computer is not backed up.
 	game.screens["final_computer_screen"] = new Screen(0, 0, 0, new Image("image/final_computer_screen/backup_required", 0, 0, 0), 

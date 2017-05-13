@@ -159,13 +159,12 @@ function load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER) {
 
 function load_introduction_part2 (game) {
 	game.dialogs["introduction_phone_dialog_2"] = new Dialog ("introduction_phone_dialog_2", game.player_name, "Where the heck am I?", ["Next."]);
-	game.dialogs["introduction_phone_dialog_3"] = new Dialog ("introduction_phone_dialog_3", "Voice", "Cyberspace, hopefully you'll learn a few things...", ["Next."]);
-	game.dialogs["introduction_phone_dialog_4"] = new Dialog ("introduction_phone_dialog_4", game.player_name, "And who are you?", ["Next."]);
-	game.dialogs["introduction_phone_dialog_5"] = new Dialog ("introduction_phone_dialog_5", "Voice", "Your brand new phone!", ["Next."]);
-	game.dialogs["introduction_phone_dialog_6"] = new Dialog ("introduction_phone_dialog_6", game.player_name, "How is this possible?! Let me out of here!!!", ["Next."]);
-	game.dialogs["introduction_phone_dialog_7"] = new Dialog ("introduction_phone_dialog_7", "Phone", "Hmm. If you think I'm going to let you ruin my hardware, you're wrong. You'll have to find your own way out.", ["Next."]);
-	game.dialogs["introduction_phone_dialog_8"] = new Dialog ("introduction_phone_dialog_8", game.player_name, "What?! You can't do that! I'm a living being, and you're just a phone.", ["Next."]);
-	game.dialogs["introduction_phone_dialog_9"] = new Dialog ("introduction_phone_dialog_9", "Phone", "Well good luck then. Try not to get lost - there is quite a big world in there.", ["Continue."]);
+	game.dialogs["introduction_phone_dialog_3"] = new Dialog ("introduction_phone_dialog_3", "Voice", "Welcome to cyberspace. Here, you'll hopefully learn a few things about computers and other electronic devices.", ["Next."]);
+	game.dialogs["introduction_phone_dialog_4"] = new Dialog ("introduction_phone_dialog_4", game.player_name, "And you are?", ["Next."]);
+	game.dialogs["introduction_phone_dialog_5"] = new Dialog ("introduction_phone_dialog_5", "Voice", "This is the Virtual Reality (VR) System speaking.", ["Next."]);
+	game.dialogs["introduction_phone_dialog_6"] = new Dialog ("introduction_phone_dialog_6", game.player_name, "How do I get out of here?", ["Next."]);
+	game.dialogs["introduction_phone_dialog_7"] = new Dialog ("introduction_phone_dialog_7", "Voice", "To complete your training an return to the living world, you'll have to complete a series of training exercises that we've designed for you. However, you may pause your training and come back at anytime - if you leave this webpage, your progress will automatically be saved.", ["Next."]);
+	game.dialogs["introduction_phone_dialog_8"] = new Dialog ("introduction_phone_dialog_8", "Voice", "By the way, your first challenge starts now. It's quite a big world in here - you'll need to acquire a map to find your way around.", ["Continue."]);
 }
 
 function introduction_onclick (button, changeMainScreen, showDialog, closeDialog, displayBrowser, changeBrowserWebPage, closeBrowser, changePhoneScreen, resizeCanvas, loadScenes, hidePhone, showPhone, pushPhoneAlert, playVideo, browser, vars) {
@@ -347,19 +346,13 @@ function introduction_onclick (button, changeMainScreen, showDialog, closeDialog
 		closeDialog();
 		showDialog("introduction_phone_dialog_8");
 		return true;
-	} else if (button == "dialog_introduction_phone_dialog_8_Next.") {
-		closeDialog();
-		showDialog("introduction_phone_dialog_9");
-		return true;
-	} else if (button == "dialog_introduction_phone_dialog_9_Continue.") {
+	} else if (button == "dialog_introduction_phone_dialog_8_Continue.") {
 		closeDialog();
 		changePhoneScreen("phoneHomeScreen");
 		showPhone();
 		changeMainScreen("mall_scene");
 		return true;
-	}
-
-	else {
+	} else {
 		return false;
 	}
 }
