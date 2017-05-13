@@ -498,8 +498,6 @@ function final_module_onclick (button, showDialog, closeDialog, changeMainScreen
 			for (var i = 0; i < extras_list.length; i++) {
 				if (extras_list[i].type == 'text' && extras_list[i].name == "final_email_menu_mfa_status_text") {
 					var mfa_status_element = extras_list[i];
-					// TODO: For future maintainers of the code: this next line is a work-around to a bug: addElementToScreen/removeElementFromScreen don't work properly for nested screens
-					removeElementFromScreen(game.screens["final_module_email"], game.screens["final_module_email"].extras[vars.email_menu_screen_index]);
 					removeElementFromScreen(game.screens["final_module_email_settings"], mfa_status_element);
 					if (vars.email_mfa_enabled) {
 						mfa_status_element.text = "Disabled";
@@ -510,10 +508,7 @@ function final_module_onclick (button, showDialog, closeDialog, changeMainScreen
 						mfa_status_element.font_color = "rgba(0,255,0,1)";
 						vars.email_mfa_enabled = true;
 					}
-					addElementToScreen(game.screens["final_module_email_settings"], mfa_status_element);
-					// TODO: 2 next lines, same work around
-					vars.email_menu_screen_index = game.screens["final_module_email"].extras.length;
-					addElementToScreen(game.screens["final_module_email"], game.screens["final_module_email_settings"]);			
+					addElementToScreen(game.screens["final_module_email_settings"], mfa_status_element);		
 					break; // Must bailout, to avoid encountering the same element again.
 				}
 			}
@@ -555,8 +550,6 @@ function final_module_onclick (button, showDialog, closeDialog, changeMainScreen
 		showDialog("final_recovery_phone_dialog_2");
 		return true;
 	} else if (button == "dialog_final_recovery_phone_dialog_2_Got it, thanks.") {
-		// TODO: For future maintainers of the code: this next line is a work-around to a bug: addElementToScreen/removeElementFromScreen don't work properly for nested screens
-		removeElementFromScreen(game.screens["final_module_email"], game.screens["final_module_email"].extras[vars.email_menu_screen_index]);
 		
 		// Get rid of the button on the recovery phone #.
 		var button_list = game.screens["final_module_email_settings"].buttons;
@@ -578,11 +571,7 @@ function final_module_onclick (button, showDialog, closeDialog, changeMainScreen
 				addElementToScreen(game.screens["final_module_email_settings"], phone_number_element);
 				break; // Must bailout, to avoid encountering the same element again.
 			}
-		}
-		
-		// TODO: 2 next lines, same work around
-		vars.email_menu_screen_index = game.screens["final_module_email"].extras.length;
-		addElementToScreen(game.screens["final_module_email"], game.screens["final_module_email_settings"]);			
+		}	
 		
 		vars.email_recovery_phone_set = true;
 		console.log(vars.email_recovery_phone_set);

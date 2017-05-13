@@ -768,49 +768,59 @@ var DIALOG_BUTTON_PADDING = 5;
 var MAX_DISPLAYED_MAILBOX_ENTRIES = 17;
 var MAX_TODO_LIST_TASKS = 5;
 
-/* Pushes the commands needed to draw the display element into the commands argument. */
+
 function drawDisplayObject (element, commands) {
+	drawDisplayObjectHelper (element, commands, 0, 0, 0);
+}
+
+/* Pushes the commands needed to draw the display element into the commands argument. */
+function drawDisplayObjectHelper (element, commands, dx, dy, dl) {
+	if (element["on_screen"]) {
+		writeToServerLog("Warning: display element may have been drawn twice: " + JSON.stringify(element));
+	}
+	
+	element.on_screen = true;
+	element.on_screen_x = element.x + dx;
+	element.on_screen_y = element.y + dy;
+	element.on_screen_layer = element.layer + dl;
+	
 	if (element.type == 'image') {
 		if (typeof element.scale !== 'undefined') {
-			commands.push(["drawImage", element.id, element.x, element.y, element.layer, element.scale]);
+			commands.push(["drawImage", element.id, element.on_screen_x, element.on_screen_y, element.on_screen_layer, element.scale]);
 		} else {
-			commands.push(["drawImage", element.id, element.x, element.y, element.layer]);
+			commands.push(["drawImage", element.id, element.on_screen_x, element.on_screen_y, element.on_screen_layer]);
 		}
 	} else if (element.type == 'animation') {
-		commands.push(["drawAnimation", element.id, element.x, element.y, element.layer, element.callbackRequested]);
+		commands.push(["drawAnimation", element.id, element.on_screen_x, element.on_screen_y, element.on_screen_layer, element.callbackRequested]);
 	} else if (element.type == 'text') {
-		commands.push(["drawText", element.name, element.x, element.y, element.x2, element.y2, element.layer, element.text, element.font, element.font_color]);
+		commands.push(["drawText", element.name, element.on_screen_x, element.on_screen_y, element.x2 + dx, element.y2 + dy, element.on_screen_layer, element.text, element.font, element.font_color]);
 	} else if (element.type == 'rectangle') {
-		commands.push(["drawRectangle", element.name, element.x, element.y, element.x2, element.y2, element.layer, element.font_color]);
+		commands.push(["drawRectangle", element.name, element.on_screen_x, element.on_screen_y, element.x2 + dx, element.y2 + dy, element.on_screen_layer, element.font_color]);
 	} else if (element.type == 'screen') {
-		if (element["on_screen"])
-			writeToServerLog("Warning: display element may have been drawn twice: " + JSON.stringify(element));
-		drawDisplayObject(translate(element.base, element.x, element.y, element.layer), commands);
+		drawDisplayObjectHelper(element.base, commands, element.on_screen_x, element.on_screen_y, element.on_screen_layer);
 
 		for (var i = 0; i < element.buttons.length; i++) {
 			if (element.buttons[i].text) {
-				commands.push(["addButton", element.buttons[i].name, element.buttons[i].x1 + element.x, element.buttons[i].y1 + element.y, element.buttons[i].x2 + element.x, element.buttons[i].y2 + element.y, element.buttons[i].layer + element.layer, element.buttons[i].text, element.buttons[i].font, element.buttons[i].font_color]);
+				commands.push(["addButton", element.buttons[i].name, element.buttons[i].x1 + element.on_screen_x, element.buttons[i].y1 + element.on_screen_y, element.buttons[i].x2 + element.on_screen_x, element.buttons[i].y2 + element.on_screen_y, element.buttons[i].layer + element.on_screen_layer, element.buttons[i].text, element.buttons[i].font, element.buttons[i].font_color]);
 			} else {
-				commands.push(["addButton", element.buttons[i].name, element.buttons[i].x1 + element.x, element.buttons[i].y1 + element.y, element.buttons[i].x2 + element.x, element.buttons[i].y2 + element.y, element.buttons[i].layer + element.layer]);
+				commands.push(["addButton", element.buttons[i].name, element.buttons[i].x1 + element.on_screen_x, element.buttons[i].y1 + element.on_screen_y, element.buttons[i].x2 + element.on_screen_x, element.buttons[i].y2 + element.on_screen_y, element.buttons[i].layer + element.on_screen_layer]);
 			}
 		}
 
 		for (var i = 0; i < element.textFields.length; i++) {
-			commands.push(["addTextInputField", element.textFields[i].name, element.textFields[i].x1 + element.x, element.textFields[i].y1 + element.y, element.textFields[i].x2 + element.x, element.textFields[i].y2 + element.y, element.layer + element.textFields[i].layer, element.textFields[i].text, element.textFields[i].font, element.textFields[i].font_color, element.textFields[i].help_text]);
+			commands.push(["addTextInputField", element.textFields[i].name, element.textFields[i].x1 + element.on_screen_x, element.textFields[i].y1 + element.on_screen_y, element.textFields[i].x2 + element.on_screen_x, element.textFields[i].y2 + element.on_screen_y, element.on_screen_layer + element.textFields[i].layer, element.textFields[i].text, element.textFields[i].font, element.textFields[i].font_color, element.textFields[i].help_text]);
 		}
 
 		for (var i = 0; i < element.extras.length; i++) {
-			drawDisplayObject(translate(element.extras[i], element.x, element.y, element.layer), commands);
+			drawDisplayObjectHelper(element.extras[i], commands, element.on_screen_x, element.on_screen_y, element.on_screen_layer);
 		}
-
-		markAsOnScreen(element);
 	}
 }
 
 /* Pushes the commands needed to clear the specified display element into the commands argument. */
 function clearDisplayObject (element, commands) {
 	if (element.type == 'image') {
-		commands.push(["clearImage", element.id, element.x, element.y, element.layer]);
+		commands.push(["clearImage", element.id, element.on_screen_x, element.on_screen_y, element.on_screen_layer]);
 	} else if (element.type == 'animation') {
 		commands.push(["clearAnimation", element.id]);
 	} else if (element.type == 'text') {
@@ -818,7 +828,7 @@ function clearDisplayObject (element, commands) {
 	} else if (element.type == 'rectangle') {
 		commands.push(["clearRectangle", element.name]);
 	} else if (element.type == 'screen') {
-		clearDisplayObject(translate(element.base, element.x, element.y, element.layer), commands);
+		clearDisplayObject(element.base, commands);
 
 		for (var i = 0; i < element.buttons.length; i++) {
 			commands.push(["deleteButton", element.buttons[i].name]);
@@ -829,45 +839,15 @@ function clearDisplayObject (element, commands) {
 		}
 
 		for (var i = 0; i < element.extras.length; i++) {
-			clearDisplayObject(translate(element.extras[i], element.x, element.y, element.layer), commands);
+			clearDisplayObject(element.extras[i], commands);
 		}
 
-		markAsOffScreen(element);
 	}
-}
-
-/* Helper function. Marks this screen and all sub-screens as on screen.
- * The parent_on_screen_x, parent_on_screen_y, and parent_on_screen_layer arguments are used in recursive calls.
- */
-function markAsOnScreen(element, parent_on_screen_x, parent_on_screen_y, parent_on_screen_layer) {
-	element["on_screen"] = true;
-	element["on_screen_x"] = typeof parent_on_screen_x === 'undefined' ? element.x : element.x + parent_on_screen_x;
-	element["on_screen_y"] = typeof parent_on_screen_y === 'undefined' ? element.y : element.y + parent_on_screen_y;
-	element["on_screen_layer"] = typeof parent_on_screen_layer === 'undefined' ? element.layer : element.layer + parent_on_screen_layer;
-
-	if (element.base.type == 'screen')
-		markAsOnScreen(element.base, element["on_screen_x"], element["on_screen_y"], element["on_screen_layer"]);
-
-	for (var i = 0; i < element.extras.length; i++) {
-		if (element.extras[i].type == 'screen')
-			markAsOnScreen(element.extras[i], element["on_screen_x"], element["on_screen_y"], element["on_screen_layer"]);
-	}
-}
-
-/* Helper function. Marks this screen and all sub-screens as off the screen. */
-function markAsOffScreen(element) {
-	delete element["on_screen"];
-	delete element["on_screen_x"];
-	delete element["on_screen_y"];
-	delete element["on_screen_layer"];
-
-	if (element.base.type == 'screen')
-		markAsOffScreen(element.base);
-
-	for (var i = 0; i < element.extras.length; i++) {
-		if (element.extras[i].type == 'screen')
-			markAsOffScreen(element.extras[i]);
-	}
+	
+	delete element.on_screen;
+	delete element.on_screen_x;
+	delete element.on_screen_y;
+	delete element.on_screen_layer;
 }
 
 /* Helper function.
@@ -1178,6 +1158,8 @@ io.on('connection', function (socket) {
 
 		// Load the introduction scene into the game state object.
 		load_introduction (game, changeBrowserWebPage, PHONE_SCREEN_LAYER);
+		loadScenes();
+		changeMainScreen("final_room");
 	}
 
 	// Send commands to client, to initialize it to the current game state, which may be loaded or the default.
@@ -2206,7 +2188,7 @@ io.on('connection', function (socket) {
 		var commands = [];
 
 		if (screen["on_screen"]) {
-			drawDisplayObject(translate(element, screen.on_screen_x, screen.on_screen_y, screen.on_screen_layer), commands);
+			drawDisplayObjectHelper(element, commands, screen["on_screen_x"], screen["on_screen_y"], screen["on_screen_layer"]);
 		}
 
 		screen.extras.push(element);
@@ -2218,7 +2200,7 @@ io.on('connection', function (socket) {
 	function removeElementFromScreen (screen, element) {
 		var commands = [];
 		if (screen["on_screen"]) {
-			clearDisplayObject(translate(element, screen.on_screen_x, screen.on_screen_y, screen.on_screen_layer), commands);
+			clearDisplayObject(element, commands);
 		}
 
 		var removeCount = 0;
