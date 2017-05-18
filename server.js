@@ -1295,22 +1295,28 @@ io.on('connection', function (socket) {
 			// TODO: Fix the actual application's buttons to use the image icons for the locations.
 
 			if (location_to_unlock == "Mall") {
-				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 0,150, 173, 180, 2, "Go to Mall", "18px Times", "rgba(0,0,0,1)"));
+				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_mall", 25,70, 45, 90, 2));
+				addElementToScreen(game.screens["phoneMapAppScreen"], new Image ("image/phone/icon/map/mall", 19, 63, 2, 0.03125));
 				addButtonToScreen(game.screens["phoneMapSpoofAppScreen"], new Button ("go_to_mall", 0,150, 173, 180, 2, "Go to Mall", "18px Times", "rgba(0,0,0,1)"));
 			} else if (location_to_unlock == "Coffee Shop") {
-				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, 2, "Go to Coffee Shop", "18px Times", "rgba(0,0,0,1)"));
+				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_coffee_shop", 134, 184, 152, 206, 2));
+				addElementToScreen(game.screens["phoneMapAppScreen"], new Image ("image/phone/icon/map/coffee_shop", 134, 184, 2, 0.03656));
 				addButtonToScreen(game.screens["phoneMapSpoofAppScreen"], new Button ("go_to_coffee_shop", 0, 60, 173, 90, 2, "Go to Coffee Shop", "18px Times", "rgba(0,0,0,1)"));
 			} else if (location_to_unlock == "Library") {
-				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, 2, "Go to Library", "18px Times", "rgba(0,0,0,1)"));
+				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_library", 70, 166, 90, 186, 2));
+				addElementToScreen(game.screens["phoneMapAppScreen"], new Image("image/phone/icon/map/library", 66, 162, 2, 0.02667));
 				addButtonToScreen(game.screens["phoneMapSpoofAppScreen"], new Button ("go_to_library", 0, 90, 173, 120, 2, "Go to Library", "18px Times", "rgba(0,0,0,1)"));
 			} else if (location_to_unlock == "Apartment") {
-				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(0,0,0,1)"));
+				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_apartment", 85, 96, 105, 121, 2));
+				addElementToScreen(game.screens["phoneMapAppScreen"], new Image ("image/phone/icon/map/apartment", 75, 89, 2, 0.037037));
 				addButtonToScreen(game.screens["phoneMapSpoofAppScreen"], new Button ("go_to_apartment", 0, 120, 173, 150, 2, "Go to Apartment", "18px Times", "rgba(0,0,0,1)"));
 			} else if (location_to_unlock == "Police Station") {
-				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_office_lobby", 0, 30, 173, 60, 2, "Go to Police Station", "18px Times", "rgba(0,0,0,1)"));
+				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_office_lobby", 121, 81, 151, 96, 2));
+				addElementToScreen(game.screens["phoneMapAppScreen"], new Image ("image/phone/icon/map/police_station", 111, 64, 2, 0.045045));
 				addButtonToScreen(game.screens["phoneMapSpoofAppScreen"], new Button ("go_to_office_lobby", 0, 30, 173, 60, 2, "Go to Police Station", "18px Times", "rgba(0,0,0,1)"));
 			} else if (location_to_unlock == "Dorm Room") {
-				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_dorm_room", 0, 180, 173, 210, 2, "Go to Dorm Room", "18px Times", "rgba(0,0,0,1)"));
+				addButtonToScreen(game.screens["phoneMapAppScreen"], new Button ("go_to_dorm_room", 50, 125, 70, 144, 2));
+				addElementToScreen(game.screens["phoneMapAppScreen"], new Image ("image/phone/icon/map/dorm_room", 50, 125, 2, 0.0478));
 				addButtonToScreen(game.screens["phoneMapSpoofAppScreen"], new Button ("go_to_dorm_room", 0, 180, 173, 210, 2, "Go to Dorm Room", "18px Times", "rgba(0,0,0,1)"));
 			} else {
 				writeToServerLog(username + " | Unlock not handled for " + location_to_unlock);
