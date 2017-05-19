@@ -1232,6 +1232,10 @@ io.on('connection', function (socket) {
 
 	/* Loads all the additional scenes into the game object. */
 	function loadScenes () {
+		game.screens["gameCredits"] = new Screen (0, 0, 0, new Image ("image/credits", 0, 0, 0), [
+			new Button ("game_credits_continue", 550, 610, 780, 720, 1, "Next >", "66px Arial", "rgba(0,0,0,1)")
+		], [], []);
+	
 		game.screens["gameCompleteScreen"] = new Screen (0, 0, 0, new Image ("image/mission/complete", 0, 0, 0), [
 			new Button ("game_complete_take_survey", 400, 425, 800, 475, 2, "Take Our Survey", "40px Arial", "rgba(255, 255, 255, 1)")
 		], [], [
@@ -1242,7 +1246,7 @@ io.on('connection', function (socket) {
 			new Text ("game_complete_apartment_score", 436, 50, 716, 100, 1, "Apartment: ", "30px Arial", "rgba(255, 255, 255, 1)"),
 			new Text ("game_complete_police_station_score", 872, 50, 1152, 100, 1, "Police Station: ", "30px Arial", "rgba(255, 255, 255, 1)"),
 			new Text ("game_complete_dorm_room_score", 0, 100, 280, 150, 1, "Dorm Room: ", "30px Arial", "rgba(255, 255, 255, 1)"),
-			new Text ("game_complete_total_score", 436, 150, 716, 200, 1, "Total Score: ", "30px Arial", "rgba(255, 255, 255, 1)"),
+			new Text ("game_complete_total_score", 436, 150, 1200, 200, 1, "Total Score: ", "30px Arial", "rgba(255, 255, 255, 1)"),
 			new Rectangle ("game_complete_take_survey_backing_rectangle", 400, 425, 800, 475, 1, "rgba(255, 255, 255, 0.5)"),
 			new Text ("game_complete_screen_message", 100, 500, 1000, 700, 1, "That's all there is to play right now. Congratulations on making it to the end! We'd appreciate it if you take our survey to help make the game better. Sincerely, The CyberEDU Team", "18px Times", "rgba(255, 255, 255, 1)")
 		]);
@@ -2449,8 +2453,9 @@ io.on('connection', function (socket) {
 
 		if (game.final_module_variables.final_module_complete) {
 			// Game is indeed complete.
-			resizeCanvas(1152, 648);
-			changeMainScreen("gameCompleteScreen");
+			resizeCanvas(1280, 720);
+			changeMainScreen("gameCredits");
+			hidePhone();
 		} else if (game.coffee_shop_variables.score > 0 && game.library_variables.score > 0 && game.apartment_variables.score > 0 && game.introduction_variables.score > 0 && game.mall_scene_variables.score > 0 && game.police_station_variables.module_complete) {
 			// All modules except the final are complete.
 			// Send message to unlock the final module's location.
@@ -2760,6 +2765,9 @@ io.on('connection', function (socket) {
 				playVideo("video/mfa");
 			}
 			closeDialog();
+		} else if (button == 'game_credits_continue') {
+			resizeCanvas(1152, 648);
+			changeMainScreen("gameCompleteScreen");
 		} else {
 			writeToServerLog(username + " | Received unhandled click event: " + button);
 		}
